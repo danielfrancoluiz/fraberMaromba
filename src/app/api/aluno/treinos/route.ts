@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAlunoSession } from "@/lib/get-api-session";
-import type { Treino, Exercicio } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 const ORDEM_DIAS = [
@@ -15,7 +15,9 @@ const ORDEM_DIAS = [
 
 type DiaSemana = (typeof ORDEM_DIAS)[number];
 
-type TreinoComExercicios = Treino & { exercicios: Exercicio[] };
+type TreinoComExercicios = Prisma.TreinoGetPayload<{
+  include: { exercicios: true };
+}>;
 
 type TreinosPorDia = Record<DiaSemana, TreinoComExercicios[]>;
 
