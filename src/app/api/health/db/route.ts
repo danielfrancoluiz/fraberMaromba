@@ -1,12 +1,22 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import {
+  authErrorHint,
+  getDatabaseConnectionMeta,
+  getDatabaseEnvDiagnostics,
+  resolveDatabaseConnectionString,
+} from "@/lib/database-url";
 
 export const runtime = "nodejs";
 
 /** Diagnóstico de conexão com o banco (use em produção só para debug pontual). */
 export async function GET() {
-  const databaseUrl = process.env.DATABASE_URL ?? "";
-  const hostHint = databaseUrl.replace(/:[^:@]+@/, ":***@").split("?")[0];
+  const env = getDatabaseEnvDiagnostics();
+  const connectionString = resolveDatabaseConnectionString();
+  const meta = getDatabaseConnectionMeta(connectionString);
+  const hostHint = connectionString
+    ? connectionString.replace(/:[^:@]+@/, ":***@").split("?")[0]
+    : null;
 
   try {
     await prisma.$queryRaw`SELECT 1`;
@@ -14,7 +24,9 @@ export async function GET() {
 
     return NextResponse.json({
       ok: true,
+      env,
       host: hostHint,
+      connection: meta,
       usuarios,
     });
   } catch (error) {
@@ -23,10 +35,11 @@ export async function GET() {
     return NextResponse.json(
       {
         ok: false,
+        env,
         host: hostHint,
+        connection: meta,
         error: message,
-        hint:
-          "Na Vercel, DATABASE_URL deve usar *.pooler.supabase.com:6543 (Transaction), usuário postgres.SEU_PROJECT_REF.",
+        hint: authErrorHint(message, meta, env),
       },
       { status: 503 }
     );
