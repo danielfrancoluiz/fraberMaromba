@@ -6,9 +6,47 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+function appendQueryParam(connectionString: string, key: string, value: string): string {
+  if (connectionString.includes(`${key}=`)) return connectionString;
+  const separator = connectionString.includes("?") ? "&" : "?";
+  return `${connectionString}${separator}${key}=${value}`;
+}
+
+function appendSslMode(connectionString: string): string {
+  return appendQueryParam(connectionString, "sslmode", "require");
+}
+
+/** Transaction pooler (6543) exige pgbouncer=true para Prisma. */
+function appendSupabasePoolerParams(connectionString: string): string {
+  const isPooler =
+    connectionString.includes("pooler.supabase.com") &&
+    (connectionString.includes(":6543") || connectionString.includes("pooler.supabase.com:5432"));
+
+  if (!isPooler) return connectionString;
+
+  return appendQueryParam(connectionString, "pgbouncer", "true");
+}
+
+function assertVercelDatabaseUrl(connectionString: string): void {
+  if (process.env.VERCEL !== "1") return;
+
+  const usesDirectDbHost =
+    connectionString.includes("@db.") &&
+    connectionString.includes(".supabase.co");
+  const usesPoolerHost = connectionString.includes("pooler.supabase.com");
+
+  if (usesDirectDbHost && !usesPoolerHost) {
+    throw new Error(
+      "DATABASE_URL incorreta na Vercel: use o Connection Pooler do Supabase (host *.pooler.supabase.com, porta 6543 em Transaction ou 5432 em Session). Não use db.xxx.supabase.co:5432 como DATABASE_URL."
+    );
+  }
+}
+
 function createPrismaClient(): PrismaClient {
-  const connectionString =
-    process.env.DIRECT_URL ?? process.env.DATABASE_URL;
+  // Em produção (Vercel/serverless), use DATABASE_URL (pooler). DIRECT_URL é para migrations locais.
+  const connectionString = appendSupabasePoolerParams(
+    appendSslMode(process.env.DATABASE_URL ?? process.env.DIRECT_URL ?? "")
+  );
 
   if (!connectionString) {
     throw new Error(
@@ -16,7 +54,18 @@ function createPrismaClient(): PrismaClient {
     );
   }
 
-  const pool = new Pool({ connectionString });
+  assertVercelDatabaseUrl(connectionString);
+
+  const isSupabase = connectionString.includes("supabase.co");
+
+  const pool = new Pool({
+    connectionString,
+    max: isSupabase ? 1 : undefined,
+    ssl: isSupabase ? { rejectUnauthorized: false } : undefined,
+    connectionTimeoutMillis: 15_000,
+    // Vercel + Supabase: força IPv4 (evita "Can't reach database server")
+    family: process.env.VERCEL === "1" && isSupabase ? 4 : undefined,
+  });
   const adapter = new PrismaPg(pool);
 
   return new PrismaClient({

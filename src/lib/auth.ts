@@ -29,42 +29,56 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.senha) return null;
 
-        const usuario = await prisma.usuario.findUnique({
-          where: { email: credentials.email },
-        });
+        const email = credentials.email.trim().toLowerCase();
 
-        if (!usuario) return null;
-
-        const senhaCorreta = await verificarSenha(
-          credentials.senha,
-          usuario.senha
-        );
-
-        if (!senhaCorreta) return null;
-
-        if (!isRole(usuario.role) || !isStatus(usuario.status)) {
-          return null;
-        }
-
-        let professorId: string | undefined;
-
-        if (usuario.role === "aluno") {
-          const aluno = await prisma.aluno.findFirst({
-            where: {
-              OR: [{ usuarioId: usuario.id }, { id: usuario.id }],
-            },
+        try {
+          const usuario = await prisma.usuario.findUnique({
+            where: { email },
           });
-          professorId = aluno?.professorId;
-        }
 
-        return {
-          id: usuario.id,
-          name: usuario.nome,
-          email: usuario.email,
-          role: usuario.role,
-          status: usuario.status,
-          professorId,
-        };
+          if (!usuario) {
+            console.warn("[auth] usuário não encontrado:", email);
+            return null;
+          }
+
+          const senhaCorreta = await verificarSenha(
+            credentials.senha,
+            usuario.senha
+          );
+
+          if (!senhaCorreta) {
+            console.warn("[auth] senha incorreta:", email);
+            return null;
+          }
+
+          if (!isRole(usuario.role) || !isStatus(usuario.status)) {
+            console.warn("[auth] role/status inválido:", email, usuario.role, usuario.status);
+            return null;
+          }
+
+          let professorId: string | undefined;
+
+          if (usuario.role === "aluno") {
+            const aluno = await prisma.aluno.findFirst({
+              where: {
+                OR: [{ usuarioId: usuario.id }, { id: usuario.id }],
+              },
+            });
+            professorId = aluno?.professorId;
+          }
+
+          return {
+            id: usuario.id,
+            name: usuario.nome,
+            email: usuario.email,
+            role: usuario.role,
+            status: usuario.status,
+            professorId,
+          };
+        } catch (error) {
+          console.error("[auth] falha ao consultar banco:", error);
+          throw error;
+        }
       },
     }),
     GoogleProvider({

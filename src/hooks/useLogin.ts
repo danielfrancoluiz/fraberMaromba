@@ -46,13 +46,18 @@ export function useLogin(): UseLoginReturn {
 
     try {
       const result = await signIn("credentials", {
-        email,
+        email: email.trim().toLowerCase(),
         senha,
         redirect: false,
       });
 
       if (result?.error || !result?.ok) {
-        setErro("Email ou senha incorretos");
+        const detalhe = result?.error?.trim();
+        if (detalhe && detalhe !== "CredentialsSignin") {
+          setErro(detalhe);
+        } else {
+          setErro("Email ou senha incorretos");
+        }
         return;
       }
 
