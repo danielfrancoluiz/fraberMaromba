@@ -12,7 +12,7 @@ function createPrismaClient(): PrismaClient {
 
   if (!connectionString) {
     throw new Error(
-      "DATABASE_URL ou DIRECT_URL não configurado. Verifique .env.local"
+      "DATABASE_URL ou DIRECT_URL não configurado. Verifique as variáveis de ambiente."
     );
   }
 
@@ -25,8 +25,16 @@ function createPrismaClient(): PrismaClient {
   });
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+function getPrismaClient(): PrismaClient {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = createPrismaClient();
+  }
+  return globalForPrisma.prisma;
 }
+
+export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
+  get(_target, property, receiver) {
+    const client = getPrismaClient();
+    return Reflect.get(client, property, receiver);
+  },
+});
