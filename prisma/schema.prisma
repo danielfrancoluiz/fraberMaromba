@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Usuario {
+  id         String   @id @default(uuid())
+  nome       String
+  email      String   @unique
+  senha      String
+  role       String   // "professor" ou "aluno"
+  status     String   @default("ativo_plataforma")
+  criadoEm   DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  // Relações
+  professorAlunos  Aluno[]   @relation("ProfessorAlunos")
+  alunoVinculo     Aluno?    @relation("UsuarioAluno")
+  convitesGerados  Convite[] @relation("ProfessorConvites")
+  treinos          Treino[]  @relation("ProfessorTreinos")
+  templates        TreinoTemplate[] @relation("ProfessorTemplates")
+}
+
+model Aluno {
+  id           String   @id @default(uuid())
+  usuarioId    String?  @unique
+  professorId  String
+  nomeCompleto String
+  cpf          String   @unique
+  email        String
+  telefone     String
+  sexo         String
+  dataNascimento String
+  peso         Float
+  altura       Float
+  objetivo     String
+  planoId      String
+  status       String   @default("ativo_professor")
+  dataCadastro DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  professor    Usuario  @relation("ProfessorAlunos", fields: [professorId], references: [id])
+  usuario      Usuario? @relation("UsuarioAluno", fields: [usuarioId], references: [id])
+  treinos      Treino[] @relation("AlunoTreinos")
+  pagamentos   Pagamento[]
+  checkins     Checkin[]
+  medicoes     MedicaoFisica[]
+}
+
+model Treino {
+  id          String   @id @default(uuid())
+  alunoId     String
+  professorId String
+  nome        String
+  diaSemana   String
+  dataCriacao DateTime @default(now())
+
+  aluno       Aluno    @relation("AlunoTreinos", fields: [alunoId], references: [id])
+  professor   Usuario  @relation("ProfessorTreinos", fields: [professorId], references: [id])
+  exercicios  Exercicio[]
+}
+
+model Exercicio {
+  id             String  @id @default(uuid())
+  treinoId       String
+  nome           String
+  series         Int
+  repeticoes     Int
+  grupoMuscular  String?
+  observacao     String?
+  ordem          Int     @default(0)
+
+  treino         Treino  @relation(fields: [treinoId], references: [id], onDelete: Cascade)
+}
+
+model TreinoTemplate {
+  id          String   @id @default(uuid())
+  professorId String
+  nome        String
+  descricao   String?
+  dataCriacao DateTime @default(now())
+
+  professor   Usuario  @relation("ProfessorTemplates", fields: [professorId], references: [id])
+  exercicios  ExercicioTemplate[]
+}
+
+model ExercicioTemplate {
+  id             String  @id @default(uuid())
+  templateId     String
+  nome           String
+  series         Int
+  repeticoes     Int
+  grupoMuscular  String?
+  observacao     String?
+  ordem          Int     @default(0)
+
+  template       TreinoTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+}
+
+model Convite {
+  id           String   @id @default(uuid())
+  token        String   @unique @default(uuid())
+  professorId  String
+  email        String?
+  usado        Boolean  @default(false)
+  dataCriacao  DateTime @default(now())
+
+  professor    Usuario  @relation("ProfessorConvites", fields: [professorId], references: [id])
+}
+
+model Pagamento {
+  id              String   @id @default(uuid())
+  alunoId         String
+  professorId     String
+  valor           Float
+  status          String   @default("pendente")
+  planoId         String
+  metodoPagamento String?
+  stripeSessionId String?  @unique
+  dataVencimento  DateTime
+  dataPagamento   DateTime?
+  criadoEm        DateTime @default(now())
+
+  aluno           Aluno    @relation(fields: [alunoId], references: [id])
+}
+
+model Checkin {
+  id         String   @id @default(uuid())
+  alunoId    String
+  treinoId   String?
+  dataHora   DateTime @default(now())
+  observacao String?
+
+  aluno      Aluno    @relation(fields: [alunoId], references: [id])
+}
+
+model MedicaoFisica {
+  id             String   @id @default(uuid())
+  alunoId        String
+  professorId    String
+  peso           Float?
+  cintura        Float?
+  quadril        Float?
+  bracoDireito   Float?
+  bracoEsquerdo  Float?
+  coxaDireita    Float?
+  coxaEsquerda   Float?
+  observacao     String?
+  dataMedicao    DateTime @default(now())
+  criadoEm       DateTime @default(now())
+
+  aluno          Aluno    @relation(fields: [alunoId], references: [id])
+}
