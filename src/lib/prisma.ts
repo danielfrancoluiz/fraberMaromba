@@ -63,8 +63,6 @@ function createPrismaClient(): PrismaClient {
     max: isSupabase ? 1 : undefined,
     ssl: isSupabase ? { rejectUnauthorized: false } : undefined,
     connectionTimeoutMillis: 15_000,
-    // Vercel + Supabase: força IPv4 (evita "Can't reach database server")
-    family: process.env.VERCEL === "1" && isSupabase ? 4 : undefined,
   });
   const adapter = new PrismaPg(pool);
 
