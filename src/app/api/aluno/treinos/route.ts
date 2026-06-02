@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAlunoSession } from "@/lib/get-api-session";
-import { Treino, Exercicio } from "@prisma/client";
+import type { Treino, Exercicio } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 const ORDEM_DIAS = [
