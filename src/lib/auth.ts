@@ -1,22 +1,16 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
-import { prisma } from "@/lib/prisma";
-import { verificarSenha } from "@/lib/senha";
+import { autenticarUsuario } from "@/lib/autenticar-usuario";
+import { getNextAuthSecret } from "@/lib/nextauth-config";
 
-function isRole(value: string): value is "professor" | "aluno" {
-  return value === "professor" || value === "aluno";
-}
-
-function isStatus(
-  value: string
-): value is "ativo_professor" | "ativo_plataforma" | "inativo" {
-  return (
-    value === "ativo_professor" ||
-    value === "ativo_plataforma" ||
-    value === "inativo"
-  );
-}
+const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim();
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
+const googleConfigurado = Boolean(
+  googleClientId &&
+    googleClientSecret &&
+    googleClientId !== "placeholder_configure_later"
+);
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -29,43 +23,12 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.senha) return null;
 
-        const email = credentials.email.trim().toLowerCase();
-
         try {
-          const usuario = await prisma.usuario.findUnique({
-            where: { email },
-          });
-
-          if (!usuario) {
-            console.warn("[auth] usuário não encontrado:", email);
-            return null;
-          }
-
-          const senhaCorreta = await verificarSenha(
-            credentials.senha,
-            usuario.senha
+          const usuario = await autenticarUsuario(
+            credentials.email,
+            credentials.senha
           );
-
-          if (!senhaCorreta) {
-            console.warn("[auth] senha incorreta:", email);
-            return null;
-          }
-
-          if (!isRole(usuario.role) || !isStatus(usuario.status)) {
-            console.warn("[auth] role/status inválido:", email, usuario.role, usuario.status);
-            return null;
-          }
-
-          let professorId: string | undefined;
-
-          if (usuario.role === "aluno") {
-            const aluno = await prisma.aluno.findFirst({
-              where: {
-                OR: [{ usuarioId: usuario.id }, { id: usuario.id }],
-              },
-            });
-            professorId = aluno?.professorId;
-          }
+          if (!usuario) return null;
 
           return {
             id: usuario.id,
@@ -73,7 +36,7 @@ export const authOptions: NextAuthOptions = {
             email: usuario.email,
             role: usuario.role,
             status: usuario.status,
-            professorId,
+            professorId: usuario.professorId,
           };
         } catch (error) {
           console.error("[auth] falha ao consultar banco:", error);
@@ -81,10 +44,14 @@ export const authOptions: NextAuthOptions = {
         }
       },
     }),
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
-    }),
+    ...(googleConfigurado
+      ? [
+          GoogleProvider({
+            clientId: googleClientId!,
+            clientSecret: googleClientSecret!,
+          }),
+        ]
+      : []),
   ],
   session: {
     strategy: "jwt",
@@ -113,5 +80,5 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
     error: "/login",
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: getNextAuthSecret(),
 };
