@@ -12,8 +12,15 @@ function appendQueryParam(connectionString: string, key: string, value: string):
   return `${connectionString}${separator}${key}=${value}`;
 }
 
-function appendSslMode(connectionString: string): string {
-  return appendQueryParam(connectionString, "sslmode", "require");
+/** sslmode na URL faz o driver validar o certificado; usamos `ssl` no Pool para Supabase. */
+function stripSslQueryParams(connectionString: string): string {
+  return connectionString
+    .replace(/([?&])sslmode=[^&]*/g, "$1")
+    .replace(/([?&])sslrootcert=[^&]*/g, "$1")
+    .replace(/([?&])sslcert=[^&]*/g, "$1")
+    .replace(/([?&])sslkey=[^&]*/g, "$1")
+    .replace(/[?&]$/, "")
+    .replace(/\?&/, "?");
 }
 
 /** Transaction pooler (6543) exige pgbouncer=true para Prisma. */
@@ -44,19 +51,23 @@ function assertVercelDatabaseUrl(connectionString: string): void {
 
 function createPrismaClient(): PrismaClient {
   // Em produção (Vercel/serverless), use DATABASE_URL (pooler). DIRECT_URL é para migrations locais.
-  const connectionString = appendSupabasePoolerParams(
-    appendSslMode(process.env.DATABASE_URL ?? process.env.DIRECT_URL ?? "")
-  );
+  const raw =
+    process.env.DATABASE_URL ?? process.env.DIRECT_URL ?? "";
 
-  if (!connectionString) {
+  if (!raw) {
     throw new Error(
       "DATABASE_URL ou DIRECT_URL não configurado. Verifique as variáveis de ambiente."
     );
   }
 
-  assertVercelDatabaseUrl(connectionString);
+  const isSupabase = raw.includes("supabase");
 
-  const isSupabase = connectionString.includes("supabase.co");
+  let connectionString = appendSupabasePoolerParams(raw);
+  if (isSupabase) {
+    connectionString = stripSslQueryParams(connectionString);
+  }
+
+  assertVercelDatabaseUrl(connectionString);
 
   const pool = new Pool({
     connectionString,
