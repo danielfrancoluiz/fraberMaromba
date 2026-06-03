@@ -41,7 +41,7 @@ function parseStorageValue(raw: string | null): unknown {
   }
 }
 
-export default function Page() {
+function SeedPageContent() {
   const [localStorageContent, setLocalStorageContent] = useState<string | null>(null);
   const [sessaoContent, setSessaoContent] = useState<string | null>(null);
   const [mensagemSeed, setMensagemSeed] = useState<string | null>(null);
@@ -60,7 +60,7 @@ export default function Page() {
 
     const alunoId = alunos[0].id;
     const existentes = JSON.parse(localStorage.getItem("fraber_treinos") || "[]");
-    const ids = existentes.map((t: any) => t.id);
+    const ids = existentes.map((t: { id: string }) => t.id);
     const novos = treinosMock
       .filter((t) => !ids.includes(t.id))
       .map((t) => ({ ...t, alunoId }));
@@ -136,4 +136,82 @@ export default function Page() {
       ) : null}
     </main>
   );
+}
+
+export default function Page() {
+  const [senha, setSenha] = useState("");
+  const [autorizado, setAutorizado] = useState(false);
+  const [erroSenha, setErroSenha] = useState(false);
+
+  function handleEntrar(e: React.FormEvent) {
+    e.preventDefault();
+    setErroSenha(false);
+
+    if (senha === process.env.NEXT_PUBLIC_DEV_SEED_PASSWORD) {
+      setAutorizado(true);
+      return;
+    }
+
+    setErroSenha(true);
+  }
+
+  if (!autorizado) {
+    return (
+      <main
+        style={{
+          background: "#0D1B2E",
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "1rem",
+          padding: "1.5rem",
+        }}
+      >
+        <p style={{ color: "#F0F4FF", fontSize: "1.2rem" }}>
+          Página de Seeds — acesso restrito
+        </p>
+        <form
+          onSubmit={handleEntrar}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "12px",
+            width: "100%",
+            maxWidth: "320px",
+          }}
+        >
+          <input
+            type="password"
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            placeholder="Senha de acesso"
+            style={{
+              width: "100%",
+              minHeight: "48px",
+              borderRadius: "8px",
+              border: "1px solid #1E3050",
+              background: "#132035",
+              color: "#F0F4FF",
+              padding: "10px 12px",
+              fontSize: "1rem",
+              outline: "none",
+            }}
+          />
+          <button type="submit" style={buttonStyle}>
+            Entrar
+          </button>
+          {erroSenha ? (
+            <p style={{ color: "#E8001C", margin: 0, fontSize: "0.95rem" }}>
+              Senha incorreta
+            </p>
+          ) : null}
+        </form>
+      </main>
+    );
+  }
+
+  return <SeedPageContent />;
 }
