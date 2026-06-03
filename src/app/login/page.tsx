@@ -5,16 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { useLogin } from "@/hooks/useLogin";
-
-const colors = {
-  background: "#0D1B2E",
-  surface: "#132035",
-  primary: "#2E7FD9",
-  secondary: "#E8001C",
-  textPrimary: "#F0F4FF",
-  textSecondary: "#7A9CC4",
-  border: "#1E3050",
-};
+import { Logo } from "@/components/Logo";
 
 function GoogleIcon() {
   return (
@@ -58,72 +49,36 @@ function LoginContent() {
 
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
-  const inputStyle: React.CSSProperties = {
-    minHeight: "48px",
-    width: "100%",
-    borderRadius: "10px",
-    border: `1px solid ${colors.border}`,
-    backgroundColor: colors.background,
-    color: colors.textPrimary,
-    padding: "10px 12px",
-    fontFamily: "Inter, sans-serif",
-    fontSize: "0.95rem",
-    outline: "none",
-  };
-
   return (
     <main
       className="login-page"
       style={{
-        backgroundColor: colors.background,
         minHeight: "100vh",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontFamily: "Inter, sans-serif",
+        padding: "1.5rem",
       }}
     >
-      <div className="login-card">
-        <h1
-          style={{
-            margin: 0,
-            color: colors.primary,
-            fontWeight: 700,
-            fontSize: "1.75rem",
-            textAlign: "center",
-          }}
-        >
-          FRABER CrossFit
-        </h1>
-        <p
-          style={{
-            margin: "8px 0 28px",
-            color: colors.textSecondary,
-            textAlign: "center",
-            fontSize: "0.95rem",
-          }}
-        >
+      <div className="login-card card" style={{ width: "100%", maxWidth: "420px" }}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.25rem" }}>
+          <Logo size={112} showText />
+        </div>
+
+        <p className="text-muted" style={{ margin: "0 0 1.5rem", textAlign: "center" }}>
           Acesse sua conta
         </p>
 
         {cadastroSucesso ? (
           <div
+            className="card"
             style={{
-              marginBottom: "20px",
-              padding: "14px 16px",
-              backgroundColor: colors.surface,
-              border: "1px solid #22c55e",
-              borderRadius: "10px",
+              marginBottom: "1rem",
+              borderColor: "var(--fraber-success)",
+              background: "rgba(34, 197, 94, 0.08)",
             }}
           >
-            <p
-              style={{
-                margin: 0,
-                color: colors.textPrimary,
-                fontSize: "0.9rem",
-                textAlign: "center",
-              }}
-            >
+            <p style={{ margin: 0, fontSize: "0.9rem", textAlign: "center" }}>
               Conta criada com sucesso! Faça login para continuar.
             </p>
           </div>
@@ -132,25 +87,17 @@ function LoginContent() {
         {authError === "Configuration" ? (
           <div
             style={{
-              marginBottom: "16px",
+              marginBottom: "1rem",
               padding: "12px",
-              backgroundColor: "rgba(232, 0, 28, 0.12)",
-              border: "1px solid #E8001C",
-              borderRadius: "10px",
+              borderRadius: "var(--fraber-radius-sm)",
+              background: "rgba(232, 0, 28, 0.1)",
+              border: "1px solid var(--fraber-accent)",
+              fontSize: "0.85rem",
+              textAlign: "center",
             }}
           >
-            <p
-              style={{
-                margin: 0,
-                color: colors.textPrimary,
-                fontSize: "0.9rem",
-                textAlign: "center",
-              }}
-            >
-              NEXTAUTH_URL: https://fraber-maromba-hyyo.vercel.app — NEXTAUTH_SECRET:
-              string aleatória longa (não use o domínio como secret). Redeploy após
-              corrigir.
-            </p>
+            Erro de configuração do login. Verifique NEXTAUTH_URL e NEXTAUTH_SECRET na
+            Vercel.
           </div>
         ) : null}
 
@@ -162,34 +109,20 @@ function LoginContent() {
           style={{ display: "grid", gap: "14px" }}
         >
           <div>
-            <label
-              style={{
-                display: "block",
-                color: colors.textSecondary,
-                marginBottom: "6px",
-                fontSize: "0.9rem",
-              }}
-            >
+            <label className="text-muted" style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem" }}>
               Email
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={inputStyle}
+              className="input-field"
               autoComplete="email"
             />
           </div>
 
           <div>
-            <label
-              style={{
-                display: "block",
-                color: colors.textSecondary,
-                marginBottom: "6px",
-                fontSize: "0.9rem",
-              }}
-            >
+            <label className="text-muted" style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem" }}>
               Senha
             </label>
             <div style={{ position: "relative" }}>
@@ -197,7 +130,8 @@ function LoginContent() {
                 type={mostrarSenha ? "text" : "password"}
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
-                style={{ ...inputStyle, paddingRight: "44px" }}
+                className="input-field"
+                style={{ paddingRight: "44px" }}
                 autoComplete="current-password"
               />
               <button
@@ -211,10 +145,9 @@ function LoginContent() {
                   transform: "translateY(-50%)",
                   border: "none",
                   background: "transparent",
-                  color: colors.textSecondary,
+                  color: "var(--fraber-text-muted)",
                   cursor: "pointer",
                   display: "flex",
-                  alignItems: "center",
                   padding: 0,
                 }}
               >
@@ -224,43 +157,20 @@ function LoginContent() {
           </div>
 
           {erro ? (
-            <p style={{ margin: 0, color: colors.secondary, fontSize: "0.9rem" }}>
+            <p className="text-accent" style={{ margin: 0, fontSize: "0.9rem" }}>
               {erro}
             </p>
           ) : null}
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              minHeight: "48px",
-              width: "100%",
-              border: "none",
-              borderRadius: "10px",
-              backgroundColor: colors.primary,
-              color: colors.textPrimary,
-              fontFamily: "Inter, sans-serif",
-              fontWeight: 700,
-              fontSize: "0.95rem",
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.75 : 1,
-            }}
-          >
+          <button type="submit" disabled={loading} className="btn-primary" style={{ width: "100%" }}>
             {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            margin: "20px 0",
-          }}
-        >
-          <div style={{ flex: 1, height: "1px", backgroundColor: colors.border }} />
-          <span style={{ color: colors.textSecondary, fontSize: "0.85rem" }}>ou</span>
-          <div style={{ flex: 1, height: "1px", backgroundColor: colors.border }} />
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "1.25rem 0" }}>
+          <div style={{ flex: 1, height: 1, background: "var(--fraber-border)" }} />
+          <span className="text-muted" style={{ fontSize: "0.85rem" }}>ou</span>
+          <div style={{ flex: 1, height: 1, background: "var(--fraber-border)" }} />
         </div>
 
         <button
@@ -270,11 +180,10 @@ function LoginContent() {
           style={{
             minHeight: "48px",
             width: "100%",
-            border: "none",
-            borderRadius: "10px",
-            backgroundColor: "#ffffff",
-            color: colors.background,
-            fontFamily: "Inter, sans-serif",
+            border: "1px solid var(--fraber-border)",
+            borderRadius: "var(--fraber-radius-sm)",
+            background: "#fff",
+            color: "#111",
             fontWeight: 600,
             fontSize: "0.95rem",
             cursor: loadingGoogle ? "not-allowed" : "pointer",
@@ -289,52 +198,20 @@ function LoginContent() {
           {loadingGoogle ? "Aguardando Google..." : "Entrar com Google"}
         </button>
 
-        <p style={{ margin: "24px 0 0", textAlign: "center", fontSize: "0.9rem" }}>
-          <Link
-            href="/cadastro"
-            style={{ color: colors.primary, textDecoration: "none" }}
-          >
+        <p style={{ margin: "1.5rem 0 0", textAlign: "center", fontSize: "0.9rem" }}>
+          <Link href="/cadastro" style={{ color: "var(--fraber-primary)", textDecoration: "none" }}>
             Não tem conta? Cadastre-se
           </Link>
         </p>
 
         <div
-          style={{
-            marginTop: "24px",
-            padding: "14px 16px",
-            backgroundColor: colors.background,
-            border: `1px solid ${colors.border}`,
-            borderRadius: "10px",
-            display: "grid",
-            gap: "6px",
-          }}
+          className="chart-empty"
+          style={{ marginTop: "1.25rem", fontSize: "0.8rem", textAlign: "left" }}
         >
-          <p style={{ margin: 0, color: colors.textSecondary, fontSize: "0.85rem" }}>
-            Professor: ricardo@fraber.com / 123456
-          </p>
-          <p style={{ margin: 0, color: colors.textSecondary, fontSize: "0.85rem" }}>
-            Aluno: carlos@fraber.com / 123456
-          </p>
+          <p style={{ margin: 0 }}>Professor: ricardo@fraber.com / 123456</p>
+          <p style={{ margin: "6px 0 0" }}>Aluno: carlos@fraber.com / 123456</p>
         </div>
       </div>
-
-      <style jsx global>{`
-        .login-page {
-          width: 100%;
-          padding: 1.5rem;
-        }
-        .login-card {
-          width: 100%;
-        }
-        @media (min-width: 768px) {
-          .login-card {
-            max-width: 420px;
-            background-color: #132035;
-            border-radius: 12px;
-            padding: 2rem;
-          }
-        }
-      `}</style>
     </main>
   );
 }
@@ -344,17 +221,11 @@ export default function Page() {
     <Suspense
       fallback={
         <main
-          style={{
-            backgroundColor: "#0D1B2E",
-            minHeight: "100vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#7A9CC4",
-            fontFamily: "Inter, sans-serif",
-          }}
+          className="page-main"
+          style={{ display: "grid", placeItems: "center" }}
         >
-          Carregando...
+          <Logo size={80} />
+          <p className="text-muted">Carregando...</p>
         </main>
       }
     >

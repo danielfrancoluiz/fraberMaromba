@@ -24,21 +24,13 @@ function intervaloHoje(): { dataInicio: string; dataFim: string } {
 
 function PresencasHojeCard({ total }: { total: number | null }) {
   return (
-    <section
-      style={{
-        backgroundColor: "#132035",
-        border: "1px solid #1E3050",
-        borderRadius: "12px",
-        padding: "16px",
-        fontFamily: "Inter, sans-serif",
-      }}
-    >
-      <p style={{ margin: 0, color: "#7A9CC4", fontSize: "0.95rem" }}>Presenças Hoje</p>
+    <section className="card">
+      <p className="text-muted" style={{ margin: 0, fontSize: "0.95rem" }}>Presenças Hoje</p>
       <strong
         style={{
           marginTop: "8px",
           display: "inline-block",
-          color: "#2E7FD9",
+          color: "var(--fraber-primary)",
           fontSize: "2rem",
           lineHeight: 1.1,
         }}
@@ -84,34 +76,20 @@ export default function Page() {
   }, []);
 
   return (
-    <main
-      style={{
-        backgroundColor: "#0D1B2E",
-        minHeight: "100vh",
-        padding: "1.5rem 1rem 6rem",
-      }}
-    >
+    <main className="page-main">
       <style>{`
         .dashboard-resumo-grid {
           display: grid;
           gap: 1rem;
           grid-template-columns: 1fr;
         }
-
         @media (min-width: 768px) {
           .dashboard-resumo-grid {
             grid-template-columns: 1fr 1fr;
           }
         }
       `}</style>
-      <div
-        style={{
-          maxWidth: "920px",
-          margin: "0 auto",
-          display: "grid",
-          gap: "1rem",
-        }}
-      >
+      <div className="page-container">
         <DashboardHeader nome={session?.user?.name ?? ""} />
         <GerarConviteButton professorId={session?.user?.id ?? ""} />
         <div className="dashboard-resumo-grid">
@@ -121,11 +99,11 @@ export default function Page() {
         <BuscaAlunos valor={termoBusca} onChange={setTermoBusca} />
 
         {loading ? (
-          <p style={{ color: "#7A9CC4", textAlign: "center", margin: "2rem 0" }}>
+          <p className="text-muted" style={{ textAlign: "center", margin: "2rem 0" }}>
             Carregando...
           </p>
         ) : erro ? (
-          <p style={{ color: "#E8001C", textAlign: "center", margin: "2rem 0" }}>
+          <p className="text-accent" style={{ textAlign: "center", margin: "2rem 0" }}>
             {erro}
           </p>
         ) : alunosFiltrados.length > 0 ? (
@@ -135,7 +113,7 @@ export default function Page() {
             ))}
           </div>
         ) : (
-          <p style={{ color: "#7A9CC4", textAlign: "center", margin: "2rem 0" }}>
+          <p className="text-muted" style={{ textAlign: "center", margin: "2rem 0" }}>
             {termoBusca.trim()
               ? "Nenhum aluno encontrado."
               : "Você ainda não cadastrou nenhum aluno."}

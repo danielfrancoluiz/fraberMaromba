@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useAlunoDashboard } from "@/hooks/useAlunoDashboard";
+import { AppTopBar } from "@/components/AppTopBar";
 import { NavDiasSemana } from "@/components/aluno/NavDiasSemana";
 import { TreinoResumoCard } from "@/components/aluno/TreinoResumoCard";
 import { PlanoStatus } from "@/components/aluno/PlanoStatus";
@@ -19,12 +20,6 @@ const DIAS_SEMANA = [
   "sabado",
   "domingo",
 ];
-
-const colors = {
-  background: "#0D1B2E",
-  textPrimary: "#F0F4FF",
-  textSecondary: "#7A9CC4",
-};
 
 export default function Page() {
   const router = useRouter();
@@ -74,23 +69,13 @@ export default function Page() {
   }, [aluno, diaSelecionado, treinosPorDia]);
 
   return (
-    <main
-      className="aluno-page"
-      style={{
-        backgroundColor: colors.background,
-        minHeight: "100vh",
-        fontFamily: "Inter, sans-serif",
-      }}
-    >
-      <div className="aluno-page-container">
-        <header style={{ marginBottom: "20px" }}>
-          <h1 style={{ margin: 0, color: colors.textPrimary, fontSize: "1.4rem" }}>
-            Olá, {aluno?.nome ?? "Aluno"}
-          </h1>
-          <p style={{ margin: "6px 0 0", color: colors.textSecondary }}>
-            Seus treinos da semana
-          </p>
-        </header>
+    <main className="page-main">
+      <div className="page-container">
+        <AppTopBar
+          title={`Olá, ${aluno?.nome ?? "Aluno"}`}
+          subtitle="Seus treinos da semana"
+          logoSize={48}
+        />
 
         <PlanoStatus
           alunoId={session?.user?.id ?? ""}
@@ -105,33 +90,15 @@ export default function Page() {
         />
 
         {loading ? (
-          <p
-            style={{
-              marginTop: "24px",
-              textAlign: "center",
-              color: colors.textSecondary,
-            }}
-          >
+          <p className="text-muted" style={{ marginTop: "24px", textAlign: "center" }}>
             Carregando...
           </p>
         ) : erro ? (
-          <p
-            style={{
-              marginTop: "24px",
-              textAlign: "center",
-              color: "#E8001C",
-            }}
-          >
+          <p className="text-accent" style={{ marginTop: "24px", textAlign: "center" }}>
             {erro}
           </p>
         ) : treinosDoDia.length === 0 ? (
-          <p
-            style={{
-              marginTop: "24px",
-              textAlign: "center",
-              color: colors.textSecondary,
-            }}
-          >
+          <p className="text-muted" style={{ marginTop: "24px", textAlign: "center" }}>
             Nenhum treino para este dia.
           </p>
         ) : (
@@ -153,33 +120,6 @@ export default function Page() {
           </div>
         )}
       </div>
-
-      <style jsx global>{`
-        .aluno-page {
-          width: 100%;
-          padding: 1rem 1rem 2rem;
-        }
-        .aluno-page-container {
-          width: 100%;
-        }
-        @media (min-width: 768px) {
-          .aluno-page-container {
-            max-width: 600px;
-            margin: 0 auto;
-          }
-          .aluno-page {
-            padding: 1.5rem 2rem 2rem;
-          }
-        }
-        @media (min-width: 1024px) {
-          .aluno-page-container {
-            max-width: 800px;
-          }
-          .aluno-page {
-            padding: 2rem 3rem 2rem;
-          }
-        }
-      `}</style>
     </main>
   );
 }

@@ -1,7 +1,9 @@
 "use client";
 
-import { CheckCircle, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle, Dumbbell, RefreshCw } from "lucide-react";
 import { Exercicio } from "@/types";
+import { getExercicioImagemUrl, getGrupoMuscularCor } from "@/lib/exercicio-imagem";
 
 interface ExercicioItemProps {
   exercicio: Exercicio;
@@ -20,6 +22,51 @@ const colors = {
   concluidoBg: "#0d2b1a",
   concluidoIcon: "#22c55e",
 };
+
+function ExercicioThumbnail({ exercicio }: { exercicio: Exercicio }) {
+  const [imgErro, setImgErro] = useState(false);
+  const url = getExercicioImagemUrl(exercicio.nome);
+  const cor = getGrupoMuscularCor(exercicio.grupoMuscular);
+
+  if (url && !imgErro) {
+    return (
+      <img
+        src={url}
+        alt=""
+        width={48}
+        height={48}
+        onError={() => setImgErro(true)}
+        style={{
+          width: "48px",
+          height: "48px",
+          borderRadius: "10px",
+          objectFit: "cover",
+          flexShrink: 0,
+          border: `1px solid ${colors.border}`,
+          background: colors.surface,
+        }}
+      />
+    );
+  }
+
+  return (
+    <div
+      aria-hidden
+      style={{
+        width: "48px",
+        height: "48px",
+        borderRadius: "10px",
+        background: `${cor}22`,
+        border: `1px solid ${cor}66`,
+        display: "grid",
+        placeItems: "center",
+        flexShrink: 0,
+      }}
+    >
+      <Dumbbell size={22} color={cor} />
+    </div>
+  );
+}
 
 export function ExercicioItem({
   exercicio,
@@ -41,26 +88,7 @@ export function ExercicioItem({
         alignItems: "flex-start",
       }}
     >
-      <button
-        type="button"
-        onClick={concluido ? onDesmarcar : onMarcar}
-        aria-label={concluido ? "Desmarcar exercício" : "Marcar exercício como concluído"}
-        style={{
-          minWidth: "48px",
-          minHeight: "48px",
-          width: "48px",
-          height: "48px",
-          borderRadius: "10px",
-          border: `2px solid ${concluido ? colors.concluidoIcon : colors.border}`,
-          backgroundColor: concluido ? "rgba(34, 197, 94, 0.15)" : "transparent",
-          display: "grid",
-          placeItems: "center",
-          cursor: "pointer",
-          flexShrink: 0,
-        }}
-      >
-        {concluido ? <CheckCircle size={24} color={colors.concluidoIcon} /> : null}
-      </button>
+      <ExercicioThumbnail exercicio={exercicio} />
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <h3
@@ -117,25 +145,46 @@ export function ExercicioItem({
         ) : null}
       </div>
 
-      <button
-        type="button"
-        onClick={onSubstituir}
-        style={{
-          border: "none",
-          background: "transparent",
-          color: colors.textSecondary,
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-          fontFamily: "Inter, sans-serif",
-          fontSize: "0.85rem",
-          cursor: "pointer",
-          flexShrink: 0,
-        }}
-      >
-        <RefreshCw size={16} />
-        Substituir
-      </button>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+        <button
+          type="button"
+          onClick={concluido ? onDesmarcar : onMarcar}
+          aria-label={concluido ? "Desmarcar exercício" : "Marcar exercício como concluído"}
+          style={{
+            minWidth: "40px",
+            minHeight: "40px",
+            width: "40px",
+            height: "40px",
+            borderRadius: "10px",
+            border: `2px solid ${concluido ? colors.concluidoIcon : colors.border}`,
+            backgroundColor: concluido ? "rgba(34, 197, 94, 0.15)" : "transparent",
+            display: "grid",
+            placeItems: "center",
+            cursor: "pointer",
+          }}
+        >
+          {concluido ? <CheckCircle size={20} color={colors.concluidoIcon} /> : null}
+        </button>
+
+        <button
+          type="button"
+          onClick={onSubstituir}
+          style={{
+            border: "none",
+            background: "transparent",
+            color: colors.textSecondary,
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+            fontFamily: "Inter, sans-serif",
+            fontSize: "0.75rem",
+            cursor: "pointer",
+          }}
+        >
+          <RefreshCw size={14} />
+          Substituir
+        </button>
+      </div>
     </article>
   );
 }

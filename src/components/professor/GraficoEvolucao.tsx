@@ -1,13 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MedicaoFisica } from "@/hooks/useMedicoes";
 
 interface GraficoEvolucaoProps {
   medicoes: MedicaoFisica[];
 }
 
-type MedidaKey = "peso" | "cintura" | "quadril" | "bracoDireito" | "coxaDireita";
+type MedidaKey =
+  | "peso"
+  | "cintura"
+  | "quadril"
+  | "bracoDireito"
+  | "bracoEsquerdo"
+  | "coxaDireita"
+  | "coxaEsquerda";
 
 interface MedidaOption {
   key: MedidaKey;
@@ -24,21 +31,15 @@ const MEDIDAS: MedidaOption[] = [
   { key: "peso", label: "Peso" },
   { key: "cintura", label: "Cintura" },
   { key: "quadril", label: "Quadril" },
-  { key: "bracoDireito", label: "Braço Direito" },
-  { key: "coxaDireita", label: "Coxa Direita" },
+  { key: "bracoDireito", label: "Braço D." },
+  { key: "bracoEsquerdo", label: "Braço E." },
+  { key: "coxaDireita", label: "Coxa D." },
+  { key: "coxaEsquerda", label: "Coxa E." },
 ];
 
-const colors = {
-  surface: "#132035",
-  primary: "#2E7FD9",
-  textPrimary: "#F0F4FF",
-  textSecondary: "#7A9CC4",
-  border: "#1E3050",
-};
-
-const SVG_WIDTH = 600;
-const SVG_HEIGHT = 280;
-const PADDING = { top: 24, right: 24, bottom: 48, left: 48 };
+const SVG_WIDTH = 640;
+const SVG_HEIGHT = 300;
+const PADDING = { top: 44, right: 28, bottom: 52, left: 56 };
 
 function formatarDataCurta(dataIso: string): string {
   const data = new Date(dataIso);
@@ -47,152 +48,234 @@ function formatarDataCurta(dataIso: string): string {
   return `${dia}/${mes}`;
 }
 
+function formatarValor(valor: number): string {
+  return Number.isInteger(valor) ? String(valor) : valor.toFixed(1);
+}
+
+function valorNumerico(valor: unknown): number | null {
+  if (valor === null || valor === undefined || valor === "") return null;
+  if (typeof valor === "number" && !Number.isNaN(valor)) return valor;
+  if (typeof valor === "string") {
+    const numero = Number.parseFloat(valor.replace(",", "."));
+    return Number.isNaN(numero) ? null : numero;
+  }
+  return null;
+}
+
 function extrairPontos(medicoes: MedicaoFisica[], medida: MedidaKey): PontoGrafico[] {
   return medicoes
-    .filter((m) => m[medida] !== null && m[medida] !== undefined)
-    .map((m) => ({
-      data: m.dataMedicao,
-      valor: m[medida] as number,
-      label: `${formatarDataCurta(m.dataMedicao)}: ${m[medida]}`,
-    }))
+    .map((m) => {
+      const valor = valorNumerico(m[medida]);
+      if (valor === null) return null;
+      return {
+        data: m.dataMedicao,
+        valor,
+        label: `${formatarDataCurta(m.dataMedicao)} · ${formatarValor(valor)}`,
+      };
+    })
+    .filter((p): p is PontoGrafico => p !== null)
     .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
+}
+
+function contarPontosPorMedida(medicoes: MedicaoFisica[]): Record<MedidaKey, number> {
+  return MEDIDAS.reduce(
+    (acc, medida) => {
+      acc[medida.key] = extrairPontos(medicoes, medida.key).length;
+      return acc;
+    },
+    {} as Record<MedidaKey, number>
+  );
+}
+
+function calcularTicks(min: number, max: number, total = 4): number[] {
+  if (min === max) return [min];
+  const passo = (max - min) / (total - 1);
+  return Array.from({ length: total }, (_, i) => min + passo * i);
 }
 
 export function GraficoEvolucao({ medicoes }: GraficoEvolucaoProps) {
   const [medidaSelecionada, setMedidaSelecionada] = useState<MedidaKey>("peso");
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
+  const contagemPorMedida = useMemo(
+    () => contarPontosPorMedida(medicoes),
+    [medicoes]
+  );
+
+  useEffect(() => {
+    if (contagemPorMedida[medidaSelecionada] > 0) return;
+    const primeiraComDados = MEDIDAS.find((m) => contagemPorMedida[m.key] > 0);
+    if (primeiraComDados) setMedidaSelecionada(primeiraComDados.key);
+  }, [contagemPorMedida, medidaSelecionada]);
+
   const pontos = useMemo(
     () => extrairPontos(medicoes, medidaSelecionada),
     [medicoes, medidaSelecionada]
   );
 
+  const medidaLabel =
+    MEDIDAS.find((m) => m.key === medidaSelecionada)?.label ?? medidaSelecionada;
+
   const chartWidth = SVG_WIDTH - PADDING.left - PADDING.right;
   const chartHeight = SVG_HEIGHT - PADDING.top - PADDING.bottom;
 
-  const { linhaPath, circulos, labelsX } = useMemo(() => {
+  const chartData = useMemo(() => {
     if (pontos.length < 2) {
-      return { linhaPath: "", circulos: [], labelsX: [] };
+      return { linhaPath: "", circulos: [], labelsX: [], ticksY: [] as number[] };
     }
 
     const valores = pontos.map((p) => p.valor);
     const minVal = Math.min(...valores);
     const maxVal = Math.max(...valores);
     const range = maxVal - minVal || 1;
+    const paddingVal = range * 0.12;
+    const minPlot = minVal - paddingVal;
+    const maxPlot = maxVal + paddingVal;
+    const plotRange = maxPlot - minPlot;
+
+    const ticksY = calcularTicks(minVal, maxVal);
 
     const coords = pontos.map((ponto, index) => {
-      const x =
-        PADDING.left +
-        (pontos.length === 1 ? chartWidth / 2 : (index / (pontos.length - 1)) * chartWidth);
+      const x = PADDING.left + (index / (pontos.length - 1)) * chartWidth;
       const y =
-        PADDING.top + chartHeight - ((ponto.valor - minVal) / range) * chartHeight;
+        PADDING.top + chartHeight - ((ponto.valor - minPlot) / plotRange) * chartHeight;
       return { x, y, ponto };
     });
 
     const path = coords
-      .map((c, i) => `${i === 0 ? "M" : "L"} ${c.x} ${c.y}`)
+      .map((c, i) => `${i === 0 ? "M" : "L"} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`)
       .join(" ");
-
-    const labels = coords.map((c) => ({
-      x: c.x,
-      label: formatarDataCurta(c.ponto.data),
-    }));
 
     return {
       linhaPath: path,
       circulos: coords,
-      labelsX: labels,
+      labelsX: coords.map((c, index) => ({
+        x: c.x,
+        label: formatarDataCurta(c.ponto.data),
+        key: `${c.ponto.data}-${index}`,
+      })),
+      ticksY,
+      minPlot,
+      maxPlot,
+      plotRange,
     };
   }, [pontos, chartWidth, chartHeight]);
 
   return (
-    <section className="grafico-evolucao">
-      <div
-        style={{
-          backgroundColor: colors.surface,
-          border: `1px solid ${colors.border}`,
-          borderRadius: "12px",
-          padding: "1rem",
-          fontFamily: "Inter, sans-serif",
-        }}
-      >
-        <label
-          style={{
-            display: "block",
-            color: colors.textSecondary,
-            fontSize: "0.9rem",
-            marginBottom: "6px",
-          }}
-        >
-          Medida
-        </label>
-        <select
-          value={medidaSelecionada}
-          onChange={(e) => {
-            setMedidaSelecionada(e.target.value as MedidaKey);
-            setHoverIndex(null);
-          }}
-          style={{
-            width: "100%",
-            minHeight: "48px",
-            borderRadius: "10px",
-            border: `1px solid ${colors.border}`,
-            backgroundColor: "#0D1B2E",
-            color: colors.textPrimary,
-            padding: "10px 12px",
-            marginBottom: "1rem",
-          }}
-        >
-          {MEDIDAS.map((medida) => (
-            <option key={medida.key} value={medida.key}>
-              {medida.label}
-            </option>
-          ))}
-        </select>
+    <section style={{ width: "100%" }}>
+      <div className="card" style={{ padding: "1.125rem" }}>
+        <p className="text-muted" style={{ margin: "0 0 10px", fontSize: "0.875rem" }}>
+          Evolução — escolha a medida
+        </p>
 
-        {pontos.length < 2 ? (
-          <p
-            style={{
-              margin: 0,
-              color: colors.textSecondary,
-              textAlign: "center",
-              padding: "2rem 1rem",
-            }}
-          >
-            Adicione pelo menos 2 medições para ver o gráfico.
+        <div className="chip-group" role="group" aria-label="Selecionar medida">
+          {MEDIDAS.map((medida) => {
+            const total = contagemPorMedida[medida.key];
+            const ativa = medidaSelecionada === medida.key;
+            return (
+              <button
+                key={medida.key}
+                type="button"
+                aria-pressed={ativa}
+                disabled={total === 0}
+                className={`chip ${ativa ? "chip-active" : ""} ${total === 0 ? "chip-disabled" : ""}`}
+                onClick={() => {
+                  setMedidaSelecionada(medida.key);
+                  setHoverIndex(null);
+                }}
+              >
+                {medida.label}
+                {total > 0 ? ` · ${total}` : ""}
+              </button>
+            );
+          })}
+        </div>
+
+        {medicoes.length === 0 ? (
+          <p className="chart-empty" style={{ marginTop: "1rem" }}>
+            Nenhuma medição registrada ainda. Salve a primeira medição acima.
+          </p>
+        ) : pontos.length === 0 ? (
+          <p className="chart-empty" style={{ marginTop: "1rem" }}>
+            Nenhum valor de &quot;{medidaLabel}&quot; nas medições. Escolha outra medida ou
+            preencha este campo na próxima medição.
+          </p>
+        ) : pontos.length === 1 ? (
+          <p className="chart-empty" style={{ marginTop: "1rem" }}>
+            <strong style={{ color: "var(--fraber-text)" }}>
+              {formatarValor(pontos[0].valor)}
+            </strong>{" "}
+            em {formatarDataCurta(pontos[0].data)} — registre mais uma medição com &quot;
+            {medidaLabel}&quot; para ver o gráfico de evolução.
           </p>
         ) : (
-          <div style={{ overflowX: "auto" }}>
+          <div style={{ marginTop: "1rem", overflow: "visible" }}>
             <svg
               viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
               width="100%"
-              style={{ display: "block", minWidth: "320px" }}
+              style={{ display: "block", minWidth: "300px", overflow: "visible" }}
               role="img"
-              aria-label="Gráfico de evolução"
+              aria-label={`Gráfico de evolução: ${medidaLabel}`}
             >
+              {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+                const y = PADDING.top + chartHeight * (1 - ratio);
+                return (
+                  <line
+                    key={ratio}
+                    x1={PADDING.left}
+                    y1={y}
+                    x2={PADDING.left + chartWidth}
+                    y2={y}
+                    stroke="var(--fraber-border)"
+                    strokeWidth={1}
+                    strokeDasharray="4 4"
+                    opacity={0.6}
+                  />
+                );
+              })}
+
+              {chartData.ticksY.map((tick) => {
+                const y =
+                  PADDING.top +
+                  chartHeight -
+                  ((tick - chartData.minPlot!) / chartData.plotRange!) * chartHeight;
+                return (
+                  <text
+                    key={tick}
+                    x={PADDING.left - 10}
+                    y={y + 4}
+                    fill="var(--fraber-text-muted)"
+                    fontSize={11}
+                    textAnchor="end"
+                  >
+                    {formatarValor(tick)}
+                  </text>
+                );
+              })}
+
               <line
                 x1={PADDING.left}
                 y1={PADDING.top + chartHeight}
                 x2={PADDING.left + chartWidth}
                 y2={PADDING.top + chartHeight}
-                stroke={colors.border}
-                strokeWidth={1}
+                stroke="var(--fraber-border)"
+                strokeWidth={1.5}
               />
               <line
                 x1={PADDING.left}
                 y1={PADDING.top}
                 x2={PADDING.left}
                 y2={PADDING.top + chartHeight}
-                stroke={colors.border}
-                strokeWidth={1}
+                stroke="var(--fraber-border)"
+                strokeWidth={1.5}
               />
 
-              {labelsX.map((item) => (
+              {chartData.labelsX.map((item) => (
                 <text
-                  key={item.label + item.x}
+                  key={item.key}
                   x={item.x}
-                  y={SVG_HEIGHT - 12}
-                  fill={colors.textSecondary}
+                  y={SVG_HEIGHT - 16}
+                  fill="var(--fraber-text-muted)"
                   fontSize={11}
                   textAnchor="middle"
                 >
@@ -200,73 +283,77 @@ export function GraficoEvolucao({ medicoes }: GraficoEvolucaoProps) {
                 </text>
               ))}
 
-              <path
-                d={linhaPath}
-                fill="none"
-                stroke={colors.primary}
-                strokeWidth={2}
-                strokeLinejoin="round"
-              />
+              {chartData.linhaPath ? (
+                <path
+                  d={chartData.linhaPath}
+                  fill="none"
+                  stroke="var(--fraber-primary)"
+                  strokeWidth={2.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              ) : null}
 
-              {circulos.map((circulo, index) => (
-                <g key={circulo.ponto.data}>
-                  <circle
-                    cx={circulo.x}
-                    cy={circulo.y}
-                    r={hoverIndex === index ? 7 : 5}
-                    fill={colors.primary}
-                    stroke={colors.textPrimary}
-                    strokeWidth={2}
-                    style={{ cursor: "pointer" }}
-                    onMouseEnter={() => setHoverIndex(index)}
-                    onMouseLeave={() => setHoverIndex(null)}
-                  />
-                  {hoverIndex === index ? (
-                    <>
-                      <rect
-                        x={circulo.x - 50}
-                        y={circulo.y - 36}
-                        width={100}
-                        height={24}
-                        rx={4}
-                        fill="#0D1B2E"
-                        stroke={colors.border}
-                      />
-                      <text
-                        x={circulo.x}
-                        y={circulo.y - 20}
-                        fill={colors.textPrimary}
-                        fontSize={11}
-                        textAnchor="middle"
-                      >
-                        {circulo.ponto.label}
-                      </text>
-                    </>
-                  ) : null}
-                </g>
-              ))}
+              {chartData.circulos.map((circulo, index) => {
+                const ativo = hoverIndex === index;
+                const tooltipY = circulo.y < PADDING.top + 36 ? circulo.y + 28 : circulo.y - 28;
+                const tooltipW = 108;
+                const tooltipX = Math.min(
+                  Math.max(circulo.x - tooltipW / 2, 8),
+                  SVG_WIDTH - tooltipW - 8
+                );
+
+                return (
+                  <g key={`${circulo.ponto.data}-${index}`}>
+                    <circle
+                      cx={circulo.x}
+                      cy={circulo.y}
+                      r={ativo ? 6 : 4.5}
+                      fill="var(--fraber-primary)"
+                      stroke="var(--fraber-text)"
+                      strokeWidth={2}
+                      style={{ cursor: "pointer" }}
+                      onMouseEnter={() => setHoverIndex(index)}
+                      onMouseLeave={() => setHoverIndex(null)}
+                    />
+                    <text
+                      x={circulo.x}
+                      y={circulo.y - 12}
+                      fill="var(--fraber-text-muted)"
+                      fontSize={10}
+                      textAnchor="middle"
+                    >
+                      {formatarValor(circulo.ponto.valor)}
+                    </text>
+                    {ativo ? (
+                      <>
+                        <rect
+                          x={tooltipX}
+                          y={tooltipY - 14}
+                          width={tooltipW}
+                          height={26}
+                          rx={6}
+                          fill="var(--fraber-bg-soft)"
+                          stroke="var(--fraber-border)"
+                        />
+                        <text
+                          x={tooltipX + tooltipW / 2}
+                          y={tooltipY + 2}
+                          fill="var(--fraber-text)"
+                          fontSize={11}
+                          textAnchor="middle"
+                        >
+                          {circulo.ponto.label}
+                        </text>
+                      </>
+                    ) : null}
+                  </g>
+                );
+              })}
             </svg>
           </div>
         )}
       </div>
-
-      <style jsx global>{`
-        .grafico-evolucao {
-          width: 100%;
-          padding: 1rem;
-        }
-        @media (min-width: 768px) {
-          .grafico-evolucao {
-            max-width: 600px;
-            margin: 0 auto;
-          }
-        }
-        @media (min-width: 1024px) {
-          .grafico-evolucao {
-            max-width: 800px;
-          }
-        }
-      `}</style>
     </section>
   );
 }

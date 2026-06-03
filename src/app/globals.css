@@ -1,26 +1,180 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --fraber-bg: #050f1a;
+  --fraber-bg-soft: #0a1628;
+  --fraber-surface: #111d32;
+  --fraber-surface-hover: #1a2944;
+  --fraber-border: #243652;
+  --fraber-primary: #3b82f6;
+  --fraber-primary-dim: #2563eb;
+  --fraber-accent: #e8001c;
+  --fraber-text: #f1f5f9;
+  --fraber-text-muted: #94a3b8;
+  --fraber-success: #22c55e;
+  --fraber-radius: 14px;
+  --fraber-radius-sm: 10px;
+  --fraber-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --fraber-glow: 0 0 0 1px rgba(59, 130, 246, 0.15);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--fraber-bg);
+  --color-foreground: var(--fraber-text);
+  --font-sans: var(--font-inter);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100%;
+  margin: 0;
+  background: radial-gradient(ellipse 120% 80% at 50% -20%, #1e3a5f 0%, var(--fraber-bg) 55%);
+  color: var(--fraber-text);
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page-main {
+  min-height: 100vh;
+  padding: 1.25rem 1rem 5rem;
+}
+
+.page-container {
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  display: grid;
+  gap: 1rem;
+}
+
+.card {
+  background: var(--fraber-surface);
+  border: 1px solid var(--fraber-border);
+  border-radius: var(--fraber-radius);
+  padding: 1.125rem;
+  box-shadow: var(--fraber-glow);
+}
+
+.card-hover:hover {
+  background: var(--fraber-surface-hover);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+.btn-primary {
+  min-height: 48px;
+  border: none;
+  border-radius: var(--fraber-radius-sm);
+  background: linear-gradient(135deg, var(--fraber-primary) 0%, var(--fraber-primary-dim) 100%);
+  color: var(--fraber-text);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.input-field {
+  min-height: 48px;
+  width: 100%;
+  border-radius: var(--fraber-radius-sm);
+  border: 1px solid var(--fraber-border);
+  background: var(--fraber-bg-soft);
+  color: var(--fraber-text);
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-field:focus {
+  border-color: var(--fraber-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.text-muted {
+  color: var(--fraber-text-muted);
+}
+
+.text-accent {
+  color: var(--fraber-accent);
+}
+
+.app-topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 4px;
+}
+
+.app-topbar-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.app-topbar-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  color: var(--fraber-text-muted);
+}
+
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  min-height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--fraber-border);
+  background: var(--fraber-bg-soft);
+  color: var(--fraber-text);
+  padding: 6px 14px;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chip:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.chip-active {
+  border-color: var(--fraber-primary);
+  background: rgba(59, 130, 246, 0.18);
+  color: #dbeafe;
+}
+
+.chip-disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.chart-empty {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  color: var(--fraber-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  border-radius: var(--fraber-radius-sm);
+  background: var(--fraber-bg-soft);
+  border: 1px dashed var(--fraber-border);
 }

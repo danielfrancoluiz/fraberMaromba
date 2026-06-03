@@ -10,6 +10,7 @@ import { ExercicioItem } from "@/components/aluno/ExercicioItem";
 import { TimerDescanso } from "@/components/aluno/TimerDescanso";
 import { SubstitutoPanel } from "@/components/aluno/SubstitutoPanel";
 import { CheckinButton } from "@/components/aluno/CheckinButton";
+import { LogoutButton } from "@/components/LogoutButton";
 import { ArrowLeft } from "lucide-react";
 
 export default function Page() {
@@ -140,38 +141,42 @@ export default function Page() {
         style={{
           display: "flex",
           alignItems: "center",
+          justifyContent: "space-between",
           gap: "1rem",
           marginBottom: "1.5rem",
         }}
       >
-        <button
-          onClick={() => router.back()}
-          style={{
-            background: "transparent",
-            border: "none",
-            cursor: "pointer",
-            color: "#F0F4FF",
-            padding: "8px",
-          }}
-        >
-          <ArrowLeft size={24} />
-        </button>
-        <div>
-          <h1 style={{ color: "#F0F4FF", margin: 0, fontSize: "1.3rem" }}>
-            {treino.nome}
-          </h1>
-          <span
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem", minWidth: 0 }}>
+          <button
+            onClick={() => router.back()}
             style={{
-              background: "#2E7FD9",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
               color: "#F0F4FF",
-              borderRadius: "999px",
-              padding: "2px 10px",
-              fontSize: "0.75rem",
+              padding: "8px",
             }}
           >
-            {diasLabel[treino.diaSemana] ?? treino.diaSemana}
-          </span>
+            <ArrowLeft size={24} />
+          </button>
+          <div>
+            <h1 style={{ color: "#F0F4FF", margin: 0, fontSize: "1.3rem" }}>
+              {treino.nome}
+            </h1>
+            <span
+              style={{
+                background: "#2E7FD9",
+                color: "#F0F4FF",
+                borderRadius: "999px",
+                padding: "2px 10px",
+                fontSize: "0.75rem",
+              }}
+            >
+              {diasLabel[treino.diaSemana] ?? treino.diaSemana}
+            </span>
+          </div>
         </div>
+        <LogoutButton />
       </div>
 
       <div style={{ marginBottom: "1rem" }}>

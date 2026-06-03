@@ -286,6 +286,46 @@ export async function listarTemplates(
   return templates.map(mapTemplate);
 }
 
+export async function atualizarTemplate(
+  id: string,
+  dados: {
+    nome?: string;
+    descricao?: string;
+    exercicios?: Exercicio[];
+  }
+): Promise<TreinoTemplate> {
+  const res = await fetch(`/api/professor/templates/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ...(dados.nome !== undefined ? { nome: dados.nome } : {}),
+      ...(dados.descricao !== undefined ? { descricao: dados.descricao } : {}),
+      ...(dados.exercicios !== undefined
+        ? {
+            exercicios: dados.exercicios.map((exercicio, index) => ({
+              nome: exercicio.nome,
+              series: exercicio.series,
+              repeticoes: exercicio.repeticoes,
+              grupoMuscular: exercicio.grupoMuscular,
+              observacao: exercicio.observacao,
+              ordem: index + 1,
+            })),
+          }
+        : {}),
+    }),
+  });
+
+  const template = await handleResponse<TreinoTemplateApi>(res);
+  return mapTemplate(template);
+}
+
+export async function deletarTemplate(id: string): Promise<void> {
+  const res = await fetch(`/api/professor/templates/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+  await handleResponse<{ sucesso: boolean }>(res);
+}
+
 export async function atribuirTemplatePAraAluno(
   templateId: string,
   alunoId: string,

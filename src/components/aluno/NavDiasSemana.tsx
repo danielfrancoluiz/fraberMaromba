@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+
 const colors = {
   primary: "#2E7FD9",
   surface: "#132035",
@@ -32,14 +34,25 @@ export function NavDiasSemana({
   diaSelecionado,
   onChange,
 }: NavDiasSemanaProps) {
+  const navRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    const botao = nav.querySelector<HTMLElement>(`[data-dia="${diaSelecionado}"]`);
+    botao?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  }, [diaSelecionado]);
+
   return (
-    <nav className="nav-dias-semana" aria-label="Dias da semana">
+    <nav ref={navRef} className="nav-dias-semana" aria-label="Dias da semana">
       {dias.map((dia) => {
         const selecionado = dia === diaSelecionado;
         return (
           <button
             key={dia}
             type="button"
+            data-dia={dia}
             onClick={() => onChange(dia)}
             style={{
               flexShrink: 0,

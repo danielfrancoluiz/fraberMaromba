@@ -4,7 +4,6 @@ import {
   atribuirTemplatePAraAluno,
   listarTemplates,
 } from "@/services/professorService";
-import { professorAtivo } from "@/mocks/professorMock";
 
 interface UseAtribuirTemplateReturn {
   templates: TreinoTemplate[];
@@ -20,6 +19,7 @@ interface UseAtribuirTemplateReturn {
 
 export function useAtribuirTemplate(
   alunoId: string,
+  professorId: string,
   onSucesso: () => void
 ): UseAtribuirTemplateReturn {
   const [templates, setTemplates] = useState<TreinoTemplate[]>([]);
@@ -31,6 +31,11 @@ export function useAtribuirTemplate(
   const [feedbackErro, setFeedbackErro] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!professorId) {
+      setLoadingTemplates(false);
+      return;
+    }
+
     let ativo = true;
 
     const carregarTemplates = async (): Promise<void> => {
@@ -38,7 +43,7 @@ export function useAtribuirTemplate(
       setFeedbackErro(null);
 
       try {
-        const lista = await listarTemplates(professorAtivo.id);
+        const lista = await listarTemplates(professorId);
         if (ativo) setTemplates(lista);
       } catch (error) {
         if (!ativo) return;
@@ -57,7 +62,7 @@ export function useAtribuirTemplate(
     return () => {
       ativo = false;
     };
-  }, []);
+  }, [professorId]);
 
   const handleAtribuir = async (): Promise<void> => {
     if (!templateSelecionado) {
@@ -77,7 +82,7 @@ export function useAtribuirTemplate(
       await atribuirTemplatePAraAluno(
         templateSelecionado.id,
         alunoId,
-        professorAtivo.id,
+        professorId,
         diaSemana
       );
       onSucesso();

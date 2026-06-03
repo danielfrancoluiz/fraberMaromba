@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { UserCheck } from "lucide-react";
 import { useCadastro } from "@/hooks/useCadastro";
+import { Logo } from "@/components/Logo";
 
 const colors = {
   background: "#0D1B2E",
@@ -53,23 +54,22 @@ function CadastroContent() {
 
   return (
     <main
-      className="cadastro-page"
+      className="cadastro-page page-main"
       style={{
-        backgroundColor: colors.background,
-        minHeight: "100vh",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontFamily: "Inter, sans-serif",
       }}
     >
-      <div className="cadastro-card">
+      <div className="cadastro-card card" style={{ width: "100%" }}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
+          <Logo size={88} />
+        </div>
         <h1
           style={{
             margin: "0 0 24px",
-            color: colors.textPrimary,
             fontWeight: 700,
-            fontSize: "1.5rem",
+            fontSize: "1.35rem",
             textAlign: "center",
           }}
         >

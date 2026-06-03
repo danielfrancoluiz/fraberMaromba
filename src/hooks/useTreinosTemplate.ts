@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { TreinoTemplate } from "@/types";
 import { listarTemplates } from "@/services/professorService";
-import { professorAtivo } from "@/mocks/professorMock";
 
 interface UseTreinosTemplateReturn {
   templates: TreinoTemplate[];
@@ -11,6 +11,7 @@ interface UseTreinosTemplateReturn {
 }
 
 export function useTreinosTemplate(): UseTreinosTemplateReturn {
+  const { data: session, status } = useSession();
   const [templates, setTemplates] = useState<TreinoTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -21,6 +22,14 @@ export function useTreinosTemplate(): UseTreinosTemplateReturn {
   }, []);
 
   useEffect(() => {
+    if (status === "loading") return;
+
+    const professorId = session?.user?.id;
+    if (!professorId) {
+      setLoading(false);
+      return;
+    }
+
     let ativo = true;
 
     const carregarTemplates = async (): Promise<void> => {
@@ -28,7 +37,7 @@ export function useTreinosTemplate(): UseTreinosTemplateReturn {
       setErro(null);
 
       try {
-        const lista = await listarTemplates(professorAtivo.id);
+        const lista = await listarTemplates(professorId);
         if (!ativo) return;
         setTemplates(lista);
       } catch (error) {
@@ -46,7 +55,7 @@ export function useTreinosTemplate(): UseTreinosTemplateReturn {
     return () => {
       ativo = false;
     };
-  }, [reloadKey]);
+  }, [reloadKey, status, session?.user?.id]);
 
   return { templates, loading, erro, recarregar };
 }

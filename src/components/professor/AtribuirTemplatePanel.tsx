@@ -2,6 +2,7 @@
 
 import { ClipboardList } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useAtribuirTemplate } from "@/hooks/useAtribuirTemplate";
 import { TreinoTemplate } from "@/types";
 
@@ -27,6 +28,8 @@ export function AtribuirTemplatePanel({
   onSucesso,
 }: AtribuirTemplatePanelProps) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const professorId = session?.user?.id ?? "";
   const {
     templates,
     loadingTemplates,
@@ -37,7 +40,7 @@ export function AtribuirTemplatePanel({
     loadingSubmit,
     feedbackErro,
     handleAtribuir,
-  } = useAtribuirTemplate(alunoId, onSucesso);
+  } = useAtribuirTemplate(alunoId, professorId, onSucesso);
 
   const renderTemplateItem = (template: TreinoTemplate) => {
     const selecionado = templateSelecionado?.id === template.id;
