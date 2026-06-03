@@ -1,31 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { hashSenha, verificarSenha } from "@/lib/senha";
+import { carregarDadosSessaoPorEmail, type DadosSessaoUsuario } from "@/lib/sessao-usuario";
 
-export type UsuarioAutenticado = {
-  id: string;
-  nome: string;
-  email: string;
-  role: "professor" | "aluno";
-  status: "ativo_professor" | "ativo_plataforma" | "inativo";
-  professorId?: string;
-};
+export type UsuarioAutenticado = DadosSessaoUsuario;
 
 function isBcryptHash(valor: string): boolean {
   return /^\$2[aby]\$\d{2}\$/.test(valor);
-}
-
-function isRole(value: string): value is "professor" | "aluno" {
-  return value === "professor" || value === "aluno";
-}
-
-function isStatus(
-  value: string
-): value is "ativo_professor" | "ativo_plataforma" | "inativo" {
-  return (
-    value === "ativo_professor" ||
-    value === "ativo_plataforma" ||
-    value === "inativo"
-  );
 }
 
 async function senhaConfere(
@@ -69,31 +49,5 @@ export async function autenticarUsuario(
     });
   }
 
-  const role = usuario.role.trim().toLowerCase();
-  const status = usuario.status.trim().toLowerCase();
-
-  if (!isRole(role) || !isStatus(status)) {
-    console.warn("[auth] role/status inválido:", emailNormalizado, role, status);
-    return null;
-  }
-
-  let professorId: string | undefined;
-
-  if (role === "aluno") {
-    const aluno = await prisma.aluno.findFirst({
-      where: {
-        OR: [{ usuarioId: usuario.id }, { id: usuario.id }],
-      },
-    });
-    professorId = aluno?.professorId;
-  }
-
-  return {
-    id: usuario.id,
-    nome: usuario.nome,
-    email: usuario.email,
-    role,
-    status,
-    professorId,
-  };
+  return carregarDadosSessaoPorEmail(usuario.email);
 }

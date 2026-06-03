@@ -11,24 +11,51 @@ export function usePagamento({ alunoId, planoId }: UsePagamentoProps) {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
-  const PAYMENT_LINKS: Record<string, string> = {
-    mensal: process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_MENSAL ?? "",
-    semestral: process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_MENSAL ?? "",
-    anual: process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_MENSAL ?? "",
-    avulso: process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_MENSAL ?? "",
-  };
-
   async function iniciarPagamento() {
+    if (!alunoId) {
+      setErro("Aluno não identificado.");
+      return;
+    }
+
     setLoading(true);
     setErro(null);
+
     try {
-      const link = PAYMENT_LINKS[planoId];
-      if (!link) {
-        setErro("Link de pagamento não configurado para este plano.");
+      const res = await fetch("/api/pagamentos/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ alunoId, planoId }),
+      });
+
+      const body: unknown = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        const msg =
+          typeof body === "object" &&
+          body !== null &&
+          "error" in body &&
+          typeof (body as { error: string }).error === "string"
+            ? (body as { error: string }).error
+            : "Erro ao iniciar pagamento";
+        setErro(msg);
         return;
       }
-      const paymentUrl = `${link}?client_reference_id=${alunoId}&return_url=${encodeURIComponent(window.location.origin + "/pagamento/sucesso")}`;
-      window.open(paymentUrl, "_blank");
+
+      const url =
+        typeof body === "object" &&
+        body !== null &&
+        "url" in body &&
+        typeof (body as { url: string }).url === "string"
+          ? (body as { url: string }).url
+          : null;
+
+      if (!url) {
+        setErro("Resposta de pagamento inválida.");
+        return;
+      }
+
+      window.location.href = url;
     } catch {
       setErro("Erro ao redirecionar para o pagamento.");
     } finally {

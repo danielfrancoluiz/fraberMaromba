@@ -2,6 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 import bcrypt from "bcryptjs";
+import { EXERCICIOS_CATALOGO_SEED } from "./data/exercicios-catalogo";
 
 const pool = new Pool({
   connectionString:
@@ -21,9 +22,26 @@ async function main() {
   await prisma.treino.deleteMany();
   await prisma.exercicioTemplate.deleteMany();
   await prisma.treinoTemplate.deleteMany();
+  await prisma.exercicioCatalogo.deleteMany();
   await prisma.convite.deleteMany();
   await prisma.aluno.deleteMany();
   await prisma.usuario.deleteMany();
+
+  console.log("Populando catálogo de exercícios...");
+  await prisma.exercicioCatalogo.createMany({
+    data: EXERCICIOS_CATALOGO_SEED.map((item) => ({
+      nome: item.nome,
+      slug: item.slug,
+      grupoMuscular: item.grupoMuscular,
+      equipamento: item.equipamento ?? null,
+      dificuldade: item.dificuldade ?? null,
+      descricao: item.descricao ?? null,
+      gifUrl: item.gifUrl,
+      imagemUrl: item.imagemUrl,
+      ativo: true,
+    })),
+    skipDuplicates: true,
+  });
 
   const senhaProfessor = await bcrypt.hash("123456", 12);
   const senhaAluno = await bcrypt.hash("123456", 12);

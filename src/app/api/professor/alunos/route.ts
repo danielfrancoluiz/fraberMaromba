@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireProfessorSession } from "@/lib/get-api-session";
 import { prisma } from "@/lib/prisma";
+import { mensagemErroBanco } from "@/lib/erro-banco";
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,9 +17,11 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(alunos);
   } catch (error) {
-    const mensagem =
-      error instanceof Error ? error.message : "Erro ao listar alunos";
-    return NextResponse.json({ error: mensagem }, { status: 500 });
+    console.error("[GET /api/professor/alunos]", error);
+    return NextResponse.json(
+      { error: mensagemErroBanco(error) },
+      { status: 500 }
+    );
   }
 }
 

@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { autenticarUsuario } from "@/lib/autenticar-usuario";
+import { carregarDadosSessaoPorEmail } from "@/lib/sessao-usuario";
 import { applyNextAuthEnv, getNextAuthSecret } from "@/lib/nextauth-config";
 
 applyNextAuthEnv();
@@ -39,6 +40,8 @@ export const authOptions: NextAuthOptions = {
             role: usuario.role,
             status: usuario.status,
             professorId: usuario.professorId,
+            alunoId: usuario.alunoId,
+            planoId: usuario.planoId,
           };
         } catch (error) {
           console.error("[auth] falha ao consultar banco:", error);
@@ -59,21 +62,40 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
-        token.id = user.id;
-        token.role = user.role;
-        token.status = user.status;
-        token.professorId = user.professorId;
+        if (account?.provider === "google" && user.email) {
+          const dados = await carregarDadosSessaoPorEmail(user.email);
+          if (dados) {
+            token.id = dados.id;
+            token.role = dados.role;
+            token.status = dados.status;
+            token.professorId = dados.professorId;
+            token.alunoId = dados.alunoId;
+            token.planoId = dados.planoId;
+          }
+        } else {
+          token.id = user.id;
+          token.role = user.role;
+          token.status = user.status;
+          token.professorId = user.professorId;
+          token.alunoId = user.alunoId;
+          token.planoId = user.planoId;
+        }
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-        session.user.status = token.status;
-        session.user.professorId = token.professorId;
+        session.user.id = token.id as string;
+        session.user.role = token.role as "professor" | "aluno";
+        session.user.status = token.status as
+          | "ativo_professor"
+          | "ativo_plataforma"
+          | "inativo";
+        session.user.professorId = token.professorId as string | undefined;
+        session.user.alunoId = token.alunoId as string | undefined;
+        session.user.planoId = token.planoId as string | undefined;
       }
       return session;
     },

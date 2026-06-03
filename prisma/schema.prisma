@@ -45,6 +45,7 @@ model Aluno {
   professor    Usuario  @relation("ProfessorAlunos", fields: [professorId], references: [id])
   usuario      Usuario? @relation("UsuarioAluno", fields: [usuarioId], references: [id])
   treinos      Treino[] @relation("AlunoTreinos")
+  sessoes      TreinoSessao[] @relation("AlunoSessoes")
   pagamentos   Pagamento[]
   checkins     Checkin[]
   medicoes     MedicaoFisica[]
@@ -55,25 +56,49 @@ model Treino {
   alunoId     String
   professorId String
   nome        String
+  descricao   String?
+  objetivo    String?
   diaSemana   String
   dataCriacao DateTime @default(now())
 
   aluno       Aluno    @relation("AlunoTreinos", fields: [alunoId], references: [id])
   professor   Usuario  @relation("ProfessorTreinos", fields: [professorId], references: [id])
   exercicios  Exercicio[]
+  sessoes     TreinoSessao[] @relation("TreinoSessoes")
+}
+
+model ExercicioCatalogo {
+  id             String   @id @default(uuid())
+  nome           String
+  slug           String   @unique
+  grupoMuscular  String
+  equipamento    String?
+  dificuldade    String?
+  descricao      String?
+  gifUrl         String?
+  imagemUrl      String?
+  ativo          Boolean  @default(true)
+  criadoEm       DateTime @default(now())
+
+  exerciciosTreino     Exercicio[]
+  exerciciosTemplate   ExercicioTemplate[]
 }
 
 model Exercicio {
-  id             String  @id @default(uuid())
-  treinoId       String
-  nome           String
-  series         Int
-  repeticoes     Int
-  grupoMuscular  String?
-  observacao     String?
-  ordem          Int     @default(0)
+  id                  String  @id @default(uuid())
+  treinoId            String
+  exercicioCatalogoId String?
+  nome                String
+  series              Int
+  repeticoes          Int
+  grupoMuscular       String?
+  observacao          String?
+  restSeconds         Int     @default(60)
+  ordem               Int     @default(0)
 
-  treino         Treino  @relation(fields: [treinoId], references: [id], onDelete: Cascade)
+  treino    Treino             @relation(fields: [treinoId], references: [id], onDelete: Cascade)
+  catalogo  ExercicioCatalogo? @relation(fields: [exercicioCatalogoId], references: [id], onDelete: SetNull)
+  seriesSessao TreinoSessaoSerie[] @relation("ExercicioSeriesSessao")
 }
 
 model TreinoTemplate {
@@ -88,16 +113,47 @@ model TreinoTemplate {
 }
 
 model ExercicioTemplate {
-  id             String  @id @default(uuid())
-  templateId     String
-  nome           String
-  series         Int
-  repeticoes     Int
-  grupoMuscular  String?
-  observacao     String?
-  ordem          Int     @default(0)
+  id                  String  @id @default(uuid())
+  templateId          String
+  exercicioCatalogoId String?
+  nome                String
+  series              Int
+  repeticoes          Int
+  grupoMuscular       String?
+  observacao          String?
+  restSeconds         Int     @default(60)
+  ordem               Int     @default(0)
 
-  template       TreinoTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  template  TreinoTemplate      @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  catalogo  ExercicioCatalogo?  @relation(fields: [exercicioCatalogoId], references: [id], onDelete: SetNull)
+}
+
+model TreinoSessao {
+  id              String    @id @default(uuid())
+  treinoId        String
+  alunoId         String
+  iniciadoEm      DateTime  @default(now())
+  finalizadoEm    DateTime?
+  duracaoSegundos Int?
+  status          String    @default("em_andamento")
+
+  treino  Treino              @relation("TreinoSessoes", fields: [treinoId], references: [id], onDelete: Cascade)
+  aluno   Aluno               @relation("AlunoSessoes", fields: [alunoId], references: [id], onDelete: Cascade)
+  series  TreinoSessaoSerie[]
+}
+
+model TreinoSessaoSerie {
+  id                     String  @id @default(uuid())
+  sessaoId               String
+  exercicioId            String
+  numeroSerie            Int
+  concluida              Boolean @default(false)
+  substitutoCatalogoId   String?
+
+  sessao    TreinoSessao @relation(fields: [sessaoId], references: [id], onDelete: Cascade)
+  exercicio Exercicio    @relation("ExercicioSeriesSessao", fields: [exercicioId], references: [id], onDelete: Cascade)
+
+  @@unique([sessaoId, exercicioId, numeroSerie])
 }
 
 model Convite {

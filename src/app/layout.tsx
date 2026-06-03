@@ -11,6 +11,25 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Fraber CrossFit",
   description: "Plataforma de gestão Fraber CrossFit",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Fraber",
+  },
+  icons: {
+    icon: [{ url: "/logo.jpeg", type: "image/jpeg" }],
+    apple: [{ url: "/logo.jpeg", type: "image/jpeg" }],
+  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#050f1a",
 };
 
 export default function RootLayout({

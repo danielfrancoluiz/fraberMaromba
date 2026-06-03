@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { ModalPortal } from "@/components/ModalPortal";
 import { Treino, TreinoTemplate, Aluno } from "@/types";
 import { listarAlunos, atribuirTemplatePAraAluno } from "@/services/professorService";
 
@@ -86,19 +87,12 @@ export function AtribuirTemplateModal({
   }
 
   return (
+    <ModalPortal>
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="atribuir-template-titulo"
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 100,
-        background: "rgba(5, 15, 26, 0.75)",
-        display: "grid",
-        placeItems: "center",
-        padding: "1rem",
-      }}
+      className="modal-overlay"
       onClick={onFechar}
     >
       <div
@@ -190,5 +184,6 @@ export function AtribuirTemplateModal({
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }

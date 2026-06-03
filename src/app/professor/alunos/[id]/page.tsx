@@ -9,12 +9,16 @@ import { AlunoDetalhesHeader } from "@/components/professor/AlunoDetalhesHeader"
 import { AlunoInfoCard } from "@/components/professor/AlunoInfoCard";
 import { EditarAlunoForm } from "@/components/professor/EditarAlunoForm";
 import { TreinoCard } from "@/components/professor/TreinoCard";
-import { CriarTreinoForm } from "@/components/professor/CriarTreinoForm";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { deletarTreino } from "@/services/professorService";
+import { Treino } from "@/types";
 import { AtribuirTemplatePanel } from "@/components/professor/AtribuirTemplatePanel";
 import { MedicaoForm } from "@/components/professor/MedicaoForm";
 import { GraficoEvolucao } from "@/components/professor/GraficoEvolucao";
 import { HistoricoCheckins } from "@/components/professor/HistoricoCheckins";
 import { PagamentoCard } from "@/components/professor/PagamentoCard";
+import { buscarEstatisticasSessaoAlunoProfessor } from "@/services/sessaoService";
+import { EstatisticasSessaoProfessor } from "@/types";
 
 const planosPadrao = [
   { id: "mensal", nome: "Mensal" },
@@ -57,9 +61,13 @@ export default function Page() {
   const { aluno, treinos, loading, erro, recarregar } = useAlunoDetalhes(id);
 
   const [showEditarForm, setShowEditarForm] = useState(false);
-  const [showCriarTreino, setShowCriarTreino] = useState(false);
   const [showAtribuirTemplate, setShowAtribuirTemplate] = useState(false);
+  const [treinoExcluir, setTreinoExcluir] = useState<Treino | null>(null);
+  const [excluindoTreino, setExcluindoTreino] = useState(false);
   const [medicoes, setMedicoes] = useState<MedicaoFisica[]>([]);
+  const [statsSessoes, setStatsSessoes] = useState<EstatisticasSessaoProfessor | null>(
+    null
+  );
 
   const carregarMedicoes = useCallback(async (): Promise<void> => {
     if (!id) return;
@@ -82,6 +90,21 @@ export default function Page() {
   useEffect(() => {
     void carregarMedicoes();
   }, [carregarMedicoes]);
+
+  useEffect(() => {
+    if (!id) return;
+    let ativo = true;
+    void buscarEstatisticasSessaoAlunoProfessor(id)
+      .then((d) => {
+        if (ativo) setStatsSessoes(d);
+      })
+      .catch(() => {
+        if (ativo) setStatsSessoes(null);
+      });
+    return () => {
+      ativo = false;
+    };
+  }, [id]);
 
   if (loading) {
     return (
@@ -162,7 +185,6 @@ export default function Page() {
           onVoltar={() => router.push("/professor/dashboard")}
           onEditar={() => {
             setShowEditarForm(true);
-            setShowCriarTreino(false);
             setShowAtribuirTemplate(false);
           }}
         />
@@ -179,6 +201,33 @@ export default function Page() {
         ) : (
           <AlunoInfoCard aluno={aluno} nomePlano={nomePlano} />
         )}
+
+        <section
+          className="card"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "12px",
+            padding: "14px",
+          }}
+        >
+          <div>
+            <p className="text-muted" style={{ margin: 0, fontSize: "0.8rem" }}>
+              Treinos concluídos
+            </p>
+            <strong style={{ fontSize: "1.5rem", color: "var(--fraber-primary)" }}>
+              {statsSessoes?.treinosConcluidos ?? 0}
+            </strong>
+          </div>
+          <div>
+            <p className="text-muted" style={{ margin: 0, fontSize: "0.8rem" }}>
+              Minutos treinados
+            </p>
+            <strong style={{ fontSize: "1.5rem", color: "var(--fraber-primary)" }}>
+              {statsSessoes?.minutosTotais ?? 0} min
+            </strong>
+          </div>
+        </section>
 
         <section
           style={{
@@ -217,7 +266,6 @@ export default function Page() {
                 type="button"
                 onClick={() => {
                   setShowAtribuirTemplate(true);
-                  setShowCriarTreino(false);
                   setShowEditarForm(false);
                 }}
                 style={{
@@ -240,11 +288,9 @@ export default function Page() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setShowCriarTreino(true);
-                  setShowAtribuirTemplate(false);
-                  setShowEditarForm(false);
-                }}
+                onClick={() =>
+                  router.push(`/professor/treinos/montar?alunoId=${encodeURIComponent(aluno.id)}`)
+                }
                 style={{
                   minHeight: "40px",
                   border: "1px solid #1E3050",
@@ -261,7 +307,7 @@ export default function Page() {
                 }}
               >
                 <Plus size={16} />
-                Criar Personalizado
+                Montar treino
               </button>
             </div>
           </div>
@@ -277,17 +323,6 @@ export default function Page() {
             />
           ) : null}
 
-          {showCriarTreino ? (
-            <CriarTreinoForm
-              alunoId={aluno.id}
-              onCancelar={() => setShowCriarTreino(false)}
-              onSucesso={() => {
-                setShowCriarTreino(false);
-                recarregar();
-              }}
-            />
-          ) : null}
-
           {treinos.length === 0 ? (
             <p style={{ margin: 0, color: "#7A9CC4" }}>
               Nenhum treino cadastrado ainda.
@@ -295,7 +330,14 @@ export default function Page() {
           ) : (
             <div style={{ display: "grid", gap: "10px" }}>
               {treinos.map((treino) => (
-                <TreinoCard key={treino.id} treino={treino} />
+                <TreinoCard
+                  key={treino.id}
+                  treino={treino}
+                  onEditar={(t) =>
+                    router.push(`/professor/treinos/montar/${t.id}`)
+                  }
+                  onExcluir={setTreinoExcluir}
+                />
               ))}
             </div>
           )}
@@ -330,19 +372,38 @@ export default function Page() {
           <HistoricoCheckins alunoId={aluno.id} />
         </section>
 
-        <section
-          style={{
-            backgroundColor: "#132035",
-            border: "1px solid #1E3050",
-            borderRadius: "12px",
-            padding: "14px",
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
+        <section className="card" style={{ padding: "14px" }}>
           <SecaoTitulo>Pagamento</SecaoTitulo>
           <PagamentoCard alunoId={aluno.id} planoAtual={aluno.planoId} />
         </section>
       </div>
+
+      <ConfirmDialog
+        open={!!treinoExcluir}
+        titulo="Excluir treino?"
+        mensagem={
+          treinoExcluir
+            ? `Excluir o treino "${treinoExcluir.nome}"? Esta ação não pode ser desfeita.`
+            : ""
+        }
+        confirmarLabel="Excluir"
+        cancelarLabel="Cancelar"
+        loading={excluindoTreino}
+        onConfirmar={async () => {
+          if (!treinoExcluir) return;
+          setExcluindoTreino(true);
+          try {
+            await deletarTreino(treinoExcluir.id);
+            setTreinoExcluir(null);
+            recarregar();
+          } catch (error) {
+            alert(error instanceof Error ? error.message : "Erro ao excluir treino");
+          } finally {
+            setExcluindoTreino(false);
+          }
+        }}
+        onCancelar={() => !excluindoTreino && setTreinoExcluir(null)}
+      />
     </main>
   );
 }

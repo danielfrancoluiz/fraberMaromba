@@ -21,7 +21,8 @@ export default withAuth(
       // Aluno inativo: bloqueia acesso a treinos
       if (
         pathname.startsWith("/aluno/treino") ||
-        pathname.startsWith("/aluno/dashboard")
+        pathname.startsWith("/aluno/dashboard") ||
+        pathname.startsWith("/aluno/treinos")
       ) {
         if (
           token?.status !== "ativo_professor" &&

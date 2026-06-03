@@ -1,7 +1,8 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
 import { useCriarTreino } from "@/hooks/useCriarTreino";
+import { ExercicioFormCard } from "@/components/professor/ExercicioFormCard";
+import { ExercisePickerModal } from "@/components/professor/ExercisePickerModal";
 
 interface CriarTreinoFormProps {
   alunoId: string;
@@ -29,9 +30,12 @@ export function CriarTreinoForm({
     errors,
     loadingSubmit,
     feedbackErro,
+    pickerAberto,
+    setPickerAberto,
     handleChange,
-    adicionarExercicio,
+    adicionarDoCatalogo,
     removerExercicio,
+    substituirCatalogo,
     handleExercicioChange,
     handleSubmit,
   } = useCriarTreino(alunoId, onSucesso);
@@ -95,7 +99,7 @@ export function CriarTreinoForm({
               <h3 style={{ margin: 0, fontSize: "1rem" }}>Exercícios</h3>
               <button
                 type="button"
-                onClick={adicionarExercicio}
+                onClick={() => setPickerAberto(true)}
                 className="botao-adicionar"
               >
                 + Adicionar Exercício
@@ -103,105 +107,26 @@ export function CriarTreinoForm({
             </div>
           </div>
 
-          {errors.exercicios && errors.exercicios[0]?.nome === "Adicione pelo menos um exercício" ? (
+          {errors.exercicios &&
+          errors.exercicios[0]?.nome === "Adicione pelo menos um exercício" ? (
             <p className="span-2 erro-campo" style={{ marginTop: "-4px" }}>
               Adicione pelo menos um exercício
             </p>
           ) : null}
 
           {form.exercicios.map((exercicio, index) => (
-            <div key={exercicio.id} className="span-2 exercicio-card">
-              <div className="exercicio-grid">
-                <div className="span-2">
-                  <div className="titulo-exercicio">
-                    <label className="label-campo" style={{ marginBottom: 0 }}>
-                      Nome do Exercício
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => removerExercicio(exercicio.id)}
-                      className="botao-remover"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                  <input
-                    value={exercicio.nome}
-                    onChange={(e) =>
-                      handleExercicioChange(exercicio.id, "nome", e.target.value)
-                    }
-                    style={inputStyle}
-                  />
-                  {errors.exercicios?.[index]?.nome ? (
-                    <p className="erro-campo">{errors.exercicios[index]?.nome}</p>
-                  ) : null}
-                </div>
-
-                <div className="span-2">
-                  <label className="label-campo">Grupo Muscular (opcional)</label>
-                  <select
-                    value={exercicio.grupoMuscular}
-                    onChange={(e) =>
-                      handleExercicioChange(
-                        exercicio.id,
-                        "grupoMuscular",
-                        e.target.value
-                      )
-                    }
-                    style={inputStyle}
-                  >
-                    <option value="">Selecione</option>
-                    <option value="Peito">Peito</option>
-                    <option value="Costas">Costas</option>
-                    <option value="Pernas">Pernas</option>
-                    <option value="Ombros">Ombros</option>
-                    <option value="Bíceps">Bíceps</option>
-                    <option value="Tríceps">Tríceps</option>
-                    <option value="Abdômen">Abdômen</option>
-                    <option value="Outros">Outros</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="label-campo">Séries</label>
-                  <input
-                    value={exercicio.series}
-                    onChange={(e) =>
-                      handleExercicioChange(exercicio.id, "series", e.target.value)
-                    }
-                    style={inputStyle}
-                  />
-                  {errors.exercicios?.[index]?.series ? (
-                    <p className="erro-campo">{errors.exercicios[index]?.series}</p>
-                  ) : null}
-                </div>
-
-                <div>
-                  <label className="label-campo">Repetições</label>
-                  <input
-                    value={exercicio.repeticoes}
-                    onChange={(e) =>
-                      handleExercicioChange(exercicio.id, "repeticoes", e.target.value)
-                    }
-                    style={inputStyle}
-                  />
-                  {errors.exercicios?.[index]?.repeticoes ? (
-                    <p className="erro-campo">{errors.exercicios[index]?.repeticoes}</p>
-                  ) : null}
-                </div>
-
-                <div className="span-2">
-                  <label className="label-campo">Observação (opcional)</label>
-                  <textarea
-                    rows={3}
-                    value={exercicio.observacao}
-                    onChange={(e) =>
-                      handleExercicioChange(exercicio.id, "observacao", e.target.value)
-                    }
-                    style={{ ...inputStyle, minHeight: "96px", resize: "vertical" }}
-                  />
-                </div>
-              </div>
+            <div key={exercicio.id} className="span-2">
+              <ExercicioFormCard
+                exercicio={exercicio}
+                index={index}
+                inputStyle={inputStyle}
+                errors={errors.exercicios?.[index]}
+                onRemover={() => removerExercicio(exercicio.id)}
+                onChange={(campo, valor) =>
+                  handleExercicioChange(exercicio.id, campo, valor)
+                }
+                onSubstituirCatalogo={substituirCatalogo}
+              />
             </div>
           ))}
 
@@ -221,6 +146,15 @@ export function CriarTreinoForm({
           </div>
         </form>
       </div>
+
+      <ExercisePickerModal
+        open={pickerAberto}
+        onFechar={() => setPickerAberto(false)}
+        onSelecionar={(item) => {
+          adicionarDoCatalogo(item);
+          setPickerAberto(false);
+        }}
+      />
 
       <style jsx global>{`
         .criar-treino-section {
@@ -261,34 +195,6 @@ export function CriarTreinoForm({
           color: ${colors.textPrimary};
           padding: 8px 12px;
           font-weight: 600;
-          cursor: pointer;
-        }
-        .exercicio-card {
-          background: ${colors.surface};
-          border: 1px solid ${colors.border};
-          border-radius: 12px;
-          padding: 12px;
-        }
-        .exercicio-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 12px;
-        }
-        .titulo-exercicio {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 6px;
-        }
-        .botao-remover {
-          min-height: 36px;
-          min-width: 36px;
-          border: 1px solid ${colors.secondary};
-          border-radius: 8px;
-          color: ${colors.secondary};
-          background: transparent;
-          display: grid;
-          place-items: center;
           cursor: pointer;
         }
         .acoes {
@@ -335,10 +241,6 @@ export function CriarTreinoForm({
             grid-template-columns: repeat(2, minmax(0, 1fr));
             column-gap: 1rem;
             row-gap: 14px;
-          }
-          .exercicio-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
           }
           .span-2 {
             grid-column: span 2;

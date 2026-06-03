@@ -1,15 +1,19 @@
 "use client";
 
-import { Dumbbell } from "lucide-react";
+import { Dumbbell, Pencil, Trash2 } from "lucide-react";
 import { Treino } from "@/types";
+import { labelObjetivoTreino } from "@/lib/treino-objetivos";
 
 interface TreinoCardProps {
   treino: Treino;
+  onEditar?: (treino: Treino) => void;
+  onExcluir?: (treino: Treino) => void;
 }
 
 const colors = {
   surface: "#132035",
   primary: "#2E7FD9",
+  secondary: "#E8001C",
   textPrimary: "#F0F4FF",
   textSecondary: "#7A9CC4",
   border: "#1E3050",
@@ -25,7 +29,9 @@ const diaLabel: Record<Treino["diaSemana"], string> = {
   domingo: "Domingo",
 };
 
-export function TreinoCard({ treino }: TreinoCardProps) {
+export function TreinoCard({ treino, onEditar, onExcluir }: TreinoCardProps) {
+  const objetivoLabel = labelObjetivoTreino(treino.objetivo);
+
   return (
     <article
       style={{
@@ -64,6 +70,50 @@ export function TreinoCard({ treino }: TreinoCardProps) {
           {diaLabel[treino.diaSemana]}
         </span>
       </header>
+
+      {objetivoLabel ? (
+        <p style={{ margin: "0 0 8px", color: colors.textSecondary, fontSize: "0.85rem" }}>
+          Meta: {objetivoLabel}
+        </p>
+      ) : null}
+
+      {treino.descricao ? (
+        <p style={{ margin: "0 0 10px", color: colors.textSecondary, fontSize: "0.85rem" }}>
+          {treino.descricao}
+        </p>
+      ) : null}
+
+      {(onEditar || onExcluir) && (
+        <div
+          style={{
+            display: "flex",
+            gap: "8px",
+            marginBottom: "12px",
+            flexWrap: "wrap",
+          }}
+        >
+          {onEditar ? (
+            <button
+              type="button"
+              className="chip chip--icon"
+              onClick={() => onEditar(treino)}
+              aria-label="Editar treino"
+            >
+              <Pencil size={16} />
+            </button>
+          ) : null}
+          {onExcluir ? (
+            <button
+              type="button"
+              className="chip chip--danger chip--icon"
+              onClick={() => onExcluir(treino)}
+              aria-label="Excluir treino"
+            >
+              <Trash2 size={16} />
+            </button>
+          ) : null}
+        </div>
+      )}
 
       <ul style={{ margin: 0, paddingLeft: "18px", display: "grid", gap: "8px" }}>
         {treino.exercicios.map((exercicio) => (

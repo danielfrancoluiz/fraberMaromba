@@ -59,6 +59,7 @@ export async function GET(req: NextRequest) {
       include: {
         exercicios: {
           orderBy: { ordem: "asc" },
+          include: { catalogo: true },
         },
       },
     });

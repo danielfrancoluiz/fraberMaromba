@@ -45,6 +45,19 @@ export interface FormErrors {
   planoId?: string;
 }
 
+export interface ExercicioCatalogo {
+  id: string;
+  nome: string;
+  slug: string;
+  grupoMuscular: string;
+  equipamento?: string | null;
+  dificuldade?: string | null;
+  descricao?: string | null;
+  gifUrl?: string | null;
+  imagemUrl?: string | null;
+  ativo: boolean;
+}
+
 export interface Exercicio {
   id: string;
   nome: string;
@@ -52,6 +65,17 @@ export interface Exercicio {
   repeticoes: number;
   observacao?: string;
   grupoMuscular?: string;
+  exercicioCatalogoId?: string;
+  imagemUrl?: string;
+  gifUrl?: string;
+  descricao?: string;
+  equipamento?: string;
+  dificuldade?: string;
+  restSeconds?: number;
+}
+
+export interface TreinoComAluno extends Treino {
+  alunoNome?: string;
 }
 
 export interface Treino {
@@ -59,6 +83,8 @@ export interface Treino {
   alunoId: string;
   professorId: string;
   nome: string;
+  descricao?: string;
+  objetivo?: string;
   diaSemana:
     | "segunda"
     | "terca"
@@ -73,6 +99,8 @@ export interface Treino {
 
 export interface TreinoForm {
   nome: string;
+  descricao: string;
+  objetivo: string;
   diaSemana: Treino["diaSemana"] | "";
   exercicios: ExercicioForm[];
 }
@@ -82,8 +110,11 @@ export interface ExercicioForm {
   nome: string;
   series: string;
   repeticoes: string;
+  restSeconds: string;
   observacao: string;
   grupoMuscular: string;
+  exercicioCatalogoId?: string;
+  imagemUrl?: string;
 }
 
 export interface TreinoFormErrors {
@@ -141,6 +172,7 @@ export interface AlunoMock {
   senha: string;
 }
 
+/** @deprecated Substituído por TreinoSessao no banco */
 export interface ProgressoTreino {
   treinoId: string;
   alunoId: string;
@@ -148,11 +180,72 @@ export interface ProgressoTreino {
   dataUltimaAtualizacao: string;
 }
 
+export type StatusSessaoTreino = "em_andamento" | "concluido" | "cancelado";
+
+export interface TreinoSessaoSerie {
+  id: string;
+  exercicioId: string;
+  numeroSerie: number;
+  concluida: boolean;
+  substitutoCatalogoId: string | null;
+}
+
+export interface CatalogoResumoSessao {
+  id: string;
+  nome: string;
+  grupoMuscular: string;
+  imagemUrl?: string | null;
+  gifUrl?: string | null;
+  descricao?: string | null;
+  equipamento?: string | null;
+  dificuldade?: string | null;
+}
+
+export interface TreinoSessao {
+  id: string;
+  treinoId: string;
+  alunoId: string;
+  iniciadoEm: string;
+  finalizadoEm: string | null;
+  duracaoSegundos: number | null;
+  status: StatusSessaoTreino;
+  treinoNome: string;
+  treinoDiaSemana: string;
+  series: TreinoSessaoSerie[];
+  catalogoPorId?: Record<string, CatalogoResumoSessao>;
+}
+
+export interface EstatisticasSessaoAluno {
+  treinosConcluidos: number;
+  minutosTotais: number;
+  planosAtivos: number;
+  planoId: string | null;
+  ultimasSessoes: Array<{
+    id: string;
+    treinoId: string;
+    treinoNome: string;
+    treinoDiaSemana: string;
+    finalizadoEm: string | null;
+    duracaoSegundos: number | null;
+  }>;
+}
+
+export interface EstatisticasSessaoProfessor {
+  treinosConcluidos: number;
+  minutosTotais: number;
+  sessoesEmAndamento?: number;
+}
+
 export interface ExercicioSubstituto {
   id: string;
   nome: string;
   grupoMuscular: string;
   descricao?: string;
+  equipamento?: string;
+  dificuldade?: string;
+  imagemUrl?: string;
+  gifUrl?: string;
+  slug?: string;
 }
 
 export interface Convite {

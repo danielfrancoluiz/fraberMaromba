@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireProfessorSession } from "@/lib/get-api-session";
 import { prisma } from "@/lib/prisma";
+import {
+  isExercicioInputPayload,
+  mapExercicioCreateInput,
+  type ExercicioInputPayload,
+} from "@/lib/exercicio-input";
+
+const exercicioInclude = {
+  orderBy: { ordem: "asc" as const },
+  include: { catalogo: true },
+};
 
 const ORDEM_DIAS = [
   "segunda",
@@ -27,9 +37,8 @@ export async function GET(req: NextRequest) {
         ...(alunoId ? { alunoId } : {}),
       },
       include: {
-        exercicios: {
-          orderBy: { ordem: "asc" },
-        },
+        exercicios: exercicioInclude,
+        aluno: { select: { id: true, nomeCompleto: true } },
       },
       orderBy: { dataCriacao: "desc" },
     });
@@ -51,35 +60,13 @@ export async function GET(req: NextRequest) {
   }
 }
 
-interface ExercicioInput {
-  nome: string;
-  series: number;
-  repeticoes: number;
-  grupoMuscular?: string;
-  observacao?: string;
-  ordem?: number;
-}
-
 interface CriarTreinoBody {
   alunoId: string;
   nome: string;
+  descricao?: string;
+  objetivo?: string;
   diaSemana: string;
-  exercicios: ExercicioInput[];
-}
-
-function isExercicioInput(value: unknown): value is ExercicioInput {
-  if (typeof value !== "object" || value === null) return false;
-
-  const dados = value as Record<string, unknown>;
-
-  return (
-    typeof dados.nome === "string" &&
-    typeof dados.series === "number" &&
-    typeof dados.repeticoes === "number" &&
-    (dados.grupoMuscular === undefined || typeof dados.grupoMuscular === "string") &&
-    (dados.observacao === undefined || typeof dados.observacao === "string") &&
-    (dados.ordem === undefined || typeof dados.ordem === "number")
-  );
+  exercicios: ExercicioInputPayload[];
 }
 
 function isCriarTreinoBody(value: unknown): value is CriarTreinoBody {
@@ -96,7 +83,7 @@ function isCriarTreinoBody(value: unknown): value is CriarTreinoBody {
     return false;
   }
 
-  return dados.exercicios.every(isExercicioInput);
+  return dados.exercicios.every(isExercicioInputPayload);
 }
 
 export async function POST(req: NextRequest) {
@@ -123,23 +110,16 @@ export async function POST(req: NextRequest) {
       data: {
         alunoId: body.alunoId,
         professorId: session.user.id,
-        nome: body.nome,
+        nome: body.nome.trim(),
+        descricao: body.descricao?.trim() || null,
+        objetivo: body.objetivo?.trim() || null,
         diaSemana: body.diaSemana,
         exercicios: {
-          create: body.exercicios.map((exercicio, index) => ({
-            nome: exercicio.nome,
-            series: exercicio.series,
-            repeticoes: exercicio.repeticoes,
-            grupoMuscular: exercicio.grupoMuscular,
-            observacao: exercicio.observacao,
-            ordem: exercicio.ordem ?? index + 1,
-          })),
+          create: body.exercicios.map(mapExercicioCreateInput),
         },
       },
       include: {
-        exercicios: {
-          orderBy: { ordem: "asc" },
-        },
+        exercicios: exercicioInclude,
       },
     });
 

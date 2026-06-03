@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { Aluno } from "@/types";
 import { listarAlunos } from "@/services/professorService";
+import { mensagemErroBanco } from "@/lib/erro-banco";
 
 interface UseProfessorDashboardReturn {
   alunos: Aluno[];
@@ -18,9 +19,16 @@ export function useProfessorDashboard(): UseProfessorDashboardReturn {
   const { data: session, status } = useSession();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [termoBusca, setTermoBusca] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [fetchingAlunos, setFetchingAlunos] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+
+  const sessionLoading = status === "loading";
+  const loading =
+    sessionLoading ||
+    (status === "authenticated" &&
+      session?.user?.role === "professor" &&
+      fetchingAlunos);
 
   const recarregar = useCallback(() => {
     setReloadKey((k) => k + 1);
@@ -31,11 +39,13 @@ export function useProfessorDashboard(): UseProfessorDashboardReturn {
 
     if (status !== "authenticated" || session?.user?.role !== "professor") {
       setAlunos([]);
-      setLoading(false);
+      setFetchingAlunos(false);
       setErro(
-        status === "authenticated"
-          ? "Acesso negado. Faça login como professor."
-          : null
+        status === "unauthenticated"
+          ? "Faça login como professor."
+          : status === "authenticated"
+            ? "Acesso negado. Faça login como professor."
+            : null
       );
       return;
     }
@@ -43,7 +53,7 @@ export function useProfessorDashboard(): UseProfessorDashboardReturn {
     let ativo = true;
 
     const carregarAlunos = async (): Promise<void> => {
-      setLoading(true);
+      setFetchingAlunos(true);
       setErro(null);
 
       try {
@@ -53,14 +63,12 @@ export function useProfessorDashboard(): UseProfessorDashboardReturn {
         }
       } catch (error) {
         if (ativo) {
-          const mensagem =
-            error instanceof Error ? error.message : "Erro ao carregar alunos";
-          setErro(mensagem);
+          setErro(mensagemErroBanco(error));
           setAlunos([]);
         }
       } finally {
         if (ativo) {
-          setLoading(false);
+          setFetchingAlunos(false);
         }
       }
     };
@@ -69,6 +77,7 @@ export function useProfessorDashboard(): UseProfessorDashboardReturn {
 
     return () => {
       ativo = false;
+      setFetchingAlunos(false);
     };
   }, [status, session?.user?.id, session?.user?.role, reloadKey]);
 

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Dumbbell, Pencil, Trash2 } from "lucide-react";
 import { TreinoTemplate } from "@/types";
 
@@ -8,7 +7,7 @@ interface TemplateCardProps {
   template: TreinoTemplate;
   onAtribuir: (t: TreinoTemplate) => void;
   onEditar: (t: TreinoTemplate) => void;
-  onExcluir: (t: TreinoTemplate) => void;
+  onSolicitarExclusao: (t: TreinoTemplate) => void;
 }
 
 function formatarData(dataIso: string): string {
@@ -21,33 +20,16 @@ export function TemplateCard({
   template,
   onAtribuir,
   onEditar,
-  onExcluir,
+  onSolicitarExclusao,
 }: TemplateCardProps) {
-  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
-
   return (
-    <article className="card" style={{ display: "grid", gap: "10px" }}>
-      <header
-        style={{
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          gap: "10px",
-        }}
-      >
-        <h3
-          style={{
-            margin: 0,
-            fontSize: "1rem",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
+    <article className="card template-card">
+      <header className="template-card-header">
+        <h3 className="template-card-title">
           <Dumbbell size={17} color="var(--fraber-primary)" />
-          {template.nome}
+          <span>{template.nome}</span>
         </h3>
-        <span className="text-muted" style={{ fontSize: "0.8rem", flexShrink: 0 }}>
+        <span className="text-muted template-card-date">
           {formatarData(template.dataCriacao)}
         </span>
       </header>
@@ -62,62 +44,38 @@ export function TemplateCard({
         {template.exercicios.length} exercício(s)
       </p>
 
-      <ul
-        style={{
-          margin: 0,
-          paddingLeft: "18px",
-          color: "var(--fraber-text-muted)",
-          fontSize: "0.88rem",
-          display: "grid",
-          gap: "4px",
-        }}
-      >
+      <ul className="template-card-exercicios">
         {template.exercicios.map((exercicio) => (
           <li key={exercicio.id}>{exercicio.nome}</li>
         ))}
       </ul>
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "4px" }}>
-        <button type="button" className="btn-primary" style={{ flex: 1, minWidth: "140px" }} onClick={() => onAtribuir(template)}>
-          Atribuir a Aluno
-        </button>
+      <div className="template-card-actions">
         <button
           type="button"
-          className="chip"
-          onClick={() => onEditar(template)}
-          style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
+          className="btn-primary template-card-btn-atribuir"
+          onClick={() => onAtribuir(template)}
         >
-          <Pencil size={14} />
-          Editar
+          Atribuir a Aluno
         </button>
-        {!confirmandoExclusao ? (
+        <div className="template-card-actions-row">
           <button
             type="button"
-            className="chip"
-            onClick={() => setConfirmandoExclusao(true)}
-            style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "var(--fraber-accent)" }}
+            className="chip template-card-chip"
+            onClick={() => onEditar(template)}
+          >
+            <Pencil size={14} />
+            Editar
+          </button>
+          <button
+            type="button"
+            className="chip template-card-chip template-card-chip--danger"
+            onClick={() => onSolicitarExclusao(template)}
           >
             <Trash2 size={14} />
             Excluir
           </button>
-        ) : (
-          <>
-            <button
-              type="button"
-              className="chip chip-active"
-              onClick={() => {
-                onExcluir(template);
-                setConfirmandoExclusao(false);
-              }}
-              style={{ color: "var(--fraber-accent)" }}
-            >
-              Confirmar
-            </button>
-            <button type="button" className="chip" onClick={() => setConfirmandoExclusao(false)}>
-              Cancelar
-            </button>
-          </>
-        )}
+        </div>
       </div>
     </article>
   );

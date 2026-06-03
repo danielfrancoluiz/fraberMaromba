@@ -1,16 +1,24 @@
 import { useState } from "react";
 import { ExercicioForm, TreinoForm, TreinoFormErrors } from "@/types";
 import { criarTreino } from "@/services/professorService";
-import { professorAtivo } from "@/mocks/professorMock";
+import {
+  exercicioFormFromCatalogo,
+  exercicioFormParaPayload,
+  exercicioFormValido,
+} from "@/lib/form-exercicio";
+import { ExercicioCatalogo } from "@/types";
 
 interface UseCriarTreinoReturn {
   form: TreinoForm;
   errors: TreinoFormErrors;
   loadingSubmit: boolean;
   feedbackErro: string | null;
+  pickerAberto: boolean;
+  setPickerAberto: (v: boolean) => void;
   handleChange: (campo: keyof Omit<TreinoForm, "exercicios">, valor: string) => void;
-  adicionarExercicio: () => void;
+  adicionarDoCatalogo: (item: ExercicioCatalogo) => void;
   removerExercicio: (id: string) => void;
+  substituirCatalogo: (id: string, exercicio: ExercicioForm) => void;
   handleExercicioChange: (
     id: string,
     campo: keyof ExercicioForm,
@@ -21,6 +29,8 @@ interface UseCriarTreinoReturn {
 
 const FORM_INICIAL: TreinoForm = {
   nome: "",
+  descricao: "",
+  objetivo: "",
   diaSemana: "",
   exercicios: [],
 };
@@ -44,8 +54,8 @@ function validarTreino(form: TreinoForm): TreinoFormErrors {
   const errosExercicios = form.exercicios.map((exercicio) => {
     const erro: { nome?: string; series?: string; repeticoes?: string } = {};
 
-    if (!exercicio.nome.trim()) {
-      erro.nome = "Campo obrigatório";
+    if (!exercicioFormValido(exercicio)) {
+      erro.nome = "Selecione um exercício do catálogo";
     }
 
     const series = Number.parseInt(exercicio.series, 10);
@@ -81,6 +91,7 @@ export function useCriarTreino(
   const [errors, setErrors] = useState<TreinoFormErrors>({});
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [feedbackErro, setFeedbackErro] = useState<string | null>(null);
+  const [pickerAberto, setPickerAberto] = useState(false);
 
   const handleChange = (
     campo: keyof Omit<TreinoForm, "exercicios">,
@@ -90,19 +101,10 @@ export function useCriarTreino(
     setErrors((prev) => ({ ...prev, [campo]: undefined }));
   };
 
-  const adicionarExercicio = (): void => {
-    const novoExercicio: ExercicioForm = {
-      id: crypto.randomUUID(),
-      nome: "",
-      series: "",
-      repeticoes: "",
-      observacao: "",
-      grupoMuscular: "",
-    };
-
+  const adicionarDoCatalogo = (item: ExercicioCatalogo): void => {
     setForm((prev) => ({
       ...prev,
-      exercicios: [...prev.exercicios, novoExercicio],
+      exercicios: [...prev.exercicios, exercicioFormFromCatalogo(item)],
     }));
     setErrors((prev) => ({ ...prev, exercicios: undefined }));
   };
@@ -111,6 +113,13 @@ export function useCriarTreino(
     setForm((prev) => ({
       ...prev,
       exercicios: prev.exercicios.filter((exercicio) => exercicio.id !== id),
+    }));
+  };
+
+  const substituirCatalogo = (id: string, exercicio: ExercicioForm): void => {
+    setForm((prev) => ({
+      ...prev,
+      exercicios: prev.exercicios.map((ex) => (ex.id === id ? exercicio : ex)),
     }));
   };
 
@@ -157,17 +166,21 @@ export function useCriarTreino(
     try {
       await criarTreino({
         alunoId,
-        professorId: professorAtivo.id,
+        professorId: "",
         nome: form.nome.trim(),
         diaSemana: form.diaSemana,
-        exercicios: form.exercicios.map((exercicio) => ({
-          id: exercicio.id,
-          nome: exercicio.nome.trim(),
-          series: Number.parseInt(exercicio.series, 10),
-          repeticoes: Number.parseInt(exercicio.repeticoes, 10),
-          observacao: exercicio.observacao.trim() || undefined,
-          grupoMuscular: exercicio.grupoMuscular.trim() || undefined,
-        })),
+        exercicios: form.exercicios.map((exercicio) => {
+          const payload = exercicioFormParaPayload(exercicio);
+          return {
+            id: exercicio.id,
+            nome: payload.nome,
+            series: payload.series,
+            repeticoes: payload.repeticoes,
+            observacao: payload.observacao,
+            grupoMuscular: payload.grupoMuscular,
+            exercicioCatalogoId: payload.exercicioCatalogoId,
+          };
+        }),
       });
 
       onSucesso();
@@ -187,9 +200,12 @@ export function useCriarTreino(
     errors,
     loadingSubmit,
     feedbackErro,
+    pickerAberto,
+    setPickerAberto,
     handleChange,
-    adicionarExercicio,
+    adicionarDoCatalogo,
     removerExercicio,
+    substituirCatalogo,
     handleExercicioChange,
     handleSubmit,
   };

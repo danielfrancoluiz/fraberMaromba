@@ -27,13 +27,16 @@ function stripSslQueryParams(connectionString: string): string {
     .replace(/\?&/, "?");
 }
 
-/** Transaction pooler (6543) exige pgbouncer=true para Prisma. */
+/**
+ * Só Transaction pooler (6543) usa pgbouncer=true.
+ * Session pooler (5432) não — senão o driver dá "timeout exceeded when trying to connect".
+ */
 function appendSupabasePoolerParams(connectionString: string): string {
-  const isPooler =
+  const isTransactionPooler =
     connectionString.includes("pooler.supabase.com") &&
-    (connectionString.includes(":6543") || connectionString.includes("pooler.supabase.com:5432"));
+    connectionString.includes(":6543");
 
-  if (!isPooler) return connectionString;
+  if (!isTransactionPooler) return connectionString;
 
   return appendQueryParam(connectionString, "pgbouncer", "true");
 }
@@ -59,9 +62,10 @@ function createPrismaClient(): PrismaClient {
 
   const pool = new Pool({
     connectionString,
-    max: isSupabase ? 1 : undefined,
+    max: isSupabase ? 5 : undefined,
+    idleTimeoutMillis: 20_000,
     ssl: isSupabase ? { rejectUnauthorized: false } : undefined,
-    connectionTimeoutMillis: 15_000,
+    connectionTimeoutMillis: 20_000,
   });
   const adapter = new PrismaPg(pool);
 
@@ -76,6 +80,14 @@ function getPrismaClient(): PrismaClient {
     globalForPrisma.prisma = createPrismaClient();
   }
   return globalForPrisma.prisma;
+}
+
+/** Em dev, chame após alterar DATABASE_URL (ou reinicie `npm run dev`). */
+export async function resetPrismaClient(): Promise<void> {
+  if (globalForPrisma.prisma) {
+    await globalForPrisma.prisma.$disconnect();
+    globalForPrisma.prisma = undefined;
+  }
 }
 
 export const prisma: PrismaClient = new Proxy({} as PrismaClient, {

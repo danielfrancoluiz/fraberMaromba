@@ -1,4 +1,13 @@
-import { Aluno, Convite, Exercicio, Plano, Treino, TreinoTemplate } from "@/types";
+import {
+  Aluno,
+  Convite,
+  Exercicio,
+  Plano,
+  Treino,
+  TreinoComAluno,
+  TreinoTemplate,
+} from "@/types";
+import { mensagemErroBanco } from "@/lib/erro-banco";
 
 interface ApiErrorBody {
   error?: string;
@@ -20,6 +29,18 @@ interface AlunoApi {
   dataCadastro: string;
 }
 
+interface ExercicioCatalogoApi {
+  id: string;
+  nome: string;
+  slug: string;
+  grupoMuscular: string;
+  equipamento?: string | null;
+  dificuldade?: string | null;
+  descricao?: string | null;
+  gifUrl?: string | null;
+  imagemUrl?: string | null;
+}
+
 interface ExercicioApi {
   id: string;
   nome: string;
@@ -27,6 +48,9 @@ interface ExercicioApi {
   repeticoes: number;
   grupoMuscular?: string | null;
   observacao?: string | null;
+  restSeconds?: number | null;
+  exercicioCatalogoId?: string | null;
+  catalogo?: ExercicioCatalogoApi | null;
 }
 
 interface TreinoApi {
@@ -34,9 +58,12 @@ interface TreinoApi {
   alunoId: string;
   professorId: string;
   nome: string;
+  descricao?: string | null;
+  objetivo?: string | null;
   diaSemana: string;
   dataCriacao: string;
   exercicios: ExercicioApi[];
+  aluno?: { id: string; nomeCompleto: string } | null;
 }
 
 interface TreinoTemplateApi {
@@ -94,10 +121,25 @@ async function handleResponse<T>(res: Response): Promise<T> {
       );
     }
 
-    throw new Error(erroApi ?? "Erro na requisição");
+    throw new Error(
+      erroApi ? mensagemErroBanco(new Error(erroApi)) : "Erro na requisição"
+    );
   }
 
   return res.json() as Promise<T>;
+}
+
+function mapExercicioPayload(exercicio: Exercicio, index: number) {
+  return {
+    nome: exercicio.nome,
+    series: exercicio.series,
+    repeticoes: exercicio.repeticoes,
+    grupoMuscular: exercicio.grupoMuscular,
+    observacao: exercicio.observacao,
+    ordem: index + 1,
+    exercicioCatalogoId: exercicio.exercicioCatalogoId,
+    restSeconds: exercicio.restSeconds ?? 60,
+  };
 }
 
 function mapExercicio(exercicio: ExercicioApi): Exercicio {
@@ -108,6 +150,16 @@ function mapExercicio(exercicio: ExercicioApi): Exercicio {
     repeticoes: exercicio.repeticoes,
     observacao: exercicio.observacao ?? undefined,
     grupoMuscular: exercicio.grupoMuscular ?? undefined,
+    exercicioCatalogoId: exercicio.exercicioCatalogoId ?? undefined,
+    imagemUrl:
+      exercicio.catalogo?.imagemUrl ??
+      exercicio.catalogo?.gifUrl ??
+      undefined,
+    gifUrl: exercicio.catalogo?.gifUrl ?? undefined,
+    descricao: exercicio.catalogo?.descricao ?? undefined,
+    equipamento: exercicio.catalogo?.equipamento ?? undefined,
+    dificuldade: exercicio.catalogo?.dificuldade ?? undefined,
+    restSeconds: exercicio.restSeconds ?? 60,
   };
 }
 
@@ -135,9 +187,18 @@ function mapTreino(treino: TreinoApi): Treino {
     alunoId: treino.alunoId,
     professorId: treino.professorId,
     nome: treino.nome,
+    descricao: treino.descricao ?? undefined,
+    objetivo: treino.objetivo ?? undefined,
     diaSemana: isDiaSemana(treino.diaSemana) ? treino.diaSemana : "segunda",
     dataCriacao: treino.dataCriacao,
     exercicios: treino.exercicios.map(mapExercicio),
+  };
+}
+
+function mapTreinoComAluno(treino: TreinoApi): TreinoComAluno {
+  return {
+    ...mapTreino(treino),
+    alunoNome: treino.aluno?.nomeCompleto,
   };
 }
 
@@ -202,23 +263,73 @@ export async function criarTreino(
   const res = await fetch("/api/professor/treinos", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({
       alunoId: dados.alunoId,
       nome: dados.nome,
+      descricao: dados.descricao,
+      objetivo: dados.objetivo,
       diaSemana: dados.diaSemana,
-      exercicios: dados.exercicios.map((exercicio, index) => ({
-        nome: exercicio.nome,
-        series: exercicio.series,
-        repeticoes: exercicio.repeticoes,
-        grupoMuscular: exercicio.grupoMuscular,
-        observacao: exercicio.observacao,
-        ordem: index + 1,
-      })),
+      exercicios: dados.exercicios.map(mapExercicioPayload),
     }),
   });
 
   const treino = await handleResponse<TreinoApi>(res);
   return mapTreino(treino);
+}
+
+export async function buscarTreino(id: string): Promise<Treino | null> {
+  const res = await fetch(`/api/professor/treinos/${encodeURIComponent(id)}`, {
+    credentials: "include",
+  });
+  if (res.status === 404) return null;
+  const treino = await handleResponse<TreinoApi>(res);
+  return mapTreino(treino);
+}
+
+export async function atualizarTreino(
+  id: string,
+  dados: {
+    alunoId?: string;
+    nome?: string;
+    descricao?: string;
+    objetivo?: string;
+    diaSemana?: Treino["diaSemana"];
+    exercicios?: Exercicio[];
+  }
+): Promise<Treino> {
+  const res = await fetch(`/api/professor/treinos/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({
+      ...(dados.alunoId !== undefined ? { alunoId: dados.alunoId } : {}),
+      ...(dados.nome !== undefined ? { nome: dados.nome } : {}),
+      ...(dados.descricao !== undefined ? { descricao: dados.descricao } : {}),
+      ...(dados.objetivo !== undefined ? { objetivo: dados.objetivo } : {}),
+      ...(dados.diaSemana !== undefined ? { diaSemana: dados.diaSemana } : {}),
+      ...(dados.exercicios !== undefined
+        ? { exercicios: dados.exercicios.map(mapExercicioPayload) }
+        : {}),
+    }),
+  });
+
+  const treino = await handleResponse<TreinoApi>(res);
+  return mapTreino(treino);
+}
+
+export async function deletarTreino(id: string): Promise<void> {
+  const res = await fetch(`/api/professor/treinos/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  await handleResponse<{ sucesso: boolean }>(res);
+}
+
+export async function listarTreinosProfessor(): Promise<TreinoComAluno[]> {
+  const res = await fetch("/api/professor/treinos", { credentials: "include" });
+  const treinos = await handleResponse<TreinoApi[]>(res);
+  return treinos.map(mapTreinoComAluno);
 }
 
 export async function listarTreinosDoAluno(alunoId: string): Promise<Treino[]> {
@@ -263,14 +374,7 @@ export async function criarTemplate(
     body: JSON.stringify({
       nome: dados.nome,
       descricao: dados.descricao,
-      exercicios: dados.exercicios.map((exercicio, index) => ({
-        nome: exercicio.nome,
-        series: exercicio.series,
-        repeticoes: exercicio.repeticoes,
-        grupoMuscular: exercicio.grupoMuscular,
-        observacao: exercicio.observacao,
-        ordem: index + 1,
-      })),
+      exercicios: dados.exercicios.map(mapExercicioPayload),
     }),
   });
 
@@ -302,14 +406,7 @@ export async function atualizarTemplate(
       ...(dados.descricao !== undefined ? { descricao: dados.descricao } : {}),
       ...(dados.exercicios !== undefined
         ? {
-            exercicios: dados.exercicios.map((exercicio, index) => ({
-              nome: exercicio.nome,
-              series: exercicio.series,
-              repeticoes: exercicio.repeticoes,
-              grupoMuscular: exercicio.grupoMuscular,
-              observacao: exercicio.observacao,
-              ordem: index + 1,
-            })),
+            exercicios: dados.exercicios.map(mapExercicioPayload),
           }
         : {}),
     }),

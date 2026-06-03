@@ -25,7 +25,8 @@ const colors = {
 
 function ExercicioThumbnail({ exercicio }: { exercicio: Exercicio }) {
   const [imgErro, setImgErro] = useState(false);
-  const url = getExercicioImagemUrl(exercicio.nome);
+  const url =
+    exercicio.imagemUrl ?? exercicio.gifUrl ?? getExercicioImagemUrl(exercicio.nome);
   const cor = getGrupoMuscularCor(exercicio.grupoMuscular);
 
   if (url && !imgErro) {

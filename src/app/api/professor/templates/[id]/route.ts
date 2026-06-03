@@ -1,31 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireProfessorSession } from "@/lib/get-api-session";
 import { prisma } from "@/lib/prisma";
-
-interface ExercicioTemplateInput {
-  nome: string;
-  series: number;
-  repeticoes: number;
-  grupoMuscular?: string;
-  observacao?: string;
-  ordem?: number;
-}
+import {
+  isExercicioInputPayload,
+  mapExercicioCreateInput,
+  type ExercicioInputPayload,
+} from "@/lib/exercicio-input";
 
 interface AtualizarTemplateBody {
   nome?: string;
   descricao?: string;
-  exercicios?: ExercicioTemplateInput[];
+  exercicios?: ExercicioInputPayload[];
 }
 
-function isExercicioTemplateInput(value: unknown): value is ExercicioTemplateInput {
-  if (typeof value !== "object" || value === null) return false;
-  const dados = value as Record<string, unknown>;
-  return (
-    typeof dados.nome === "string" &&
-    typeof dados.series === "number" &&
-    typeof dados.repeticoes === "number"
-  );
-}
+const exercicioInclude = {
+  orderBy: { ordem: "asc" as const },
+  include: { catalogo: true },
+};
 
 function isAtualizarTemplateBody(value: unknown): value is AtualizarTemplateBody {
   if (typeof value !== "object" || value === null) return false;
@@ -34,7 +25,7 @@ function isAtualizarTemplateBody(value: unknown): value is AtualizarTemplateBody
   if (dados.descricao !== undefined && typeof dados.descricao !== "string") return false;
   if (dados.exercicios !== undefined) {
     if (!Array.isArray(dados.exercicios)) return false;
-    if (!dados.exercicios.every(isExercicioTemplateInput)) return false;
+    if (!dados.exercicios.every(isExercicioInputPayload)) return false;
   }
   return true;
 }
@@ -42,7 +33,7 @@ function isAtualizarTemplateBody(value: unknown): value is AtualizarTemplateBody
 async function buscarTemplateDoProfessor(id: string, professorId: string) {
   return prisma.treinoTemplate.findFirst({
     where: { id, professorId },
-    include: { exercicios: { orderBy: { ordem: "asc" } } },
+    include: { exercicios: exercicioInclude },
   });
 }
 
@@ -74,12 +65,7 @@ export async function PATCH(
         await tx.exercicioTemplate.createMany({
           data: body.exercicios.map((exercicio, index) => ({
             templateId: id,
-            nome: exercicio.nome,
-            series: exercicio.series,
-            repeticoes: exercicio.repeticoes,
-            grupoMuscular: exercicio.grupoMuscular,
-            observacao: exercicio.observacao,
-            ordem: exercicio.ordem ?? index + 1,
+            ...mapExercicioCreateInput(exercicio, index),
           })),
         });
       }
@@ -91,7 +77,7 @@ export async function PATCH(
           ...(body.descricao !== undefined ? { descricao: body.descricao.trim() || null } : {}),
         },
         include: {
-          exercicios: { orderBy: { ordem: "asc" } },
+          exercicios: exercicioInclude,
         },
       });
     });

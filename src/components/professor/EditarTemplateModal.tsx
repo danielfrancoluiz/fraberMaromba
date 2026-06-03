@@ -2,7 +2,16 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
-import { TreinoTemplate } from "@/types";
+import { ModalPortal } from "@/components/ModalPortal";
+import { Exercicio, ExercicioForm, TreinoTemplate } from "@/types";
+import { ExercicioFormCard } from "@/components/professor/ExercicioFormCard";
+import { ExercisePickerModal } from "@/components/professor/ExercisePickerModal";
+import {
+  exercicioFormFromCatalogo,
+  exercicioFormFromExercicio,
+  exercicioFormParaPayload,
+  exercicioFormValido,
+} from "@/lib/form-exercicio";
 
 interface EditarTemplateModalProps {
   template: TreinoTemplate;
@@ -10,7 +19,7 @@ interface EditarTemplateModalProps {
   onSalvar: (dados: {
     nome: string;
     descricao: string;
-    exercicios: TreinoTemplate["exercicios"];
+    exercicios: Exercicio[];
   }) => Promise<void>;
 }
 
@@ -21,9 +30,17 @@ export function EditarTemplateModal({
 }: EditarTemplateModalProps) {
   const [nome, setNome] = useState(template.nome);
   const [descricao, setDescricao] = useState(template.descricao ?? "");
-  const [exercicios, setExercicios] = useState(template.exercicios);
+  const [exercicios, setExercicios] = useState<ExercicioForm[]>(() =>
+    template.exercicios.map(exercicioFormFromExercicio)
+  );
+  const [pickerAberto, setPickerAberto] = useState(false);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+
+  const inputStyle: React.CSSProperties = {
+    minHeight: "44px",
+    width: "100%",
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,10 +49,36 @@ export function EditarTemplateModal({
       return;
     }
 
+    if (exercicios.length === 0) {
+      setErro("Adicione pelo menos um exercício");
+      return;
+    }
+
+    const invalido = exercicios.find((ex) => !exercicioFormValido(ex));
+    if (invalido) {
+      setErro("Selecione um exercício do catálogo em cada bloco");
+      return;
+    }
+
     setLoading(true);
     setErro(null);
     try {
-      await onSalvar({ nome: nome.trim(), descricao: descricao.trim(), exercicios });
+      await onSalvar({
+        nome: nome.trim(),
+        descricao: descricao.trim(),
+        exercicios: exercicios.map((exercicio) => {
+          const payload = exercicioFormParaPayload(exercicio);
+          return {
+            id: exercicio.id,
+            nome: payload.nome,
+            series: payload.series,
+            repeticoes: payload.repeticoes,
+            observacao: payload.observacao,
+            grupoMuscular: payload.grupoMuscular,
+            exercicioCatalogoId: payload.exercicioCatalogoId,
+          };
+        }),
+      });
       onFechar();
     } catch (error) {
       setErro(error instanceof Error ? error.message : "Erro ao salvar");
@@ -44,109 +87,130 @@ export function EditarTemplateModal({
     }
   }
 
-  function atualizarExercicio(
-    index: number,
-    campo: "nome" | "series" | "repeticoes" | "grupoMuscular",
+  function handleExercicioChange(
+    id: string,
+    campo: keyof ExercicioForm,
     valor: string
   ) {
     setExercicios((prev) =>
-      prev.map((ex, i) => {
-        if (i !== index) return ex;
-        if (campo === "series" || campo === "repeticoes") {
-          const num = Number.parseInt(valor, 10);
-          return { ...ex, [campo]: Number.isNaN(num) ? 0 : num };
-        }
-        return { ...ex, [campo]: valor };
-      })
+      prev.map((ex) => (ex.id === id ? { ...ex, [campo]: valor } : ex))
     );
   }
 
+  function substituirCatalogo(id: string, exercicio: ExercicioForm) {
+    setExercicios((prev) => prev.map((ex) => (ex.id === id ? exercicio : ex)));
+  }
+
+  function removerExercicio(id: string) {
+    setExercicios((prev) => prev.filter((ex) => ex.id !== id));
+  }
+
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 100,
-        background: "rgba(5, 15, 26, 0.75)",
-        display: "grid",
-        placeItems: "center",
-        padding: "1rem",
-        overflowY: "auto",
-      }}
-      onClick={onFechar}
-    >
-      <form
-        className="card"
-        style={{ width: "100%", maxWidth: "520px", maxHeight: "90vh", overflowY: "auto" }}
-        onClick={(e) => e.stopPropagation()}
-        onSubmit={(e) => void handleSubmit(e)}
+    <ModalPortal>
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="modal-overlay"
+        onClick={onFechar}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-          <h2 style={{ margin: 0, fontSize: "1.1rem" }}>Editar template</h2>
-          <button type="button" onClick={onFechar} aria-label="Fechar" style={{ border: "none", background: "transparent", color: "var(--fraber-text-muted)", cursor: "pointer" }}>
-            <X size={20} />
-          </button>
-        </div>
-
-        <div style={{ display: "grid", gap: "12px" }}>
-          <div>
-            <label className="text-muted" style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem" }}>Nome</label>
-            <input className="input-field" value={nome} onChange={(e) => setNome(e.target.value)} />
+        <form
+          className="card modal-form-editar"
+          onClick={(e) => e.stopPropagation()}
+          onSubmit={(e) => void handleSubmit(e)}
+        >
+          <div className="modal-form-header">
+            <h2 style={{ margin: 0, fontSize: "1.1rem" }}>Editar template</h2>
+            <button
+              type="button"
+              onClick={onFechar}
+              aria-label="Fechar"
+              className="modal-close-btn"
+            >
+              <X size={20} />
+            </button>
           </div>
-          <div>
-            <label className="text-muted" style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem" }}>Descrição</label>
-            <input className="input-field" value={descricao} onChange={(e) => setDescricao(e.target.value)} />
-          </div>
 
-          <div>
-            <p style={{ margin: "0 0 8px", fontSize: "0.875rem", fontWeight: 600 }}>Exercícios</p>
-            <div style={{ display: "grid", gap: "8px" }}>
-              {exercicios.map((ex, index) => (
-                <div key={ex.id} className="card" style={{ padding: "10px", background: "var(--fraber-bg-soft)" }}>
-                  <input
-                    className="input-field"
-                    value={ex.nome}
-                    onChange={(e) => atualizarExercicio(index, "nome", e.target.value)}
-                    style={{ marginBottom: "6px" }}
-                  />
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
-                    <input
-                      className="input-field"
-                      type="number"
-                      min={1}
-                      value={ex.series}
-                      onChange={(e) => atualizarExercicio(index, "series", e.target.value)}
-                      placeholder="Séries"
-                    />
-                    <input
-                      className="input-field"
-                      type="number"
-                      min={1}
-                      value={ex.repeticoes}
-                      onChange={(e) => atualizarExercicio(index, "repeticoes", e.target.value)}
-                      placeholder="Reps"
-                    />
-                    <input
-                      className="input-field"
-                      value={ex.grupoMuscular ?? ""}
-                      onChange={(e) => atualizarExercicio(index, "grupoMuscular", e.target.value)}
-                      placeholder="Grupo"
-                    />
-                  </div>
-                </div>
-              ))}
+          <div style={{ display: "grid", gap: "12px" }}>
+            <div>
+              <label className="modal-field-label">Nome</label>
+              <input
+                className="input-field"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+              />
             </div>
+            <div>
+              <label className="modal-field-label">Descrição</label>
+              <input
+                className="input-field"
+                value={descricao}
+                onChange={(e) => setDescricao(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "8px",
+                  marginBottom: "8px",
+                }}
+              >
+                <p style={{ margin: 0, fontSize: "0.875rem", fontWeight: 600 }}>
+                  Exercícios ({exercicios.length})
+                </p>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  style={{ padding: "6px 12px", fontSize: "0.8rem" }}
+                  onClick={() => setPickerAberto(true)}
+                >
+                  + Adicionar
+                </button>
+              </div>
+              <p className="text-muted" style={{ margin: "0 0 8px", fontSize: "0.8rem" }}>
+                Escolha do catálogo; treinos antigos só com nome continuam válidos.
+              </p>
+              <div className="modal-exercicios-lista">
+                {exercicios.map((exercicio, index) => (
+                  <ExercicioFormCard
+                    key={exercicio.id}
+                    exercicio={exercicio}
+                    index={index}
+                    inputStyle={inputStyle}
+                    onRemover={() => removerExercicio(exercicio.id)}
+                    onChange={(campo, valor) =>
+                      handleExercicioChange(exercicio.id, campo, valor)
+                    }
+                    onSubstituirCatalogo={substituirCatalogo}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {erro ? (
+              <p className="text-accent" style={{ margin: 0, fontSize: "0.875rem" }}>
+                {erro}
+              </p>
+            ) : null}
+
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? "Salvando..." : "Salvar alterações"}
+            </button>
           </div>
+        </form>
+      </div>
 
-          {erro ? <p className="text-accent" style={{ margin: 0, fontSize: "0.875rem" }}>{erro}</p> : null}
-
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? "Salvando..." : "Salvar alterações"}
-          </button>
-        </div>
-      </form>
-    </div>
+      <ExercisePickerModal
+        open={pickerAberto}
+        onFechar={() => setPickerAberto(false)}
+        onSelecionar={(item) => {
+          setExercicios((prev) => [...prev, exercicioFormFromCatalogo(item)]);
+          setPickerAberto(false);
+        }}
+      />
+    </ModalPortal>
   );
 }

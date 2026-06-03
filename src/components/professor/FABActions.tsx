@@ -5,6 +5,7 @@ import { Dumbbell, UserPlus } from "lucide-react";
 interface FABActionsProps {
   onCadastrar: () => void;
   onCriarTreino: () => void;
+  className?: string;
 }
 
 const colors = {
@@ -13,7 +14,7 @@ const colors = {
   textPrimary: "#F0F4FF",
 };
 
-export function FABActions({ onCadastrar, onCriarTreino }: FABActionsProps) {
+export function FABActions({ onCadastrar, onCriarTreino, className = "" }: FABActionsProps) {
   const buttonBaseStyle: React.CSSProperties = {
     border: "none",
     borderRadius: "9999px",
@@ -30,6 +31,7 @@ export function FABActions({ onCadastrar, onCriarTreino }: FABActionsProps) {
 
   return (
     <div
+      className={className}
       style={{
         position: "fixed",
         bottom: "24px",

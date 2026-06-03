@@ -5,7 +5,8 @@ import { Treino } from "@/types";
 
 interface TreinoResumoCardProps {
   treino: Treino;
-  concluidos: number;
+  /** Séries concluídas na sessão em andamento (se houver). */
+  seriesConcluidas: number;
   onClick: () => void;
 }
 
@@ -30,12 +31,13 @@ const DIA_LABELS: Record<Treino["diaSemana"], string> = {
 
 export function TreinoResumoCard({
   treino,
-  concluidos,
+  seriesConcluidas,
   onClick,
 }: TreinoResumoCardProps) {
   const [hovered, setHovered] = useState(false);
-  const total = treino.exercicios.length;
-  const progresso = total > 0 ? Math.min(100, (concluidos / total) * 100) : 0;
+  const totalSeries = treino.exercicios.reduce((acc, ex) => acc + ex.series, 0);
+  const progresso =
+    totalSeries > 0 ? Math.min(100, (seriesConcluidas / totalSeries) * 100) : 0;
 
   return (
     <button
@@ -101,7 +103,8 @@ export function TreinoResumoCard({
       </div>
 
       <p style={{ margin: 0, color: colors.textSecondary, fontSize: "0.88rem" }}>
-        {concluidos} de {total} exercícios concluídos
+        {seriesConcluidas} de {totalSeries} séries
+        {seriesConcluidas > 0 && seriesConcluidas < totalSeries ? " (em andamento)" : ""}
       </p>
     </button>
   );

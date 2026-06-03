@@ -7,6 +7,7 @@ declare module "next-auth" {
     role: "professor" | "aluno";
     status: "ativo_professor" | "ativo_plataforma" | "inativo";
     professorId?: string;
+    alunoId?: string;
     planoId?: string;
   }
   interface Session {
@@ -18,6 +19,7 @@ declare module "next-auth" {
       role: "professor" | "aluno";
       status: "ativo_professor" | "ativo_plataforma" | "inativo";
       professorId?: string;
+      alunoId?: string;
       planoId?: string;
     };
   }
@@ -29,6 +31,7 @@ declare module "next-auth/jwt" {
     role: "professor" | "aluno";
     status: "ativo_professor" | "ativo_plataforma" | "inativo";
     professorId?: string;
+    alunoId?: string;
     planoId?: string;
   }
 }

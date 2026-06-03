@@ -1,4 +1,5 @@
-require("dotenv/config");
+require("dotenv").config({ path: ".env" });
+require("dotenv").config({ path: ".env.local", override: true });
 
 process.env.TS_NODE_SKIP_PROJECT = "1";
 process.env.TS_NODE_COMPILER_OPTIONS = JSON.stringify({

@@ -1,70 +1,31 @@
 "use client";
 
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 import { CheckCircle } from "lucide-react";
 
 export default function Page() {
   return (
-    <main
-      style={{
-        background: "#0D1B2E",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "1rem",
-        padding: "1.5rem",
-        fontFamily: "Inter, sans-serif",
-      }}
-    >
-      <CheckCircle size={64} color="#22c55e" />
-      <h1 style={{ margin: 0, color: "#F0F4FF", fontSize: "1.75rem" }}>
-        Pagamento Confirmado!
-      </h1>
-      <p style={{ margin: 0, color: "#7A9CC4", textAlign: "center" }}>
-        Seu plano foi ativado com sucesso.
+    <main className="page-main pagamento-resultado">
+      <CheckCircle size={64} className="pagamento-resultado-icon" aria-hidden />
+      <h1>Pagamento confirmado</h1>
+      <p className="text-muted pagamento-resultado-texto">
+        Seu plano foi registrado. Se o acesso ainda não liberar, saia e entre
+        novamente para atualizar a sessão.
       </p>
-      <div
-        style={{
-          marginTop: "1rem",
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "0.75rem",
-          justifyContent: "center",
-        }}
-      >
-        <Link
-          href="/aluno/dashboard"
-          style={{
-            background: "#2E7FD9",
-            color: "#F0F4FF",
-            border: "none",
-            borderRadius: "8px",
-            padding: "12px 24px",
-            fontSize: "1rem",
-            textDecoration: "none",
-            fontWeight: 600,
-          }}
-        >
-          Ir para o Dashboard
+      <div className="pagamento-resultado-acoes">
+        <Link href="/aluno/dashboard" className="btn-primary">
+          Ir para o dashboard
+        </Link>
+        <Link href="/aluno/perfil" className="btn-secondary">
+          Ver perfil
         </Link>
         <button
           type="button"
-          onClick={() => window.close()}
-          style={{
-            background: "#132035",
-            color: "#7A9CC4",
-            border: "1px solid #1E3050",
-            borderRadius: "8px",
-            padding: "12px 24px",
-            fontSize: "1rem",
-            fontWeight: 600,
-            cursor: "pointer",
-            fontFamily: "Inter, sans-serif",
-          }}
+          className="btn-ghost"
+          onClick={() => void signOut({ callbackUrl: "/login" })}
         >
-          Fechar esta aba
+          Sair e entrar de novo
         </button>
       </div>
     </main>

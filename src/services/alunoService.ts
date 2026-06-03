@@ -1,6 +1,6 @@
-import { Treino, ProgressoTreino, ExercicioSubstituto } from "@/types";
+import { Treino, ExercicioSubstituto } from "@/types";
+import { labelGrupoMuscular, normalizarGrupoMuscular } from "@/lib/grupos-musculares";
 
-const PROGRESSO_STORAGE_KEY = "fraber_progresso";
 const SUBSTITUTOS_STORAGE_KEY = "fraber_substitutos";
 
 const ORDEM_DIAS: Treino["diaSemana"][] = [
@@ -44,6 +44,18 @@ interface ApiErrorBody {
   error?: string;
 }
 
+interface ExercicioCatalogoApi {
+  id: string;
+  nome: string;
+  slug: string;
+  grupoMuscular: string;
+  equipamento?: string | null;
+  dificuldade?: string | null;
+  descricao?: string | null;
+  imagemUrl?: string | null;
+  gifUrl?: string | null;
+}
+
 interface ExercicioApi {
   id: string;
   nome: string;
@@ -51,6 +63,9 @@ interface ExercicioApi {
   repeticoes: number;
   grupoMuscular?: string | null;
   observacao?: string | null;
+  restSeconds?: number | null;
+  exercicioCatalogoId?: string | null;
+  catalogo?: ExercicioCatalogoApi | null;
 }
 
 interface TreinoApi {
@@ -84,6 +99,16 @@ function mapTreino(treino: TreinoApi): Treino {
       repeticoes: exercicio.repeticoes,
       observacao: exercicio.observacao ?? undefined,
       grupoMuscular: exercicio.grupoMuscular ?? undefined,
+      exercicioCatalogoId: exercicio.exercicioCatalogoId ?? undefined,
+      imagemUrl:
+        exercicio.catalogo?.imagemUrl ??
+        exercicio.catalogo?.gifUrl ??
+        undefined,
+      gifUrl: exercicio.catalogo?.gifUrl ?? undefined,
+      descricao: exercicio.catalogo?.descricao ?? undefined,
+      equipamento: exercicio.catalogo?.equipamento ?? undefined,
+      dificuldade: exercicio.catalogo?.dificuldade ?? undefined,
+      restSeconds: exercicio.restSeconds ?? 60,
     })),
   };
 }
@@ -102,20 +127,6 @@ async function handleResponse<T>(res: Response): Promise<T> {
   }
 
   return res.json() as Promise<T>;
-}
-
-function lerProgressoStorage(): ProgressoTreino[] {
-  const dados = localStorage.getItem(PROGRESSO_STORAGE_KEY);
-  if (!dados) return [];
-
-  const parsed: unknown = JSON.parse(dados);
-  if (!Array.isArray(parsed)) return [];
-
-  return parsed as ProgressoTreino[];
-}
-
-function salvarProgressoStorage(progressos: ProgressoTreino[]): void {
-  localStorage.setItem(PROGRESSO_STORAGE_KEY, JSON.stringify(progressos));
 }
 
 function lerSubstitutosStorage(): ExercicioSubstituto[] {
@@ -161,52 +172,46 @@ export async function listarTreinosDoAlunoPorDia(
   return resultado;
 }
 
-export async function buscarProgresso(
-  treinoId: string,
-  alunoId: string
-): Promise<ProgressoTreino | null> {
-  const progressos = lerProgressoStorage();
-  const progresso = progressos.find(
-    (item) => item.treinoId === treinoId && item.alunoId === alunoId
-  );
-  return progresso ?? null;
-}
-
-export async function salvarProgresso(
-  progresso: ProgressoTreino
-): Promise<void> {
-  const progressos = lerProgressoStorage();
-  const index = progressos.findIndex(
-    (item) =>
-      item.treinoId === progresso.treinoId &&
-      item.alunoId === progresso.alunoId
-  );
-
-  if (index === -1) {
-    salvarProgressoStorage([...progressos, progresso]);
-    return;
-  }
-
-  const atualizados = [...progressos];
-  atualizados[index] = progresso;
-  salvarProgressoStorage(atualizados);
-}
-
-export async function limparProgresso(
-  treinoId: string,
-  alunoId: string
-): Promise<void> {
-  const progressos = lerProgressoStorage();
-  const filtrados = progressos.filter(
-    (item) => !(item.treinoId === treinoId && item.alunoId === alunoId)
-  );
-  salvarProgressoStorage(filtrados);
+interface CatalogoListagemApi {
+  itens: ExercicioCatalogoApi[];
 }
 
 export async function listarSubstitutos(
-  grupoMuscular: string
+  grupoMuscular: string,
+  excluirCatalogoId?: string
 ): Promise<ExercicioSubstituto[]> {
+  try {
+    const grupo =
+      normalizarGrupoMuscular(grupoMuscular) ||
+      grupoMuscular.trim().toLowerCase();
+    const params = new URLSearchParams({ grupo, limite: "40" });
+    const res = await fetch(`/api/exercicios?${params.toString()}`, {
+      credentials: "include",
+    });
+    if (res.ok) {
+      const dados = await handleResponse<CatalogoListagemApi>(res);
+      const itens = dados.itens
+        .filter((item) => item.id !== excluirCatalogoId)
+        .map((item) => ({
+          id: item.id,
+          nome: item.nome,
+          grupoMuscular: labelGrupoMuscular(item.grupoMuscular) || item.grupoMuscular,
+          descricao: item.descricao ?? undefined,
+          equipamento: item.equipamento ?? undefined,
+          dificuldade: item.dificuldade ?? undefined,
+          imagemUrl: item.imagemUrl ?? item.gifUrl ?? undefined,
+          gifUrl: item.gifUrl ?? undefined,
+          slug: item.slug,
+        }));
+      if (itens.length > 0) return itens;
+    }
+  } catch {
+    /* fallback local */
+  }
+
   const salvos = lerSubstitutosStorage();
   const base = salvos.length > 0 ? salvos : SUBSTITUTOS_PADRAO;
-  return filtrarSubstitutosPorGrupo(base, grupoMuscular);
+  return filtrarSubstitutosPorGrupo(base, grupoMuscular).filter(
+    (item) => item.id !== excluirCatalogoId
+  );
 }

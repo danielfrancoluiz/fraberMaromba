@@ -1,15 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { ChevronRight, Plus, Users } from "lucide-react";
 import { useProfessorDashboard } from "@/hooks/useProfessorDashboard";
-import { DashboardHeader } from "@/components/professor/DashboardHeader";
+import { DashboardHeroHeader } from "@/components/DashboardHeroHeader";
 import { ResumoAlunos } from "@/components/professor/ResumoAlunos";
-import { BuscaAlunos } from "@/components/professor/BuscaAlunos";
 import { AlunoCard } from "@/components/professor/AlunoCard";
 import { FABActions } from "@/components/professor/FABActions";
 import { GerarConviteButton } from "@/components/professor/GerarConviteButton";
+import { buscarEstatisticasSessaoProfessor } from "@/services/sessaoService";
+import { EstatisticasSessaoProfessor } from "@/types";
 
 function intervaloHoje(): { dataInicio: string; dataFim: string } {
   const inicio = new Date();
@@ -25,7 +28,9 @@ function intervaloHoje(): { dataInicio: string; dataFim: string } {
 function PresencasHojeCard({ total }: { total: number | null }) {
   return (
     <section className="card">
-      <p className="text-muted" style={{ margin: 0, fontSize: "0.95rem" }}>Presenças Hoje</p>
+      <p className="text-muted" style={{ margin: 0, fontSize: "0.95rem" }}>
+        Presenças Hoje
+      </p>
       <strong
         style={{
           marginTop: "8px",
@@ -44,9 +49,27 @@ function PresencasHojeCard({ total }: { total: number | null }) {
 export default function Page() {
   const router = useRouter();
   const { data: session } = useSession();
-  const { alunosFiltrados, termoBusca, setTermoBusca, loading, erro, totalAlunos } =
-    useProfessorDashboard();
+  const { alunosFiltrados, loading, erro, totalAlunos } = useProfessorDashboard();
   const [presencasHoje, setPresencasHoje] = useState<number | null>(null);
+  const [statsSessoes, setStatsSessoes] = useState<EstatisticasSessaoProfessor | null>(
+    null
+  );
+
+  const previewAlunos = alunosFiltrados.slice(0, 3);
+
+  useEffect(() => {
+    let ativo = true;
+    void buscarEstatisticasSessaoProfessor()
+      .then((d) => {
+        if (ativo) setStatsSessoes(d);
+      })
+      .catch(() => {
+        if (ativo) setStatsSessoes(null);
+      });
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   useEffect(() => {
     let ativo = true;
@@ -57,7 +80,12 @@ export default function Page() {
 
       try {
         const res = await fetch(`/api/professor/checkins?${params.toString()}`);
-        if (!res.ok || !ativo) return;
+        if (!ativo) return;
+
+        if (!res.ok) {
+          setPresencasHoje(0);
+          return;
+        }
 
         const dados: unknown = await res.json();
         if (Array.isArray(dados) && ativo) {
@@ -77,51 +105,116 @@ export default function Page() {
 
   return (
     <main className="page-main">
-      <style>{`
-        .dashboard-resumo-grid {
-          display: grid;
-          gap: 1rem;
-          grid-template-columns: 1fr;
-        }
-        @media (min-width: 768px) {
-          .dashboard-resumo-grid {
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-      `}</style>
       <div className="page-container">
-        <DashboardHeader nome={session?.user?.name ?? ""} />
+        <DashboardHeroHeader
+          nome={session?.user?.name ?? "Professor"}
+          role="professor"
+          stats={[
+            { valor: totalAlunos, label: "Alunos" },
+            { valor: statsSessoes?.treinosConcluidos ?? "—", label: "Treinos feitos" },
+            {
+              valor: statsSessoes ? `${statsSessoes.minutosTotais} min` : "—",
+              label: "Minutos",
+            },
+          ]}
+        />
+
         <GerarConviteButton professorId={session?.user?.id ?? ""} />
-        <div className="dashboard-resumo-grid">
+
+        <section>
+          <h2 className="section-title">Ações rápidas</h2>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "10px",
+            }}
+          >
+            <button
+              type="button"
+              className="card card-hover"
+              onClick={() => router.push("/professor/alunos/novo")}
+              style={{
+                cursor: "pointer",
+                border: "1px solid rgba(59, 130, 246, 0.35)",
+                background: "rgba(59, 130, 246, 0.1)",
+                textAlign: "center",
+                padding: "1rem",
+              }}
+            >
+              <Plus size={22} style={{ margin: "0 auto 8px", color: "var(--fraber-primary)" }} />
+              <p style={{ margin: 0, fontWeight: 700, fontSize: "0.9rem" }}>Novo aluno</p>
+            </button>
+            <button
+              type="button"
+              className="card card-hover"
+              onClick={() => router.push("/professor/alunos")}
+              style={{
+                cursor: "pointer",
+                textAlign: "center",
+                padding: "1rem",
+              }}
+            >
+              <Users size={22} style={{ margin: "0 auto 8px", color: "var(--fraber-primary)" }} />
+              <p style={{ margin: 0, fontWeight: 700, fontSize: "0.9rem" }}>Ver alunos</p>
+            </button>
+          </div>
+        </section>
+
+        <div style={{ display: "grid", gap: "1rem" }}>
           <ResumoAlunos total={totalAlunos} />
           <PresencasHojeCard total={presencasHoje} />
         </div>
-        <BuscaAlunos valor={termoBusca} onChange={setTermoBusca} />
 
-        {loading ? (
-          <p className="text-muted" style={{ textAlign: "center", margin: "2rem 0" }}>
-            Carregando...
-          </p>
-        ) : erro ? (
-          <p className="text-accent" style={{ textAlign: "center", margin: "2rem 0" }}>
-            {erro}
-          </p>
-        ) : alunosFiltrados.length > 0 ? (
-          <div style={{ display: "grid", gap: "0.75rem" }}>
-            {alunosFiltrados.map((aluno) => (
-              <AlunoCard key={aluno.id} aluno={aluno} nomePlano={aluno.planoId} />
-            ))}
+        <section>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: "0.75rem",
+            }}
+          >
+            <h2 className="section-title" style={{ margin: 0 }}>
+              Meus alunos
+            </h2>
+            <Link
+              href="/professor/alunos"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                fontSize: "0.8125rem",
+                color: "var(--fraber-primary)",
+                textDecoration: "none",
+                fontWeight: 600,
+              }}
+            >
+              Ver todos
+              <ChevronRight size={16} />
+            </Link>
           </div>
-        ) : (
-          <p className="text-muted" style={{ textAlign: "center", margin: "2rem 0" }}>
-            {termoBusca.trim()
-              ? "Nenhum aluno encontrado."
-              : "Você ainda não cadastrou nenhum aluno."}
-          </p>
-        )}
+
+          {loading ? (
+            <p className="text-muted" style={{ textAlign: "center" }}>Carregando...</p>
+          ) : erro ? (
+            <p className="text-accent" style={{ textAlign: "center" }}>{erro}</p>
+          ) : previewAlunos.length > 0 ? (
+            <div style={{ display: "grid", gap: "0.75rem" }}>
+              {previewAlunos.map((aluno) => (
+                <AlunoCard key={aluno.id} aluno={aluno} nomePlano={aluno.planoId} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted" style={{ textAlign: "center", margin: "1.5rem 0" }}>
+              Nenhum aluno cadastrado.
+            </p>
+          )}
+        </section>
       </div>
 
       <FABActions
+        className="fab-above-nav"
         onCadastrar={() => router.push("/professor/alunos/novo")}
         onCriarTreino={() => router.push("/professor/treinos")}
       />

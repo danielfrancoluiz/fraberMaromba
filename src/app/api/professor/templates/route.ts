@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireProfessorSession } from "@/lib/get-api-session";
 import { prisma } from "@/lib/prisma";
+import {
+  isExercicioInputPayload,
+  mapExercicioCreateInput,
+  type ExercicioInputPayload,
+} from "@/lib/exercicio-input";
+
+const exercicioInclude = {
+  orderBy: { ordem: "asc" as const },
+  include: { catalogo: true },
+};
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,9 +22,7 @@ export async function GET(req: NextRequest) {
     const templates = await prisma.treinoTemplate.findMany({
       where: { professorId: session.user.id },
       include: {
-        exercicios: {
-          orderBy: { ordem: "asc" },
-        },
+        exercicios: exercicioInclude,
       },
       orderBy: { dataCriacao: "desc" },
     });
@@ -27,34 +35,10 @@ export async function GET(req: NextRequest) {
   }
 }
 
-interface ExercicioTemplateInput {
-  nome: string;
-  series: number;
-  repeticoes: number;
-  grupoMuscular?: string;
-  observacao?: string;
-  ordem?: number;
-}
-
 interface CriarTemplateBody {
   nome: string;
   descricao?: string;
-  exercicios: ExercicioTemplateInput[];
-}
-
-function isExercicioTemplateInput(value: unknown): value is ExercicioTemplateInput {
-  if (typeof value !== "object" || value === null) return false;
-
-  const dados = value as Record<string, unknown>;
-
-  return (
-    typeof dados.nome === "string" &&
-    typeof dados.series === "number" &&
-    typeof dados.repeticoes === "number" &&
-    (dados.grupoMuscular === undefined || typeof dados.grupoMuscular === "string") &&
-    (dados.observacao === undefined || typeof dados.observacao === "string") &&
-    (dados.ordem === undefined || typeof dados.ordem === "number")
-  );
+  exercicios: ExercicioInputPayload[];
 }
 
 function isCriarTemplateBody(value: unknown): value is CriarTemplateBody {
@@ -70,7 +54,7 @@ function isCriarTemplateBody(value: unknown): value is CriarTemplateBody {
     return false;
   }
 
-  return dados.exercicios.every(isExercicioTemplateInput);
+  return dados.exercicios.every(isExercicioInputPayload);
 }
 
 export async function POST(req: NextRequest) {
@@ -91,20 +75,11 @@ export async function POST(req: NextRequest) {
         nome: body.nome,
         descricao: body.descricao,
         exercicios: {
-          create: body.exercicios.map((exercicio, index) => ({
-            nome: exercicio.nome,
-            series: exercicio.series,
-            repeticoes: exercicio.repeticoes,
-            grupoMuscular: exercicio.grupoMuscular,
-            observacao: exercicio.observacao,
-            ordem: exercicio.ordem ?? index + 1,
-          })),
+          create: body.exercicios.map(mapExercicioCreateInput),
         },
       },
       include: {
-        exercicios: {
-          orderBy: { ordem: "asc" },
-        },
+        exercicios: exercicioInclude,
       },
     });
 
