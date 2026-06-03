@@ -6,7 +6,10 @@ import {
   getDatabaseEnvDiagnostics,
   resolveDatabaseConnectionString,
 } from "@/lib/database-url";
-import { getNextAuthDiagnostics } from "@/lib/nextauth-config";
+import {
+  getNextAuthDiagnostics,
+  isValidNextAuthSecret,
+} from "@/lib/nextauth-config";
 
 export const runtime = "nodejs";
 
@@ -64,12 +67,14 @@ export async function GET() {
       usuarios,
       auth: {
         ...auth,
-        sessionDeveFuncionar: auth.hasSecret && auth.urlAlinhada !== false,
-        configureNaVercel: {
-          NEXTAUTH_URL: auth.urlRecomendada,
-          NEXTAUTH_SECRET:
-            "string aleatória longa OU deixe vazio se SUPABASE_JWT_SECRET existir (fallback automático)",
-        },
+        aviso:
+          auth.nextAuthSecretInvalido
+            ? "NEXTAUTH_SECRET está com valor inválido (parece URL/domínio). Gere: openssl rand -base64 32"
+            : null,
+        secretTamanho: process.env.NEXTAUTH_SECRET?.trim().length ?? 0,
+        secretValido: process.env.NEXTAUTH_SECRET?.trim()
+          ? isValidNextAuthSecret(process.env.NEXTAUTH_SECRET)
+          : null,
       },
       contas: contas.map(mapContaParaDebug),
     });

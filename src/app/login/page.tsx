@@ -42,6 +42,7 @@ function GoogleIcon() {
 function LoginContent() {
   const searchParams = useSearchParams();
   const cadastroSucesso = searchParams.get("cadastro") === "sucesso";
+  const authError = searchParams.get("error");
 
   const {
     email,
@@ -124,6 +125,31 @@ function LoginContent() {
               }}
             >
               Conta criada com sucesso! Faça login para continuar.
+            </p>
+          </div>
+        ) : null}
+
+        {authError === "Configuration" ? (
+          <div
+            style={{
+              marginBottom: "16px",
+              padding: "12px",
+              backgroundColor: "rgba(232, 0, 28, 0.12)",
+              border: "1px solid #E8001C",
+              borderRadius: "10px",
+            }}
+          >
+            <p
+              style={{
+                margin: 0,
+                color: colors.textPrimary,
+                fontSize: "0.9rem",
+                textAlign: "center",
+              }}
+            >
+              NEXTAUTH_URL: https://fraber-maromba-hyyo.vercel.app — NEXTAUTH_SECRET:
+              string aleatória longa (não use o domínio como secret). Redeploy após
+              corrigir.
             </p>
           </div>
         ) : null}

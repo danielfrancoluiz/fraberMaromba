@@ -2,7 +2,9 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { autenticarUsuario } from "@/lib/autenticar-usuario";
-import { getNextAuthSecret } from "@/lib/nextauth-config";
+import { applyNextAuthEnv, getNextAuthSecret } from "@/lib/nextauth-config";
+
+applyNextAuthEnv();
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim();
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();

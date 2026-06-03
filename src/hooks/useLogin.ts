@@ -53,6 +53,12 @@ export function useLogin(): UseLoginReturn {
 
       if (result?.error || !result?.ok) {
         const detalhe = result?.error?.trim();
+        if (detalhe === "Configuration") {
+          setErro(
+            "Configuração incorreta: NEXTAUTH_URL deve ser https://fraber-maromba-hyyo.vercel.app e NEXTAUTH_SECRET deve ser uma senha aleatória longa (não o domínio do site). Veja /api/health/db"
+          );
+          return;
+        }
         if (detalhe && detalhe !== "CredentialsSignin") {
           setErro(detalhe);
         } else {
