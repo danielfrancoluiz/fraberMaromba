@@ -7,13 +7,6 @@ interface AlunoInfoCardProps {
   nomePlano: string;
 }
 
-const colors = {
-  surface: "#132035",
-  textPrimary: "#F0F4FF",
-  textSecondary: "#7A9CC4",
-  border: "#1E3050",
-};
-
 function formatarData(valor: string): string {
   const data = new Date(`${valor}T00:00:00`);
   if (Number.isNaN(data.getTime())) {
@@ -34,35 +27,17 @@ function CampoInfo({
   span2?: boolean;
 }) {
   return (
-    <div style={{ gridColumn: span2 ? "span 2" : "span 1" }}>
-      <p style={{ margin: 0, color: colors.textSecondary, fontSize: "0.8rem" }}>
-        {label}
-      </p>
-      <p style={{ margin: "4px 0 0", color: colors.textPrimary, fontSize: "0.95rem" }}>
-        {valor}
-      </p>
+    <div className={span2 ? "info-field--span2" : undefined}>
+      <p className="info-field-label">{label}</p>
+      <p className="info-field-value">{valor}</p>
     </div>
   );
 }
 
 export function AlunoInfoCard({ aluno, nomePlano }: AlunoInfoCardProps) {
   return (
-    <section
-      style={{
-        backgroundColor: colors.surface,
-        border: `1px solid ${colors.border}`,
-        borderRadius: "12px",
-        padding: "16px",
-        fontFamily: "Inter, sans-serif",
-      }}
-    >
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-          gap: "14px 16px",
-        }}
-      >
+    <section className="card">
+      <div className="info-grid">
         <CampoInfo label="CPF" valor={aluno.cpf} />
         <CampoInfo label="Email" valor={aluno.email} />
         <CampoInfo label="Telefone" valor={aluno.telefone} />

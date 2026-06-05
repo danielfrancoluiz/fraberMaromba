@@ -51,7 +51,7 @@ export default function Page() {
 
   if (loading) {
     return (
-      <main className="workout-exec" style={{ justifyContent: "center", alignItems: "center" }}>
+      <main className="workout-exec workout-exec-center">
         <p className="text-muted">Carregando treino...</p>
       </main>
     );
@@ -59,19 +59,13 @@ export default function Page() {
 
   if (erro || !treino) {
     return (
-      <main
-        className="workout-exec"
-        style={{
-          justifyContent: "center",
-          alignItems: "center",
-          padding: "2rem",
-          gap: "1rem",
-        }}
-      >
-        <p className="text-accent" style={{ textAlign: "center", margin: 0 }}>
-          {erro ?? "Treino não encontrado."}
-        </p>
-        <button type="button" className="btn-primary" onClick={() => router.push("/aluno/dashboard")}>
+      <main className="workout-exec workout-exec-center">
+        <p className="text-accent">{erro ?? "Treino não encontrado."}</p>
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={() => router.push("/aluno/dashboard")}
+        >
           Voltar ao início
         </button>
       </main>

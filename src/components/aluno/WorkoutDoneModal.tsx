@@ -30,10 +30,8 @@ export function WorkoutDoneModal({
           <div className="workout-done-icon">
             <CheckCircle2 size={48} />
           </div>
-          <h2 style={{ margin: "0 0 6px", fontSize: "1.5rem", textAlign: "center" }}>
-            Treino concluído!
-          </h2>
-          <p className="text-muted" style={{ margin: "0 0 20px", textAlign: "center", fontSize: "0.9rem" }}>
+          <h2 className="workout-done-title">Treino concluído!</h2>
+          <p className="workout-done-subtitle">
             Parabéns! Você completou {nomeTreino}
           </p>
 
@@ -52,7 +50,7 @@ export function WorkoutDoneModal({
             </div>
           </div>
 
-          <button type="button" className="btn-primary" style={{ width: "100%" }} onClick={onFinalizar}>
+          <button type="button" className="btn-primary workout-done-btn" onClick={onFinalizar}>
             Finalizar
           </button>
         </div>

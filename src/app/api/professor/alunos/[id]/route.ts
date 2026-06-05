@@ -116,3 +116,42 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: mensagem }, { status: 500 });
   }
 }
+
+export async function DELETE(_req: NextRequest, context: RouteContext) {
+  try {
+    const session = await requireProfessorSession(_req);
+    if (!session) {
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    }
+
+    const { id } = await context.params;
+
+    const existente = await prisma.aluno.findFirst({
+      where: { id, professorId: session.user.id },
+      select: { id: true, usuarioId: true },
+    });
+
+    if (!existente) {
+      return NextResponse.json({ error: "Aluno não encontrado" }, { status: 404 });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.treinoSessao.deleteMany({ where: { alunoId: id } });
+      await tx.treino.deleteMany({ where: { alunoId: id } });
+      await tx.pagamento.deleteMany({ where: { alunoId: id } });
+      await tx.checkin.deleteMany({ where: { alunoId: id } });
+      await tx.medicaoFisica.deleteMany({ where: { alunoId: id } });
+      await tx.aluno.delete({ where: { id } });
+
+      if (existente.usuarioId) {
+        await tx.usuario.delete({ where: { id: existente.usuarioId } });
+      }
+    });
+
+    return NextResponse.json({ sucesso: true });
+  } catch (error) {
+    const mensagem =
+      error instanceof Error ? error.message : "Erro ao excluir aluno";
+    return NextResponse.json({ error: mensagem }, { status: 500 });
+  }
+}

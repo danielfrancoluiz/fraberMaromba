@@ -24,13 +24,23 @@ function shouldHideBottomNav(pathname: string, role: ShellRole): boolean {
   return false;
 }
 
+function isWideLayout(pathname: string, role: ShellRole): boolean {
+  if (role === "professor" && /^\/professor\/alunos\/[^/]+$/.test(pathname)) {
+    return true;
+  }
+  return false;
+}
+
 export function AppShell({ role, children }: AppShellProps) {
   const pathname = usePathname();
   const showNav = !shouldHideBottomNav(pathname, role);
+  const wide = isWideLayout(pathname, role);
 
   return (
     <div className={`app-shell ${showNav ? "app-shell--with-nav" : ""}`}>
-      <div className="app-shell-inner">{children}</div>
+      <div className={`app-shell-inner${wide ? " app-shell-inner--wide" : ""}`}>
+        {children}
+      </div>
       {showNav ? <BottomNav role={role} /> : null}
     </div>
   );

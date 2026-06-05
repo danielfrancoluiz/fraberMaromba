@@ -37,11 +37,6 @@ export function EditarTemplateModal({
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
-  const inputStyle: React.CSSProperties = {
-    minHeight: "44px",
-    width: "100%",
-  };
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!nome.trim()) {
@@ -130,9 +125,9 @@ export function EditarTemplateModal({
             </button>
           </div>
 
-          <div style={{ display: "grid", gap: "12px" }}>
+          <div className="page-stack">
             <div>
-              <label className="modal-field-label">Nome</label>
+              <label className="field-label">Nome</label>
               <input
                 className="input-field"
                 value={nome}
@@ -140,7 +135,7 @@ export function EditarTemplateModal({
               />
             </div>
             <div>
-              <label className="modal-field-label">Descrição</label>
+              <label className="field-label">Descrição</label>
               <input
                 className="input-field"
                 value={descricao}
@@ -149,22 +144,13 @@ export function EditarTemplateModal({
             </div>
 
             <div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: "8px",
-                  marginBottom: "8px",
-                }}
-              >
-                <p style={{ margin: 0, fontSize: "0.875rem", fontWeight: 600 }}>
+              <div className="form-section-head" style={{ marginBottom: "8px" }}>
+                <p className="form-section-title">
                   Exercícios ({exercicios.length})
                 </p>
                 <button
                   type="button"
-                  className="btn-primary"
-                  style={{ padding: "6px 12px", fontSize: "0.8rem" }}
+                  className="btn-primary btn-compact"
                   onClick={() => setPickerAberto(true)}
                 >
                   + Adicionar
@@ -179,7 +165,6 @@ export function EditarTemplateModal({
                     key={exercicio.id}
                     exercicio={exercicio}
                     index={index}
-                    inputStyle={inputStyle}
                     onRemover={() => removerExercicio(exercicio.id)}
                     onChange={(campo, valor) =>
                       handleExercicioChange(exercicio.id, campo, valor)
@@ -191,7 +176,7 @@ export function EditarTemplateModal({
             </div>
 
             {erro ? (
-              <p className="text-accent" style={{ margin: 0, fontSize: "0.875rem" }}>
+              <p className="field-error" style={{ margin: 0 }}>
                 {erro}
               </p>
             ) : null}

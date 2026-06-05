@@ -365,6 +365,14 @@ export async function atualizarAluno(
   return mapAluno(aluno);
 }
 
+export async function deletarAluno(id: string): Promise<void> {
+  const res = await fetch(`/api/professor/alunos/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  await handleResponse<{ sucesso: boolean }>(res);
+}
+
 export async function criarTemplate(
   dados: Omit<TreinoTemplate, "id" | "dataCriacao">
 ): Promise<TreinoTemplate> {

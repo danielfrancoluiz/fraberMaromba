@@ -50,69 +50,39 @@ function LoginContent() {
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
   return (
-    <main
-      className="login-page"
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1.5rem",
-      }}
-    >
-      <div className="login-card card" style={{ width: "100%", maxWidth: "420px" }}>
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.25rem" }}>
+    <main className="auth-page">
+      <div className="auth-card card">
+        <div className="auth-logo-wrap">
           <Logo size={112} showText />
         </div>
 
-        <p className="text-muted" style={{ margin: "0 0 1.5rem", textAlign: "center" }}>
-          Acesse sua conta
-        </p>
+        <p className="auth-subtitle">Acesse sua conta</p>
 
         {cadastroSucesso ? (
-          <div
-            className="card"
-            style={{
-              marginBottom: "1rem",
-              borderColor: "var(--fraber-success)",
-              background: "rgba(34, 197, 94, 0.08)",
-            }}
-          >
-            <p style={{ margin: 0, fontSize: "0.9rem", textAlign: "center" }}>
-              Conta criada com sucesso! Faça login para continuar.
-            </p>
+          <div className="auth-alert auth-alert--success">
+            Conta criada com sucesso! Faça login para continuar.
           </div>
         ) : null}
 
         {authError === "Configuration" ? (
-          <div
-            style={{
-              marginBottom: "1rem",
-              padding: "12px",
-              borderRadius: "var(--fraber-radius-sm)",
-              background: "rgba(232, 0, 28, 0.1)",
-              border: "1px solid var(--fraber-accent)",
-              fontSize: "0.85rem",
-              textAlign: "center",
-            }}
-          >
-            Erro de configuração do login. Verifique NEXTAUTH_URL e NEXTAUTH_SECRET na
-            Vercel.
+          <div className="auth-alert auth-alert--error">
+            Erro de configuração do login. Verifique NEXTAUTH_URL e NEXTAUTH_SECRET.
           </div>
         ) : null}
 
         <form
+          className="auth-form"
           onSubmit={(e) => {
             e.preventDefault();
             void handleLogin();
           }}
-          style={{ display: "grid", gap: "14px" }}
         >
           <div>
-            <label className="text-muted" style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem" }}>
+            <label className="field-label" htmlFor="login-email">
               Email
             </label>
             <input
+              id="login-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -122,94 +92,55 @@ function LoginContent() {
           </div>
 
           <div>
-            <label className="text-muted" style={{ display: "block", marginBottom: "6px", fontSize: "0.875rem" }}>
+            <label className="field-label" htmlFor="login-senha">
               Senha
             </label>
-            <div style={{ position: "relative" }}>
+            <div className="input-wrap-icon">
               <input
+                id="login-senha"
                 type={mostrarSenha ? "text" : "password"}
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 className="input-field"
-                style={{ paddingRight: "44px" }}
                 autoComplete="current-password"
               />
               <button
                 type="button"
+                className="input-icon-btn"
                 onClick={() => setMostrarSenha((v) => !v)}
                 aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
-                style={{
-                  position: "absolute",
-                  right: "12px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  border: "none",
-                  background: "transparent",
-                  color: "var(--fraber-text-muted)",
-                  cursor: "pointer",
-                  display: "flex",
-                  padding: 0,
-                }}
               >
                 {mostrarSenha ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
           </div>
 
-          {erro ? (
-            <p className="text-accent" style={{ margin: 0, fontSize: "0.9rem" }}>
-              {erro}
-            </p>
-          ) : null}
+          {erro ? <p className="field-error">{erro}</p> : null}
 
-          <button type="submit" disabled={loading} className="btn-primary" style={{ width: "100%" }}>
+          <button type="submit" disabled={loading} className="btn-primary">
             {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "1.25rem 0" }}>
-          <div style={{ flex: 1, height: 1, background: "var(--fraber-border)" }} />
-          <span className="text-muted" style={{ fontSize: "0.85rem" }}>ou</span>
-          <div style={{ flex: 1, height: 1, background: "var(--fraber-border)" }} />
-        </div>
+        <div className="auth-divider">ou</div>
 
         <button
           type="button"
+          className="btn-google"
           disabled={loadingGoogle}
           onClick={() => void handleGoogle()}
-          style={{
-            minHeight: "48px",
-            width: "100%",
-            border: "1px solid var(--fraber-border)",
-            borderRadius: "var(--fraber-radius-sm)",
-            background: "#fff",
-            color: "#111",
-            fontWeight: 600,
-            fontSize: "0.95rem",
-            cursor: loadingGoogle ? "not-allowed" : "pointer",
-            opacity: loadingGoogle ? 0.75 : 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "10px",
-          }}
         >
           <GoogleIcon />
           {loadingGoogle ? "Aguardando Google..." : "Entrar com Google"}
         </button>
 
-        <p style={{ margin: "1.5rem 0 0", textAlign: "center", fontSize: "0.9rem" }}>
-          <Link href="/cadastro" style={{ color: "var(--fraber-primary)", textDecoration: "none" }}>
-            Não tem conta? Cadastre-se
-          </Link>
+        <p className="auth-footer">
+          <Link href="/cadastro">Não tem conta? Cadastre-se</Link>
         </p>
 
-        <div
-          className="chart-empty"
-          style={{ marginTop: "1.25rem", fontSize: "0.8rem", textAlign: "left" }}
-        >
-          <p style={{ margin: 0 }}>Professor: ricardo@fraber.com / 123456</p>
-          <p style={{ margin: "6px 0 0" }}>Aluno: carlos@fraber.com / 123456</p>
+        <div className="chart-empty auth-demo-hint">
+          <p>Professor: ricardo@fraber.com / 123456</p>
+          <p>Aluno: carlos@fraber.com / 123456</p>
         </div>
       </div>
     </main>
@@ -220,10 +151,7 @@ export default function Page() {
   return (
     <Suspense
       fallback={
-        <main
-          className="page-main"
-          style={{ display: "grid", placeItems: "center" }}
-        >
+        <main className="auth-page">
           <Logo size={80} />
           <p className="text-muted">Carregando...</p>
         </main>

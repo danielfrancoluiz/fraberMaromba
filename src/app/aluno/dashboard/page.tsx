@@ -4,11 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { ChevronRight, Dumbbell } from "lucide-react";
+import { Dumbbell } from "lucide-react";
 import { useAlunoDashboard } from "@/hooks/useAlunoDashboard";
 import { DashboardHeroHeader } from "@/components/DashboardHeroHeader";
 import { TreinoResumoCard } from "@/components/aluno/TreinoResumoCard";
 import { PlanoStatus } from "@/components/aluno/PlanoStatus";
+import { Section } from "@/components/ui/Section";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Badge } from "@/components/ui/Badge";
 import {
   buscarEstatisticasSessaoAluno,
   contarSeriesConcluidasTreino,
@@ -80,10 +83,13 @@ export default function Page() {
 
   return (
     <main className="page-main">
-      <div className="page-container">
+      <div className="page-container page-stack">
         <DashboardHeroHeader
           nome={aluno?.nome ?? session?.user?.name ?? "Aluno"}
           role="aluno"
+          badgeExtra={
+            stats ? `${stats.treinosConcluidos} treinos` : undefined
+          }
           stats={[
             { valor: stats?.treinosConcluidos ?? "—", label: "Concluídos" },
             { valor: stats ? `${stats.minutosTotais} min` : "—", label: "Minutos" },
@@ -91,37 +97,17 @@ export default function Page() {
           ]}
         />
 
-        <PlanoStatus
-          alunoId={session?.user?.id ?? ""}
-          planoId={session?.user?.planoId ?? stats?.planoId ?? "mensal"}
-          status={session?.user?.status ?? "inativo"}
-        />
+        {session?.user?.status === "inativo" ? (
+          <PlanoStatus
+            alunoId={session?.user?.alunoId ?? ""}
+            planoId={session?.user?.planoId ?? stats?.planoId ?? "mensal"}
+            status={session?.user?.status ?? "inativo"}
+            mostrarPagamento
+          />
+        ) : null}
 
         {stats && stats.ultimasSessoes.length > 0 ? (
-          <section style={{ marginBottom: "1.25rem" }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: "0.5rem",
-              }}
-            >
-              <h2 className="section-title" style={{ margin: 0 }}>
-                Últimos treinos
-              </h2>
-              <Link
-                href="/aluno/historico"
-                style={{
-                  fontSize: "0.8125rem",
-                  color: "var(--fraber-primary)",
-                  textDecoration: "none",
-                  fontWeight: 600,
-                }}
-              >
-                Ver histórico
-              </Link>
-            </div>
+          <Section title="Últimos treinos" href="/aluno/historico" linkLabel="Ver histórico">
             <div className="historico-ultimos">
               {stats.ultimasSessoes.map((s) => (
                 <div key={s.id} className="historico-ultimo-item">
@@ -133,70 +119,35 @@ export default function Page() {
                       {formatarDuracaoSessao(s.duracaoSegundos)}
                     </span>
                   </div>
-                  <span className="historico-badge">Concluído</span>
+                  <Badge variant="success">Concluído</Badge>
                 </div>
               ))}
             </div>
-          </section>
+          </Section>
         ) : null}
 
-        <section>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "0.75rem",
-            }}
-          >
-            <h2 className="section-title" style={{ margin: 0 }}>
-              Treinos de hoje
-            </h2>
-            <Link
-              href="/aluno/treinos"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "4px",
-                fontSize: "0.8125rem",
-                color: "var(--fraber-primary)",
-                textDecoration: "none",
-                fontWeight: 600,
-              }}
-            >
-              Ver todos
-              <ChevronRight size={16} />
-            </Link>
-          </div>
-
+        <Section
+          title={`Treinos de ${DIA_LABELS[diaSelecionado]?.toLowerCase() ?? "hoje"}`}
+          href="/aluno/treinos"
+          linkLabel="Ver semana"
+        >
           {loading ? (
-            <p className="text-muted" style={{ textAlign: "center" }}>Carregando...</p>
+            <p className="loading-center text-muted">Carregando...</p>
           ) : erro ? (
-            <p className="text-accent" style={{ textAlign: "center" }}>{erro}</p>
+            <p className="error-center text-accent">{erro}</p>
           ) : treinosDoDia.length === 0 ? (
-            <div className="card" style={{ textAlign: "center" }}>
-              <Dumbbell
-                size={32}
-                style={{ margin: "0 auto 8px", color: "var(--fraber-text-muted)" }}
-              />
-              <p className="text-muted" style={{ margin: 0 }}>
-                Nenhum treino para {DIA_LABELS[diaSelecionado]?.toLowerCase() ?? "hoje"}.
-              </p>
-              <Link
-                href="/aluno/treinos"
-                className="btn-primary"
-                style={{
-                  marginTop: "12px",
-                  display: "inline-block",
-                  textDecoration: "none",
-                  padding: "10px 16px",
-                }}
-              >
-                Ver semana
-              </Link>
-            </div>
+            <EmptyState
+              icon={Dumbbell}
+              title="Nenhum treino para hoje"
+              description="Confira a programação completa da semana."
+              action={
+                <Link href="/aluno/treinos" className="btn-primary">
+                  Ver treinos da semana
+                </Link>
+              }
+            />
           ) : (
-            <div style={{ display: "grid", gap: "12px" }}>
+            <div className="page-stack">
               {treinosDoDia.map((treino) => (
                 <TreinoResumoCard
                   key={treino.id}
@@ -207,7 +158,7 @@ export default function Page() {
               ))}
             </div>
           )}
-        </section>
+        </Section>
       </div>
     </main>
   );

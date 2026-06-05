@@ -1,8 +1,9 @@
 "use client";
 
-import { Dumbbell, Pencil, Trash2, User } from "lucide-react";
+import { Dumbbell, Pencil, Trash2 } from "lucide-react";
 import { TreinoComAluno } from "@/types";
 import { labelObjetivoTreino } from "@/lib/treino-objetivos";
+import { Badge } from "@/components/ui/Badge";
 
 interface TreinoAtribuidoCardProps {
   treino: TreinoComAluno;
@@ -28,52 +29,54 @@ export function TreinoAtribuidoCard({
   const objetivoLabel = labelObjetivoTreino(treino.objetivo);
 
   return (
-    <article className="card treino-atribuido-card">
-      <header className="treino-atribuido-header">
-        <div className="treino-atribuido-title-row">
-          <Dumbbell size={18} className="text-accent" />
-          <h3 className="treino-atribuido-nome">{treino.nome}</h3>
+    <article className="list-card list-card--static list-card--stacked">
+      <div className="list-card-accent list-card-accent--accent" aria-hidden />
+      <div className="list-card-stacked-inner">
+        <div className="list-card-body list-card-body--stacked">
+          <div className="list-card-icon-wrap">
+            <Dumbbell size={18} className="list-card-icon" />
+          </div>
+          <div className="list-card-content">
+            <div className="list-card-top">
+              <h3 className="list-card-title">{treino.nome}</h3>
+              <div className="list-card-badge">
+                <Badge variant="primary">{diaLabel[treino.diaSemana]}</Badge>
+              </div>
+            </div>
+            <div className="list-card-meta">
+              {treino.alunoNome ? <span>{treino.alunoNome}</span> : null}
+              {treino.alunoNome ? <span>·</span> : null}
+              <span>
+                {treino.exercicios.length} exercício
+                {treino.exercicios.length !== 1 ? "s" : ""}
+              </span>
+              {objetivoLabel ? (
+                <>
+                  <span>·</span>
+                  <span>{objetivoLabel}</span>
+                </>
+              ) : null}
+            </div>
+          </div>
         </div>
-        <span className="treino-atribuido-dia">{diaLabel[treino.diaSemana]}</span>
-      </header>
-
-      {treino.alunoNome ? (
-        <p className="treino-atribuido-aluno">
-          <User size={14} />
-          {treino.alunoNome}
-        </p>
-      ) : null}
-
-      {objetivoLabel ? (
-        <p className="text-muted treino-atribuido-meta">Meta: {objetivoLabel}</p>
-      ) : null}
-
-      {treino.descricao ? (
-        <p className="text-muted treino-atribuido-desc">{treino.descricao}</p>
-      ) : null}
-
-      <p className="text-muted" style={{ margin: "8px 0 0", fontSize: "0.85rem" }}>
-        {treino.exercicios.length} exercício
-        {treino.exercicios.length !== 1 ? "s" : ""}
-      </p>
-
-      <div className="treino-atribuido-acoes">
-        <button
-          type="button"
-          className="chip chip--icon"
-          onClick={() => onEditar(treino)}
-          aria-label="Editar treino"
-        >
-          <Pencil size={16} />
-        </button>
-        <button
-          type="button"
-          className="chip chip--danger chip--icon"
-          onClick={() => onExcluir(treino)}
-          aria-label="Excluir treino"
-        >
-          <Trash2 size={16} />
-        </button>
+        <div className="card-actions-bar">
+          <button
+            type="button"
+            className="btn-secondary btn-compact card-actions-bar-btn"
+            onClick={() => onEditar(treino)}
+          >
+            <Pencil size={16} />
+            Editar
+          </button>
+          <button
+            type="button"
+            className="chip chip--danger btn-compact card-actions-bar-btn"
+            onClick={() => onExcluir(treino)}
+          >
+            <Trash2 size={16} />
+            Excluir
+          </button>
+        </div>
       </div>
     </article>
   );

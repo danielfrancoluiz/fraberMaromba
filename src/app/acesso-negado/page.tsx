@@ -3,95 +3,31 @@
 import { ArrowLeft, ShieldOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-const colors = {
-  background: "#0D1B2E",
-  primary: "#2E7FD9",
-  secondary: "#E8001C",
-  textPrimary: "#F0F4FF",
-  textSecondary: "#7A9CC4",
-  border: "#1E3050",
-};
-
 export default function Page() {
   const router = useRouter();
 
   return (
-    <main
-      style={{
-        backgroundColor: colors.background,
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1.5rem",
-        fontFamily: "Inter, sans-serif",
-      }}
-    >
-      <div
-        style={{
-          textAlign: "center",
-          maxWidth: "420px",
-          display: "grid",
-          gap: "16px",
-          justifyItems: "center",
-        }}
-      >
-        <ShieldOff size={64} color={colors.secondary} />
+    <main className="status-page">
+      <div className="status-page-inner">
+        <ShieldOff size={64} className="text-accent" aria-hidden />
 
-        <h1 style={{ margin: 0, color: colors.textPrimary, fontSize: "1.75rem" }}>
-          Acesso Negado
-        </h1>
+        <h1>Acesso negado</h1>
 
-        <p style={{ margin: 0, color: colors.textSecondary, lineHeight: 1.5 }}>
+        <p className="text-muted">
           Você não tem permissão para acessar esta página.
         </p>
 
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-            width: "100%",
-            marginTop: "8px",
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => router.back()}
-            style={{
-              minHeight: "48px",
-              border: "none",
-              borderRadius: "10px",
-              backgroundColor: colors.primary,
-              color: colors.textPrimary,
-              fontFamily: "Inter, sans-serif",
-              fontWeight: 700,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-            }}
-          >
+        <div className="action-row" style={{ width: "100%", marginTop: "8px" }}>
+          <button type="button" className="btn-primary" onClick={() => router.back()}>
             <ArrowLeft size={18} />
             Voltar
           </button>
-
           <button
             type="button"
+            className="btn-secondary"
             onClick={() => router.push("/login")}
-            style={{
-              minHeight: "48px",
-              border: `1px solid ${colors.border}`,
-              borderRadius: "10px",
-              backgroundColor: "transparent",
-              color: colors.textSecondary,
-              fontFamily: "Inter, sans-serif",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
           >
-            Ir para o Login
+            Ir para o login
           </button>
         </div>
       </div>

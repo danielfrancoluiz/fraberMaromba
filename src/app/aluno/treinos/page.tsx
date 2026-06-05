@@ -3,11 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { Dumbbell } from "lucide-react";
 import { useAlunoDashboard } from "@/hooks/useAlunoDashboard";
 import { NavDiasSemana } from "@/components/aluno/NavDiasSemana";
 import { TreinoResumoCard } from "@/components/aluno/TreinoResumoCard";
 import { contarSeriesConcluidasTreino } from "@/services/sessaoService";
 import { Treino } from "@/types";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 const DIAS_SEMANA = [
   "segunda",
@@ -26,7 +29,6 @@ export default function Page() {
     treinosPorDia,
     loading,
     erro,
-    aluno,
     diaSelecionado,
     setDiaSelecionado,
   } = useAlunoDashboard();
@@ -34,6 +36,7 @@ export default function Page() {
   const [seriesPorTreino, setSeriesPorTreino] = useState<Record<string, number>>({});
 
   const treinosDoDia: Treino[] = treinosPorDia[diaSelecionado] ?? [];
+  const primeiroNome = session?.user?.name?.split(" ")[0];
 
   useEffect(() => {
     const treinos = treinosPorDia[diaSelecionado] ?? [];
@@ -67,13 +70,15 @@ export default function Page() {
 
   return (
     <main className="page-main">
-      <div className="page-container" style={{ paddingTop: "1rem" }}>
-        <header style={{ marginBottom: "1rem" }}>
-          <h1 style={{ margin: 0, fontSize: "1.35rem" }}>Meus Treinos</h1>
-          <p className="text-muted" style={{ margin: "4px 0 0", fontSize: "0.9rem" }}>
-            {session?.user?.name ? `Olá, ${session.user.name.split(" ")[0]}` : "Sua programação semanal"}
-          </p>
-        </header>
+      <div className="page-container page-stack">
+        <PageHeader
+          title="Meus treinos"
+          subtitle={
+            primeiroNome
+              ? `Olá, ${primeiroNome} — sua programação semanal`
+              : "Sua programação semanal"
+          }
+        />
 
         <NavDiasSemana
           dias={DIAS_SEMANA}
@@ -82,19 +87,17 @@ export default function Page() {
         />
 
         {loading ? (
-          <p className="text-muted" style={{ marginTop: "24px", textAlign: "center" }}>
-            Carregando...
-          </p>
+          <p className="loading-center text-muted">Carregando...</p>
         ) : erro ? (
-          <p className="text-accent" style={{ marginTop: "24px", textAlign: "center" }}>
-            {erro}
-          </p>
+          <p className="error-center text-accent">{erro}</p>
         ) : treinosDoDia.length === 0 ? (
-          <p className="text-muted" style={{ marginTop: "24px", textAlign: "center" }}>
-            Nenhum treino para este dia.
-          </p>
+          <EmptyState
+            icon={Dumbbell}
+            title="Nenhum treino neste dia"
+            description="Selecione outro dia ou peça ao seu professor para montar seu plano."
+          />
         ) : (
-          <div style={{ marginTop: "20px", display: "grid", gap: "12px" }}>
+          <div className="page-stack">
             {treinosDoDia.map((treino) => (
               <TreinoResumoCard
                 key={treino.id}

@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { ChevronRight, Plus, Users } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import { useProfessorDashboard } from "@/hooks/useProfessorDashboard";
 import { DashboardHeroHeader } from "@/components/DashboardHeroHeader";
 import { ResumoAlunos } from "@/components/professor/ResumoAlunos";
@@ -13,6 +12,8 @@ import { FABActions } from "@/components/professor/FABActions";
 import { GerarConviteButton } from "@/components/professor/GerarConviteButton";
 import { buscarEstatisticasSessaoProfessor } from "@/services/sessaoService";
 import { EstatisticasSessaoProfessor } from "@/types";
+import { Section } from "@/components/ui/Section";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 function intervaloHoje(): { dataInicio: string; dataFim: string } {
   const inicio = new Date();
@@ -27,22 +28,10 @@ function intervaloHoje(): { dataInicio: string; dataFim: string } {
 
 function PresencasHojeCard({ total }: { total: number | null }) {
   return (
-    <section className="card">
-      <p className="text-muted" style={{ margin: 0, fontSize: "0.95rem" }}>
-        Presenças Hoje
-      </p>
-      <strong
-        style={{
-          marginTop: "8px",
-          display: "inline-block",
-          color: "var(--fraber-primary)",
-          fontSize: "2rem",
-          lineHeight: 1.1,
-        }}
-      >
-        {total === null ? "—" : total}
-      </strong>
-    </section>
+    <article className="stat-tile">
+      <p className="stat-tile-value">{total === null ? "—" : total}</p>
+      <p className="stat-tile-label">Presenças hoje</p>
+    </article>
   );
 }
 
@@ -105,7 +94,7 @@ export default function Page() {
 
   return (
     <main className="page-main">
-      <div className="page-container">
+      <div className="page-container page-stack">
         <DashboardHeroHeader
           nome={session?.user?.name ?? "Professor"}
           role="professor"
@@ -121,102 +110,66 @@ export default function Page() {
 
         <GerarConviteButton professorId={session?.user?.id ?? ""} />
 
-        <section>
-          <h2 className="section-title">Ações rápidas</h2>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "10px",
-            }}
-          >
+        <Section title="Ações rápidas">
+          <div className="quick-action-grid">
             <button
               type="button"
-              className="card card-hover"
+              className="quick-action-card quick-action-card--primary"
               onClick={() => router.push("/professor/alunos/novo")}
-              style={{
-                cursor: "pointer",
-                border: "1px solid rgba(59, 130, 246, 0.35)",
-                background: "rgba(59, 130, 246, 0.1)",
-                textAlign: "center",
-                padding: "1rem",
-              }}
             >
-              <Plus size={22} style={{ margin: "0 auto 8px", color: "var(--fraber-primary)" }} />
-              <p style={{ margin: 0, fontWeight: 700, fontSize: "0.9rem" }}>Novo aluno</p>
+              <Plus size={22} />
+              <p>Novo aluno</p>
             </button>
             <button
               type="button"
-              className="card card-hover"
+              className="quick-action-card"
               onClick={() => router.push("/professor/alunos")}
-              style={{
-                cursor: "pointer",
-                textAlign: "center",
-                padding: "1rem",
-              }}
             >
-              <Users size={22} style={{ margin: "0 auto 8px", color: "var(--fraber-primary)" }} />
-              <p style={{ margin: 0, fontWeight: 700, fontSize: "0.9rem" }}>Ver alunos</p>
+              <Users size={22} />
+              <p>Ver alunos</p>
             </button>
           </div>
-        </section>
+        </Section>
 
-        <div style={{ display: "grid", gap: "1rem" }}>
+        <div className="stats-row stats-row--3">
           <ResumoAlunos total={totalAlunos} />
           <PresencasHojeCard total={presencasHoje} />
         </div>
 
-        <section>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "0.75rem",
-            }}
-          >
-            <h2 className="section-title" style={{ margin: 0 }}>
-              Meus alunos
-            </h2>
-            <Link
-              href="/professor/alunos"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "4px",
-                fontSize: "0.8125rem",
-                color: "var(--fraber-primary)",
-                textDecoration: "none",
-                fontWeight: 600,
-              }}
-            >
-              Ver todos
-              <ChevronRight size={16} />
-            </Link>
-          </div>
-
+        <Section title="Meus alunos" href="/professor/alunos">
           {loading ? (
-            <p className="text-muted" style={{ textAlign: "center" }}>Carregando...</p>
+            <p className="loading-center text-muted">Carregando...</p>
           ) : erro ? (
-            <p className="text-accent" style={{ textAlign: "center" }}>{erro}</p>
+            <p className="error-center text-accent">{erro}</p>
           ) : previewAlunos.length > 0 ? (
-            <div style={{ display: "grid", gap: "0.75rem" }}>
+            <div className="page-stack">
               {previewAlunos.map((aluno) => (
                 <AlunoCard key={aluno.id} aluno={aluno} nomePlano={aluno.planoId} />
               ))}
             </div>
           ) : (
-            <p className="text-muted" style={{ textAlign: "center", margin: "1.5rem 0" }}>
-              Nenhum aluno cadastrado.
-            </p>
+            <EmptyState
+              icon={Users}
+              title="Nenhum aluno cadastrado"
+              description="Cadastre seu primeiro aluno para começar a montar treinos."
+              action={
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => router.push("/professor/alunos/novo")}
+                >
+                  Cadastrar aluno
+                </button>
+              }
+            />
           )}
-        </section>
+        </Section>
       </div>
 
       <FABActions
         className="fab-above-nav"
         onCadastrar={() => router.push("/professor/alunos/novo")}
-        onCriarTreino={() => router.push("/professor/treinos")}
+        onCriarTreino={() => router.push("/professor/treinos/montar")}
       />
     </main>
   );

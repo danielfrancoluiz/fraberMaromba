@@ -2,13 +2,6 @@
 
 import { useEffect, useRef } from "react";
 
-const colors = {
-  primary: "#2E7FD9",
-  surface: "#132035",
-  textPrimary: "#F0F4FF",
-  textSecondary: "#7A9CC4",
-};
-
 const DIA_LABELS: Record<string, string> = {
   segunda: "Segunda",
   terca: "Terça",
@@ -54,39 +47,12 @@ export function NavDiasSemana({
             type="button"
             data-dia={dia}
             onClick={() => onChange(dia)}
-            style={{
-              flexShrink: 0,
-              border: "none",
-              borderRadius: "999px",
-              padding: "10px 16px",
-              fontFamily: "Inter, sans-serif",
-              fontWeight: 600,
-              fontSize: "0.9rem",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              backgroundColor: selecionado ? colors.primary : colors.surface,
-              color: selecionado ? colors.textPrimary : colors.textSecondary,
-            }}
+            className={`nav-dia-btn ${selecionado ? "nav-dia-btn--active" : "nav-dia-btn--inactive"}`}
           >
             {labelDia(dia)}
           </button>
         );
       })}
-
-      <style jsx global>{`
-        .nav-dias-semana {
-          display: flex;
-          flex-wrap: nowrap;
-          gap: 8px;
-          overflow-x: auto;
-          overflow-y: hidden;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-        .nav-dias-semana::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
     </nav>
   );
 }

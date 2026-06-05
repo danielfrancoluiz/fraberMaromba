@@ -35,25 +35,28 @@ export function WorkoutSubstituteModal({
           aria-labelledby="workout-sub-title"
         >
           <div className="workout-modal-header">
-            <h2 id="workout-sub-title" style={{ margin: 0, fontSize: "1.1rem" }}>
+            <h2 id="workout-sub-title" className="workout-modal-title">
               Substituir exercício
             </h2>
-            <button type="button" className="workout-modal-close" onClick={onFechar} aria-label="Fechar">
+            <button
+              type="button"
+              className="workout-modal-close"
+              onClick={onFechar}
+              aria-label="Fechar"
+            >
               <X size={20} />
             </button>
           </div>
 
-          <p className="text-muted" style={{ margin: "0 0 12px", fontSize: "0.875rem" }}>
-            Alternativas para <strong style={{ color: "var(--fraber-text)" }}>{nomeAtual}</strong>
+          <p className="workout-modal-desc text-muted">
+            Alternativas para <strong>{nomeAtual}</strong>
           </p>
 
           <div className="workout-sub-lista">
             {loading ? (
-              <p className="text-muted" style={{ textAlign: "center", padding: "1.5rem 0" }}>
-                Carregando alternativas...
-              </p>
+              <p className="text-muted workout-sub-empty">Carregando alternativas...</p>
             ) : substitutos.length === 0 ? (
-              <p className="text-muted" style={{ textAlign: "center", padding: "1.5rem 0" }}>
+              <p className="text-muted workout-sub-empty">
                 Nenhum substituto neste grupo muscular.
               </p>
             ) : (
@@ -74,8 +77,8 @@ export function WorkoutSubstituteModal({
                       )}
                     </div>
                     <div className="workout-sub-info">
-                      <p style={{ margin: 0, fontWeight: 600, fontSize: "0.9rem" }}>{item.nome}</p>
-                      <p className="text-muted" style={{ margin: "4px 0 0", fontSize: "0.75rem" }}>
+                      <p className="workout-sub-item-title">{item.nome}</p>
+                      <p className="workout-sub-item-meta">
                         {item.equipamento ?? item.grupoMuscular}
                       </p>
                     </div>

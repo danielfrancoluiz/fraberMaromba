@@ -2,7 +2,7 @@
 
 import { ClipboardList, Dumbbell, Plus } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAlunoDetalhes } from "@/hooks/useAlunoDetalhes";
 import { MedicaoFisica } from "@/hooks/useMedicoes";
 import { AlunoDetalhesHeader } from "@/components/professor/AlunoDetalhesHeader";
@@ -10,7 +10,7 @@ import { AlunoInfoCard } from "@/components/professor/AlunoInfoCard";
 import { EditarAlunoForm } from "@/components/professor/EditarAlunoForm";
 import { TreinoCard } from "@/components/professor/TreinoCard";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { deletarTreino } from "@/services/professorService";
+import { deletarAluno, deletarTreino } from "@/services/professorService";
 import { Treino } from "@/types";
 import { AtribuirTemplatePanel } from "@/components/professor/AtribuirTemplatePanel";
 import { MedicaoForm } from "@/components/professor/MedicaoForm";
@@ -19,6 +19,8 @@ import { HistoricoCheckins } from "@/components/professor/HistoricoCheckins";
 import { PagamentoCard } from "@/components/professor/PagamentoCard";
 import { buscarEstatisticasSessaoAlunoProfessor } from "@/services/sessaoService";
 import { EstatisticasSessaoProfessor } from "@/types";
+import { Section } from "@/components/ui/Section";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 const planosPadrao = [
   { id: "mensal", nome: "Mensal" },
@@ -38,21 +40,6 @@ function isMedicaoFisica(value: unknown): value is MedicaoFisica {
   );
 }
 
-function SecaoTitulo({ children }: { children: ReactNode }) {
-  return (
-    <h2
-      style={{
-        margin: "0 0 1rem",
-        color: "#F0F4FF",
-        fontSize: "1.1rem",
-        fontFamily: "Inter, sans-serif",
-      }}
-    >
-      {children}
-    </h2>
-  );
-}
-
 export default function Page() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
@@ -64,6 +51,8 @@ export default function Page() {
   const [showAtribuirTemplate, setShowAtribuirTemplate] = useState(false);
   const [treinoExcluir, setTreinoExcluir] = useState<Treino | null>(null);
   const [excluindoTreino, setExcluindoTreino] = useState(false);
+  const [confirmarExclusaoAluno, setConfirmarExclusaoAluno] = useState(false);
+  const [excluindoAluno, setExcluindoAluno] = useState(false);
   const [medicoes, setMedicoes] = useState<MedicaoFisica[]>([]);
   const [statsSessoes, setStatsSessoes] = useState<EstatisticasSessaoProfessor | null>(
     null
@@ -108,51 +97,21 @@ export default function Page() {
 
   if (loading) {
     return (
-      <main
-        style={{
-          backgroundColor: "#0D1B2E",
-          minHeight: "100vh",
-          padding: "1.5rem 1rem 4rem",
-          display: "grid",
-          placeItems: "center",
-          color: "#7A9CC4",
-          fontFamily: "Inter, sans-serif",
-        }}
-      >
-        Carregando...
+      <main className="page-main">
+        <p className="loading-center text-muted">Carregando...</p>
       </main>
     );
   }
 
   if (erro || !aluno) {
     return (
-      <main
-        style={{
-          backgroundColor: "#0D1B2E",
-          minHeight: "100vh",
-          padding: "1.5rem 1rem 4rem",
-          display: "grid",
-          placeItems: "center",
-          color: "#F0F4FF",
-          fontFamily: "Inter, sans-serif",
-          textAlign: "center",
-        }}
-      >
-        <div>
-          <p style={{ margin: 0, marginBottom: "12px" }}>Aluno não encontrado.</p>
+      <main className="page-main">
+        <div className="status-page-inner">
+          <p>Aluno não encontrado.</p>
           <button
             type="button"
+            className="btn-secondary"
             onClick={() => router.push("/professor/dashboard")}
-            style={{
-              minHeight: "48px",
-              borderRadius: "10px",
-              border: "1px solid #1E3050",
-              backgroundColor: "#132035",
-              color: "#F0F4FF",
-              padding: "0 16px",
-              fontFamily: "Inter, sans-serif",
-              cursor: "pointer",
-            }}
           >
             Voltar
           </button>
@@ -165,28 +124,16 @@ export default function Page() {
     planosPadrao.find((plano) => plano.id === aluno.planoId)?.nome ?? aluno.planoId;
 
   return (
-    <main
-      style={{
-        backgroundColor: "#0D1B2E",
-        minHeight: "100vh",
-        padding: "1.5rem 1rem 4rem",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "920px",
-          margin: "0 auto",
-          display: "grid",
-          gap: "1rem",
-        }}
-      >
+    <main className="page-main">
+      <div className="page-container page-stack">
         <AlunoDetalhesHeader
           aluno={aluno}
-          onVoltar={() => router.push("/professor/dashboard")}
+          onVoltar={() => router.push("/professor/alunos")}
           onEditar={() => {
             setShowEditarForm(true);
             setShowAtribuirTemplate(false);
           }}
+          onExcluir={() => setConfirmarExclusaoAluno(true)}
         />
 
         {showEditarForm ? (
@@ -202,109 +149,43 @@ export default function Page() {
           <AlunoInfoCard aluno={aluno} nomePlano={nomePlano} />
         )}
 
-        <section
-          className="card"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "12px",
-            padding: "14px",
-          }}
-        >
-          <div>
-            <p className="text-muted" style={{ margin: 0, fontSize: "0.8rem" }}>
-              Treinos concluídos
-            </p>
-            <strong style={{ fontSize: "1.5rem", color: "var(--fraber-primary)" }}>
-              {statsSessoes?.treinosConcluidos ?? 0}
-            </strong>
-          </div>
-          <div>
-            <p className="text-muted" style={{ margin: 0, fontSize: "0.8rem" }}>
-              Minutos treinados
-            </p>
-            <strong style={{ fontSize: "1.5rem", color: "var(--fraber-primary)" }}>
-              {statsSessoes?.minutosTotais ?? 0} min
-            </strong>
-          </div>
-        </section>
+        <div className="stats-row">
+          <article className="stat-tile">
+            <p className="stat-tile-value">{statsSessoes?.treinosConcluidos ?? 0}</p>
+            <p className="stat-tile-label">Treinos concluídos</p>
+          </article>
+          <article className="stat-tile">
+            <p className="stat-tile-value">{statsSessoes?.minutosTotais ?? 0} min</p>
+            <p className="stat-tile-label">Minutos treinados</p>
+          </article>
+        </div>
 
-        <section
-          style={{
-            backgroundColor: "#132035",
-            border: "1px solid #1E3050",
-            borderRadius: "12px",
-            padding: "14px",
-            fontFamily: "Inter, sans-serif",
-            display: "grid",
-            gap: "12px",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "10px",
-            }}
-          >
-            <h2
-              style={{
-                margin: 0,
-                color: "#F0F4FF",
-                fontSize: "1.1rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
-              <Dumbbell size={18} color="#2E7FD9" />
+        <section className="page-section card">
+          <div className="section-title-row">
+            <h2 className="section-title section-title-icon">
+              <Dumbbell size={18} />
               Treinos
             </h2>
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <div className="action-row" style={{ flex: "none" }}>
               <button
                 type="button"
+                className="btn-primary btn-compact"
                 onClick={() => {
                   setShowAtribuirTemplate(true);
                   setShowEditarForm(false);
                 }}
-                style={{
-                  minHeight: "40px",
-                  border: "none",
-                  borderRadius: "10px",
-                  backgroundColor: "#2E7FD9",
-                  color: "#F0F4FF",
-                  fontFamily: "Inter, sans-serif",
-                  fontWeight: 600,
-                  padding: "8px 12px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
               >
                 <ClipboardList size={16} />
-                Usar Template
+                Usar template
               </button>
               <button
                 type="button"
+                className="btn-secondary btn-compact"
                 onClick={() =>
-                  router.push(`/professor/treinos/montar?alunoId=${encodeURIComponent(aluno.id)}`)
+                  router.push(
+                    `/professor/treinos/montar?alunoId=${encodeURIComponent(aluno.id)}`
+                  )
                 }
-                style={{
-                  minHeight: "40px",
-                  border: "1px solid #1E3050",
-                  borderRadius: "10px",
-                  backgroundColor: "#132035",
-                  color: "#F0F4FF",
-                  fontFamily: "Inter, sans-serif",
-                  fontWeight: 600,
-                  padding: "8px 12px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
               >
                 <Plus size={16} />
                 Montar treino
@@ -324,11 +205,13 @@ export default function Page() {
           ) : null}
 
           {treinos.length === 0 ? (
-            <p style={{ margin: 0, color: "#7A9CC4" }}>
-              Nenhum treino cadastrado ainda.
-            </p>
+            <EmptyState
+              icon={Dumbbell}
+              title="Nenhum treino cadastrado"
+              description="Monte um treino personalizado ou use um template."
+            />
           ) : (
-            <div style={{ display: "grid", gap: "10px" }}>
+            <div className="treinos-grid">
               {treinos.map((treino) => (
                 <TreinoCard
                   key={treino.id}
@@ -343,40 +226,41 @@ export default function Page() {
           )}
         </section>
 
-        <section
-          style={{
-            backgroundColor: "#132035",
-            border: "1px solid #1E3050",
-            borderRadius: "12px",
-            padding: "14px",
-            fontFamily: "Inter, sans-serif",
-            display: "grid",
-            gap: "12px",
-          }}
-        >
-          <SecaoTitulo>Evolução Física</SecaoTitulo>
+        <Section title="Evolução física" className="card">
           <MedicaoForm alunoId={aluno.id} onSalvo={carregarMedicoes} />
           <GraficoEvolucao medicoes={medicoes} />
-        </section>
+        </Section>
 
-        <section
-          style={{
-            backgroundColor: "#132035",
-            border: "1px solid #1E3050",
-            borderRadius: "12px",
-            padding: "14px",
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          <SecaoTitulo>Histórico de Presenças</SecaoTitulo>
+        <Section title="Histórico de presenças" className="card">
           <HistoricoCheckins alunoId={aluno.id} />
-        </section>
+        </Section>
 
-        <section className="card" style={{ padding: "14px" }}>
-          <SecaoTitulo>Pagamento</SecaoTitulo>
+        <Section title="Pagamento" className="card">
           <PagamentoCard alunoId={aluno.id} planoAtual={aluno.planoId} />
-        </section>
+        </Section>
       </div>
+
+      <ConfirmDialog
+        open={confirmarExclusaoAluno}
+        titulo="Excluir aluno?"
+        mensagem={`Excluir "${aluno.nomeCompleto}" e todos os treinos, medições e histórico? Esta ação não pode ser desfeita.`}
+        confirmarLabel="Excluir aluno"
+        cancelarLabel="Cancelar"
+        loading={excluindoAluno}
+        onConfirmar={async () => {
+          setExcluindoAluno(true);
+          try {
+            await deletarAluno(aluno.id);
+            setConfirmarExclusaoAluno(false);
+            router.push("/professor/alunos");
+          } catch (error) {
+            alert(error instanceof Error ? error.message : "Erro ao excluir aluno");
+          } finally {
+            setExcluindoAluno(false);
+          }
+        }}
+        onCancelar={() => !excluindoAluno && setConfirmarExclusaoAluno(false)}
+      />
 
       <ConfirmDialog
         open={!!treinoExcluir}

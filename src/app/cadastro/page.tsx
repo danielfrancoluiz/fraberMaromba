@@ -7,16 +7,6 @@ import { UserCheck } from "lucide-react";
 import { useCadastro } from "@/hooks/useCadastro";
 import { Logo } from "@/components/Logo";
 
-const colors = {
-  background: "#0D1B2E",
-  surface: "#132035",
-  primary: "#2E7FD9",
-  secondary: "#E8001C",
-  textPrimary: "#F0F4FF",
-  textSecondary: "#7A9CC4",
-  border: "#1E3050",
-};
-
 function CadastroContent() {
   const searchParams = useSearchParams();
   const tokenConvite = searchParams.get("convite") ?? undefined;
@@ -39,82 +29,26 @@ function CadastroContent() {
 
   const emailReadonly = !!convite?.email;
 
-  const inputStyle: React.CSSProperties = {
-    minHeight: "48px",
-    width: "100%",
-    borderRadius: "10px",
-    border: `1px solid ${colors.border}`,
-    backgroundColor: colors.background,
-    color: colors.textPrimary,
-    padding: "10px 12px",
-    fontFamily: "Inter, sans-serif",
-    fontSize: "0.95rem",
-    outline: "none",
-  };
-
   return (
-    <main
-      className="cadastro-page page-main"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <div className="cadastro-card card" style={{ width: "100%" }}>
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
+    <main className="auth-page">
+      <div className="auth-card card">
+        <div className="auth-logo-wrap">
           <Logo size={88} />
         </div>
-        <h1
-          style={{
-            margin: "0 0 24px",
-            fontWeight: 700,
-            fontSize: "1.35rem",
-            textAlign: "center",
-          }}
-        >
-          Criar Conta
+        <h1 className="page-header-title" style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+          Criar conta
         </h1>
 
         {loadingConvite ? (
-          <p
-            style={{
-              margin: "0 0 20px",
-              color: colors.textSecondary,
-              textAlign: "center",
-              fontSize: "0.9rem",
-            }}
-          >
+          <p className="text-muted" style={{ textAlign: "center", marginBottom: "1.25rem" }}>
             Validando convite...
           </p>
         ) : null}
 
         {convite && !feedbackErro ? (
-          <div
-            style={{
-              marginBottom: "20px",
-              padding: "14px 16px",
-              backgroundColor: colors.surface,
-              border: `1px solid ${colors.primary}`,
-              borderRadius: "10px",
-              display: "flex",
-              alignItems: "flex-start",
-              gap: "10px",
-            }}
-          >
-            <UserCheck
-              size={20}
-              color={colors.primary}
-              style={{ flexShrink: 0, marginTop: "2px" }}
-            />
-            <p
-              style={{
-                margin: 0,
-                color: colors.textSecondary,
-                fontSize: "0.9rem",
-                lineHeight: 1.5,
-              }}
-            >
+          <div className="auth-invite-banner">
+            <UserCheck size={20} />
+            <p>
               Você foi convidado por um professor. Sua conta será vinculada
               automaticamente.
             </p>
@@ -122,185 +56,101 @@ function CadastroContent() {
         ) : null}
 
         {feedbackErro ? (
-          <p
-            style={{
-              margin: "0 0 20px",
-              color: colors.secondary,
-              fontSize: "0.9rem",
-              textAlign: "center",
-            }}
-          >
+          <div className="auth-alert auth-alert--error" style={{ marginBottom: "1.25rem" }}>
             {feedbackErro}
-          </p>
+          </div>
         ) : null}
 
         <form
+          className="auth-form"
           onSubmit={(e) => {
             e.preventDefault();
             void handleSubmit();
           }}
-          style={{ display: "grid", gap: "14px" }}
         >
           <div>
-            <label
-              style={{
-                display: "block",
-                color: colors.textSecondary,
-                marginBottom: "6px",
-                fontSize: "0.9rem",
-              }}
-            >
-              Nome Completo
+            <label className="field-label" htmlFor="cadastro-nome">
+              Nome completo
             </label>
             <input
+              id="cadastro-nome"
               type="text"
+              className="input-field"
               value={form.nome}
               onChange={(e) => handleChange("nome", e.target.value)}
-              style={inputStyle}
               disabled={formularioDesabilitado}
               autoComplete="name"
             />
-            {errors.nome ? (
-              <p style={{ margin: "6px 0 0", color: colors.secondary, fontSize: "0.85rem" }}>
-                {errors.nome}
-              </p>
-            ) : null}
+            {errors.nome ? <p className="field-error">{errors.nome}</p> : null}
           </div>
 
           <div>
-            <label
-              style={{
-                display: "block",
-                color: colors.textSecondary,
-                marginBottom: "6px",
-                fontSize: "0.9rem",
-              }}
-            >
+            <label className="field-label" htmlFor="cadastro-email">
               Email
             </label>
             <input
+              id="cadastro-email"
               type="email"
+              className="input-field"
               value={form.email}
               onChange={(e) => handleChange("email", e.target.value)}
-              style={{
-                ...inputStyle,
-                opacity: emailReadonly ? 0.7 : 1,
-                cursor: emailReadonly ? "not-allowed" : "text",
-              }}
               readOnly={emailReadonly}
               disabled={formularioDesabilitado}
               autoComplete="email"
+              style={emailReadonly ? { opacity: 0.7, cursor: "not-allowed" } : undefined}
             />
-            {errors.email ? (
-              <p style={{ margin: "6px 0 0", color: colors.secondary, fontSize: "0.85rem" }}>
-                {errors.email}
-              </p>
-            ) : null}
+            {errors.email ? <p className="field-error">{errors.email}</p> : null}
           </div>
 
           <div>
-            <label
-              style={{
-                display: "block",
-                color: colors.textSecondary,
-                marginBottom: "6px",
-                fontSize: "0.9rem",
-              }}
-            >
+            <label className="field-label" htmlFor="cadastro-senha">
               Senha
             </label>
             <input
+              id="cadastro-senha"
               type="password"
+              className="input-field"
               value={form.senha}
               onChange={(e) => handleChange("senha", e.target.value)}
-              style={inputStyle}
               disabled={formularioDesabilitado}
               autoComplete="new-password"
             />
-            {errors.senha ? (
-              <p style={{ margin: "6px 0 0", color: colors.secondary, fontSize: "0.85rem" }}>
-                {errors.senha}
-              </p>
-            ) : null}
+            {errors.senha ? <p className="field-error">{errors.senha}</p> : null}
           </div>
 
           <div>
-            <label
-              style={{
-                display: "block",
-                color: colors.textSecondary,
-                marginBottom: "6px",
-                fontSize: "0.9rem",
-              }}
-            >
-              Confirmar Senha
+            <label className="field-label" htmlFor="cadastro-confirmar">
+              Confirmar senha
             </label>
             <input
+              id="cadastro-confirmar"
               type="password"
+              className="input-field"
               value={form.confirmarSenha}
               onChange={(e) => handleChange("confirmarSenha", e.target.value)}
-              style={inputStyle}
               disabled={formularioDesabilitado}
               autoComplete="new-password"
             />
             {errors.confirmarSenha ? (
-              <p style={{ margin: "6px 0 0", color: colors.secondary, fontSize: "0.85rem" }}>
-                {errors.confirmarSenha}
-              </p>
+              <p className="field-error">{errors.confirmarSenha}</p>
             ) : null}
           </div>
 
-          {errors.geral ? (
-            <p style={{ margin: 0, color: colors.secondary, fontSize: "0.9rem" }}>
-              {errors.geral}
-            </p>
-          ) : null}
+          {errors.geral ? <p className="field-error">{errors.geral}</p> : null}
 
           <button
             type="submit"
+            className="btn-primary"
             disabled={formularioDesabilitado || loadingSubmit}
-            style={{
-              minHeight: "48px",
-              width: "100%",
-              border: "none",
-              borderRadius: "10px",
-              backgroundColor: colors.primary,
-              color: colors.textPrimary,
-              fontFamily: "Inter, sans-serif",
-              fontWeight: 700,
-              fontSize: "0.95rem",
-              cursor: formularioDesabilitado || loadingSubmit ? "not-allowed" : "pointer",
-              opacity: formularioDesabilitado || loadingSubmit ? 0.75 : 1,
-            }}
           >
-            {loadingSubmit ? "Criando conta..." : "Criar Conta"}
+            {loadingSubmit ? "Criando conta..." : "Criar conta"}
           </button>
         </form>
 
-        <p style={{ margin: "24px 0 0", textAlign: "center", fontSize: "0.9rem" }}>
-          <Link href="/login" style={{ color: colors.primary, textDecoration: "none" }}>
-            Já tem conta? Faça login
-          </Link>
+        <p className="auth-footer">
+          <Link href="/login">Já tem conta? Faça login</Link>
         </p>
       </div>
-
-      <style jsx global>{`
-        .cadastro-page {
-          width: 100%;
-          padding: 1.5rem;
-        }
-        .cadastro-card {
-          width: 100%;
-        }
-        @media (min-width: 768px) {
-          .cadastro-card {
-            max-width: 420px;
-            background-color: #132035;
-            border-radius: 12px;
-            padding: 2rem;
-          }
-        }
-      `}</style>
     </main>
   );
 }
@@ -309,18 +159,8 @@ export default function Page() {
   return (
     <Suspense
       fallback={
-        <main
-          style={{
-            backgroundColor: "#0D1B2E",
-            minHeight: "100vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#7A9CC4",
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          Carregando...
+        <main className="auth-page">
+          <p className="text-muted">Carregando...</p>
         </main>
       }
     >

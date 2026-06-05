@@ -162,198 +162,191 @@ export function GraficoEvolucao({ medicoes }: GraficoEvolucaoProps) {
   }, [pontos, chartWidth, chartHeight]);
 
   return (
-    <section style={{ width: "100%" }}>
-      <div className="card" style={{ padding: "1.125rem" }}>
-        <p className="text-muted" style={{ margin: "0 0 10px", fontSize: "0.875rem" }}>
-          Evolução — escolha a medida
-        </p>
+    <div className="chart-evolucao">
+      <p className="chart-evolucao-header">Evolução — escolha a medida</p>
 
-        <div className="chip-group" role="group" aria-label="Selecionar medida">
-          {MEDIDAS.map((medida) => {
-            const total = contagemPorMedida[medida.key];
-            const ativa = medidaSelecionada === medida.key;
-            return (
-              <button
-                key={medida.key}
-                type="button"
-                aria-pressed={ativa}
-                disabled={total === 0}
-                className={`chip ${ativa ? "chip-active" : ""} ${total === 0 ? "chip-disabled" : ""}`}
-                onClick={() => {
-                  setMedidaSelecionada(medida.key);
-                  setHoverIndex(null);
-                }}
-              >
-                {medida.label}
-                {total > 0 ? ` · ${total}` : ""}
-              </button>
-            );
-          })}
-        </div>
-
-        {medicoes.length === 0 ? (
-          <p className="chart-empty" style={{ marginTop: "1rem" }}>
-            Nenhuma medição registrada ainda. Salve a primeira medição acima.
-          </p>
-        ) : pontos.length === 0 ? (
-          <p className="chart-empty" style={{ marginTop: "1rem" }}>
-            Nenhum valor de &quot;{medidaLabel}&quot; nas medições. Escolha outra medida ou
-            preencha este campo na próxima medição.
-          </p>
-        ) : pontos.length === 1 ? (
-          <p className="chart-empty" style={{ marginTop: "1rem" }}>
-            <strong style={{ color: "var(--fraber-text)" }}>
-              {formatarValor(pontos[0].valor)}
-            </strong>{" "}
-            em {formatarDataCurta(pontos[0].data)} — registre mais uma medição com &quot;
-            {medidaLabel}&quot; para ver o gráfico de evolução.
-          </p>
-        ) : (
-          <div style={{ marginTop: "1rem", overflow: "visible" }}>
-            <svg
-              viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
-              width="100%"
-              style={{ display: "block", minWidth: "300px", overflow: "visible" }}
-              role="img"
-              aria-label={`Gráfico de evolução: ${medidaLabel}`}
+      <div className="chip-group" role="group" aria-label="Selecionar medida">
+        {MEDIDAS.map((medida) => {
+          const total = contagemPorMedida[medida.key];
+          const ativa = medidaSelecionada === medida.key;
+          return (
+            <button
+              key={medida.key}
+              type="button"
+              aria-pressed={ativa}
+              disabled={total === 0}
+              className={`chip ${ativa ? "chip-active" : ""} ${total === 0 ? "chip-disabled" : ""}`}
+              onClick={() => {
+                setMedidaSelecionada(medida.key);
+                setHoverIndex(null);
+              }}
             >
-              {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-                const y = PADDING.top + chartHeight * (1 - ratio);
-                return (
-                  <line
-                    key={ratio}
-                    x1={PADDING.left}
-                    y1={y}
-                    x2={PADDING.left + chartWidth}
-                    y2={y}
-                    stroke="var(--fraber-border)"
-                    strokeWidth={1}
-                    strokeDasharray="4 4"
-                    opacity={0.6}
-                  />
-                );
-              })}
+              {medida.label}
+              {total > 0 ? ` · ${total}` : ""}
+            </button>
+          );
+        })}
+      </div>
 
-              {chartData.ticksY.map((tick) => {
-                const y =
-                  PADDING.top +
-                  chartHeight -
-                  ((tick - chartData.minPlot!) / chartData.plotRange!) * chartHeight;
-                return (
-                  <text
-                    key={tick}
-                    x={PADDING.left - 10}
-                    y={y + 4}
-                    fill="var(--fraber-text-muted)"
-                    fontSize={11}
-                    textAnchor="end"
-                  >
-                    {formatarValor(tick)}
-                  </text>
-                );
-              })}
+      {medicoes.length === 0 ? (
+        <p className="chart-empty">
+          Nenhuma medição registrada ainda. Salve a primeira medição acima.
+        </p>
+      ) : pontos.length === 0 ? (
+        <p className="chart-empty">
+          Nenhum valor de &quot;{medidaLabel}&quot; nas medições. Escolha outra medida ou
+          preencha este campo na próxima medição.
+        </p>
+      ) : pontos.length === 1 ? (
+        <p className="chart-empty">
+          <span className="chart-highlight">{formatarValor(pontos[0].valor)}</span> em{" "}
+          {formatarDataCurta(pontos[0].data)} — registre mais uma medição com &quot;
+          {medidaLabel}&quot; para ver o gráfico de evolução.
+        </p>
+      ) : (
+        <div className="chart-svg-wrap">
+          <svg
+            viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
+            className="chart-svg"
+            role="img"
+            aria-label={`Gráfico de evolução: ${medidaLabel}`}
+          >
+            {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+              const y = PADDING.top + chartHeight * (1 - ratio);
+              return (
+                <line
+                  key={ratio}
+                  x1={PADDING.left}
+                  y1={y}
+                  x2={PADDING.left + chartWidth}
+                  y2={y}
+                  stroke="var(--fraber-border)"
+                  strokeWidth={1}
+                  strokeDasharray="4 4"
+                  opacity={0.6}
+                />
+              );
+            })}
 
-              <line
-                x1={PADDING.left}
-                y1={PADDING.top + chartHeight}
-                x2={PADDING.left + chartWidth}
-                y2={PADDING.top + chartHeight}
-                stroke="var(--fraber-border)"
-                strokeWidth={1.5}
-              />
-              <line
-                x1={PADDING.left}
-                y1={PADDING.top}
-                x2={PADDING.left}
-                y2={PADDING.top + chartHeight}
-                stroke="var(--fraber-border)"
-                strokeWidth={1.5}
-              />
-
-              {chartData.labelsX.map((item) => (
+            {chartData.ticksY.map((tick) => {
+              const y =
+                PADDING.top +
+                chartHeight -
+                ((tick - chartData.minPlot!) / chartData.plotRange!) * chartHeight;
+              return (
                 <text
-                  key={item.key}
-                  x={item.x}
-                  y={SVG_HEIGHT - 16}
+                  key={tick}
+                  x={PADDING.left - 10}
+                  y={y + 4}
                   fill="var(--fraber-text-muted)"
                   fontSize={11}
-                  textAnchor="middle"
+                  textAnchor="end"
                 >
-                  {item.label}
+                  {formatarValor(tick)}
                 </text>
-              ))}
+              );
+            })}
 
-              {chartData.linhaPath ? (
-                <path
-                  d={chartData.linhaPath}
-                  fill="none"
-                  stroke="var(--fraber-primary)"
-                  strokeWidth={2.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              ) : null}
+            <line
+              x1={PADDING.left}
+              y1={PADDING.top + chartHeight}
+              x2={PADDING.left + chartWidth}
+              y2={PADDING.top + chartHeight}
+              stroke="var(--fraber-border)"
+              strokeWidth={1.5}
+            />
+            <line
+              x1={PADDING.left}
+              y1={PADDING.top}
+              x2={PADDING.left}
+              y2={PADDING.top + chartHeight}
+              stroke="var(--fraber-border)"
+              strokeWidth={1.5}
+            />
 
-              {chartData.circulos.map((circulo, index) => {
-                const ativo = hoverIndex === index;
-                const tooltipY = circulo.y < PADDING.top + 36 ? circulo.y + 28 : circulo.y - 28;
-                const tooltipW = 108;
-                const tooltipX = Math.min(
-                  Math.max(circulo.x - tooltipW / 2, 8),
-                  SVG_WIDTH - tooltipW - 8
-                );
+            {chartData.labelsX.map((item) => (
+              <text
+                key={item.key}
+                x={item.x}
+                y={SVG_HEIGHT - 16}
+                fill="var(--fraber-text-muted)"
+                fontSize={11}
+                textAnchor="middle"
+              >
+                {item.label}
+              </text>
+            ))}
 
-                return (
-                  <g key={`${circulo.ponto.data}-${index}`}>
-                    <circle
-                      cx={circulo.x}
-                      cy={circulo.y}
-                      r={ativo ? 6 : 4.5}
-                      fill="var(--fraber-primary)"
-                      stroke="var(--fraber-text)"
-                      strokeWidth={2}
-                      style={{ cursor: "pointer" }}
-                      onMouseEnter={() => setHoverIndex(index)}
-                      onMouseLeave={() => setHoverIndex(null)}
-                    />
-                    <text
-                      x={circulo.x}
-                      y={circulo.y - 12}
-                      fill="var(--fraber-text-muted)"
-                      fontSize={10}
-                      textAnchor="middle"
-                    >
-                      {formatarValor(circulo.ponto.valor)}
-                    </text>
-                    {ativo ? (
-                      <>
-                        <rect
-                          x={tooltipX}
-                          y={tooltipY - 14}
-                          width={tooltipW}
-                          height={26}
-                          rx={6}
-                          fill="var(--fraber-bg-soft)"
-                          stroke="var(--fraber-border)"
-                        />
-                        <text
-                          x={tooltipX + tooltipW / 2}
-                          y={tooltipY + 2}
-                          fill="var(--fraber-text)"
-                          fontSize={11}
-                          textAnchor="middle"
-                        >
-                          {circulo.ponto.label}
-                        </text>
-                      </>
-                    ) : null}
-                  </g>
-                );
-              })}
-            </svg>
-          </div>
-        )}
-      </div>
-    </section>
+            {chartData.linhaPath ? (
+              <path
+                d={chartData.linhaPath}
+                fill="none"
+                stroke="var(--fraber-primary)"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ) : null}
+
+            {chartData.circulos.map((circulo, index) => {
+              const ativo = hoverIndex === index;
+              const tooltipY = circulo.y < PADDING.top + 36 ? circulo.y + 28 : circulo.y - 28;
+              const tooltipW = 108;
+              const tooltipX = Math.min(
+                Math.max(circulo.x - tooltipW / 2, 8),
+                SVG_WIDTH - tooltipW - 8
+              );
+
+              return (
+                <g key={`${circulo.ponto.data}-${index}`}>
+                  <circle
+                    cx={circulo.x}
+                    cy={circulo.y}
+                    r={ativo ? 6 : 4.5}
+                    fill="var(--fraber-primary)"
+                    stroke="var(--fraber-text)"
+                    strokeWidth={2}
+                    className="chart-point"
+                    onMouseEnter={() => setHoverIndex(index)}
+                    onMouseLeave={() => setHoverIndex(null)}
+                  />
+                  <text
+                    x={circulo.x}
+                    y={circulo.y - 12}
+                    fill="var(--fraber-text-muted)"
+                    fontSize={10}
+                    textAnchor="middle"
+                  >
+                    {formatarValor(circulo.ponto.valor)}
+                  </text>
+                  {ativo ? (
+                    <>
+                      <rect
+                        x={tooltipX}
+                        y={tooltipY - 14}
+                        width={tooltipW}
+                        height={26}
+                        rx={6}
+                        fill="var(--fraber-bg-soft)"
+                        stroke="var(--fraber-border)"
+                      />
+                      <text
+                        x={tooltipX + tooltipW / 2}
+                        y={tooltipY + 2}
+                        fill="var(--fraber-text)"
+                        fontSize={11}
+                        textAnchor="middle"
+                      >
+                        {circulo.ponto.label}
+                      </text>
+                    </>
+                  ) : null}
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+      )}
+    </div>
   );
 }

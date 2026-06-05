@@ -1,13 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Play, History } from "lucide-react";
+import { History, Play } from "lucide-react";
 import { TreinoSessao } from "@/types";
 import {
   formatarDataSessao,
   formatarDuracaoSessao,
   listarSessoesAluno,
 } from "@/services/sessaoService";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Badge } from "@/components/ui/Badge";
 
 export default function Page() {
   const [itens, setItens] = useState<TreinoSessao[]>([]);
@@ -42,75 +45,53 @@ export default function Page() {
 
   return (
     <main className="page-main">
-      <div className="page-container" style={{ paddingTop: "1rem" }}>
-        <header style={{ marginBottom: "1.25rem" }}>
-          <h1 style={{ margin: 0, fontSize: "1.35rem" }}>Histórico</h1>
-          <p className="text-muted" style={{ margin: "4px 0 0", fontSize: "0.9rem" }}>
-            Treinos concluídos
-          </p>
-        </header>
+      <div className="page-container page-stack">
+        <PageHeader title="Histórico" subtitle="Treinos concluídos" />
 
         {loading ? (
-          <p className="text-muted" style={{ textAlign: "center", margin: "2rem 0" }}>
-            Carregando...
-          </p>
+          <p className="loading-center text-muted">Carregando...</p>
         ) : erro ? (
-          <p className="text-accent" style={{ textAlign: "center", margin: "2rem 0" }}>
-            {erro}
-          </p>
+          <p className="error-center text-accent">{erro}</p>
         ) : itens.length === 0 ? (
-          <div className="card historico-empty">
-            <History
-              size={40}
-              style={{
-                margin: "0 auto 12px",
-                display: "block",
-                color: "var(--fraber-text-muted)",
-              }}
-            />
-            <p style={{ margin: 0, fontWeight: 600, textAlign: "center" }}>
-              Nenhum treino concluído ainda
-            </p>
-            <p
-              className="text-muted"
-              style={{ margin: "8px 0 0", fontSize: "0.875rem", textAlign: "center" }}
-            >
-              Quando você finalizar um treino, ele aparecerá aqui com data e duração.
-            </p>
-          </div>
+          <EmptyState
+            icon={History}
+            title="Nenhum treino concluído ainda"
+            description="Quando você finalizar um treino, ele aparecerá aqui com data e duração."
+          />
         ) : (
-          <div className="historico-lista">
-            {itens.map((sessao) => (
-              <article key={sessao.id} className="historico-item card">
-                <div className="historico-item-play" aria-hidden>
-                  <Play size={20} fill="currentColor" />
-                </div>
-                <div className="historico-item-body">
-                  <div className="historico-item-top">
-                    <h2 className="historico-item-titulo">{sessao.treinoNome}</h2>
-                    <span className="historico-badge">Concluído</span>
+          <>
+            <div className="historico-lista">
+              {itens.map((sessao) => (
+                <article key={sessao.id} className="historico-item card">
+                  <div className="historico-item-play" aria-hidden>
+                    <Play size={20} fill="currentColor" />
                   </div>
-                  <p className="text-muted historico-item-meta">
-                    {formatarDataSessao(sessao.finalizadoEm ?? sessao.iniciadoEm)}
-                    {" · "}
-                    {formatarDuracaoSessao(sessao.duracaoSegundos)}
-                  </p>
-                </div>
-              </article>
-            ))}
+                  <div className="historico-item-body">
+                    <div className="historico-item-top">
+                      <h2 className="historico-item-titulo">{sessao.treinoNome}</h2>
+                      <Badge variant="success">Concluído</Badge>
+                    </div>
+                    <p className="text-muted historico-item-meta">
+                      {formatarDataSessao(sessao.finalizadoEm ?? sessao.iniciadoEm)}
+                      {" · "}
+                      {formatarDuracaoSessao(sessao.duracaoSegundos)}
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
 
             {pagina < totalPaginas ? (
               <button
                 type="button"
                 className="btn-secondary"
-                style={{ width: "100%", marginTop: "8px" }}
                 disabled={carregandoMais}
                 onClick={() => void carregar(pagina + 1, true)}
               >
                 {carregandoMais ? "Carregando..." : "Carregar mais"}
               </button>
             ) : null}
-          </div>
+          </>
         )}
       </div>
     </main>

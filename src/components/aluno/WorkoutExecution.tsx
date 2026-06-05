@@ -58,7 +58,7 @@ export function WorkoutExecution({
 
   if (sessaoLoading) {
     return (
-      <div className="workout-exec" style={{ justifyContent: "center", alignItems: "center" }}>
+      <div className="workout-exec workout-exec-center">
         <p className="text-muted">Preparando sessão...</p>
       </div>
     );
@@ -66,18 +66,8 @@ export function WorkoutExecution({
 
   if (sessaoErro) {
     return (
-      <div
-        className="workout-exec"
-        style={{
-          justifyContent: "center",
-          alignItems: "center",
-          padding: "2rem",
-          gap: "1rem",
-        }}
-      >
-        <p className="text-accent" style={{ textAlign: "center", margin: 0 }}>
-          {sessaoErro}
-        </p>
+      <div className="workout-exec workout-exec-center">
+        <p className="text-accent">{sessaoErro}</p>
         <button type="button" className="btn-primary" onClick={onSair}>
           Voltar
         </button>
@@ -87,8 +77,8 @@ export function WorkoutExecution({
 
   if (!exercicioAtual || exercicios.length === 0) {
     return (
-      <div className="workout-exec">
-        <p className="text-muted" style={{ textAlign: "center", padding: "2rem" }}>
+      <div className="workout-exec workout-exec-center">
+        <p className="text-muted workout-exec-empty">
           Este treino não possui exercícios.
         </p>
         <button type="button" className="btn-primary" onClick={onSair}>

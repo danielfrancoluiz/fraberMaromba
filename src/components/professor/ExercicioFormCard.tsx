@@ -10,7 +10,6 @@ import { GRUPOS_MUSCULARES } from "@/lib/grupos-musculares";
 interface ExercicioFormCardProps {
   exercicio: ExercicioForm;
   index: number;
-  inputStyle: React.CSSProperties;
   errors?: { nome?: string; series?: string; repeticoes?: string };
   onRemover: () => void;
   onChange: (campo: keyof ExercicioForm, valor: string) => void;
@@ -20,7 +19,6 @@ interface ExercicioFormCardProps {
 export function ExercicioFormCard({
   exercicio,
   index,
-  inputStyle,
   errors,
   onRemover,
   onChange,
@@ -37,7 +35,12 @@ export function ExercicioFormCard({
             {index + 1}
           </span>
           <p className="modal-exercicio-header-label">Exercício {index + 1}</p>
-          <button type="button" onClick={onRemover} className="exercicio-form-remove" aria-label="Remover">
+          <button
+            type="button"
+            onClick={onRemover}
+            className="exercicio-form-remove"
+            aria-label="Remover"
+          >
             <Trash2 size={16} />
           </button>
         </div>
@@ -71,8 +74,8 @@ export function ExercicioFormCard({
             )}
             <button
               type="button"
-              className="chip"
-              style={{ marginTop: "8px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+              className="chip btn-compact"
+              style={{ marginTop: "8px" }}
               onClick={() => setPickerAberto(true)}
             >
               <Search size={14} />
@@ -80,36 +83,41 @@ export function ExercicioFormCard({
             </button>
           </div>
         </div>
-        {errors?.nome ? <p className="text-accent" style={{ margin: 0, fontSize: "0.85rem" }}>{errors.nome}</p> : null}
+        {errors?.nome ? (
+          <p className="field-error" style={{ margin: 0 }}>
+            {errors.nome}
+          </p>
+        ) : null}
 
         <div className="modal-exercicio-campos-row">
           <div>
-            <label className="modal-field-label">Séries</label>
+            <label className="field-label">Séries</label>
             <input
               className="input-field"
               value={exercicio.series}
               onChange={(e) => onChange("series", e.target.value)}
-              style={inputStyle}
             />
-            {errors?.series ? <p className="text-accent" style={{ margin: "4px 0 0", fontSize: "0.85rem" }}>{errors.series}</p> : null}
+            {errors?.series ? (
+              <p className="field-error">{errors.series}</p>
+            ) : null}
           </div>
           <div>
-            <label className="modal-field-label">Repetições</label>
+            <label className="field-label">Repetições</label>
             <input
               className="input-field"
               value={exercicio.repeticoes}
               onChange={(e) => onChange("repeticoes", e.target.value)}
-              style={inputStyle}
             />
-            {errors?.repeticoes ? <p className="text-accent" style={{ margin: "4px 0 0", fontSize: "0.85rem" }}>{errors.repeticoes}</p> : null}
+            {errors?.repeticoes ? (
+              <p className="field-error">{errors.repeticoes}</p>
+            ) : null}
           </div>
           <div>
-            <label className="modal-field-label">Grupo</label>
+            <label className="field-label">Grupo</label>
             <select
               className="input-field"
               value={exercicio.grupoMuscular}
               onChange={(e) => onChange("grupoMuscular", e.target.value)}
-              style={inputStyle}
             >
               <option value="">Selecione</option>
               {GRUPOS_MUSCULARES.map((g) => (
@@ -123,13 +131,13 @@ export function ExercicioFormCard({
         </div>
 
         <div>
-          <label className="modal-field-label">Observação (opcional)</label>
+          <label className="field-label">Observação (opcional)</label>
           <textarea
             rows={2}
-            className="input-field"
+            className="input-field textarea-field"
             value={exercicio.observacao}
             onChange={(e) => onChange("observacao", e.target.value)}
-            style={{ ...inputStyle, minHeight: "72px", resize: "vertical" }}
+            style={{ minHeight: "72px" }}
           />
         </div>
       </div>

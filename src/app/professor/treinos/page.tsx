@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Dumbbell, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
@@ -17,6 +17,8 @@ import {
   deletarTreino,
   listarTreinosProfessor,
 } from "@/services/professorService";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type AbaTreinos = "templates" | "atribuidos";
 
@@ -57,24 +59,6 @@ export default function Page() {
     void carregarAtribuidos();
   }, [carregarAtribuidos]);
 
-  function handleAbrirEditar(template: TreinoTemplate) {
-    setTemplateAtribuir(null);
-    setTemplateExcluir(null);
-    setTemplateEditar(template);
-  }
-
-  function handleAbrirAtribuir(template: TreinoTemplate) {
-    setTemplateEditar(null);
-    setTemplateExcluir(null);
-    setTemplateAtribuir(template);
-  }
-
-  function handleSolicitarExclusaoTemplate(template: TreinoTemplate) {
-    setTemplateEditar(null);
-    setTemplateAtribuir(null);
-    setTemplateExcluir(template);
-  }
-
   async function handleConfirmarExclusaoTemplate() {
     if (!templateExcluir) return;
     setExcluindo(true);
@@ -114,26 +98,23 @@ export default function Page() {
     recarregar();
   }
 
-  const loadingConteudo =
-    aba === "templates" ? loading : loadingAtribuidos;
+  const loadingConteudo = aba === "templates" ? loading : loadingAtribuidos;
   const erroConteudo = aba === "templates" ? erro : erroAtribuidos;
 
   return (
     <main className="page-main">
-      <div className="page-container">
-        <header style={{ paddingTop: "1rem", marginBottom: "0.75rem" }}>
-          <h1 style={{ margin: 0, fontSize: "1.35rem" }}>Treinos</h1>
-          <p className="text-muted" style={{ margin: "4px 0 0" }}>
-            Templates reutilizáveis e treinos dos alunos
-          </p>
-        </header>
+      <div className="page-container page-stack">
+        <PageHeader
+          title="Treinos"
+          subtitle="Templates reutilizáveis e treinos dos alunos"
+        />
 
-        <div className="treinos-tabs" role="tablist">
+        <div className="tabs-bar" role="tablist">
           <button
             type="button"
             role="tab"
             aria-selected={aba === "atribuidos"}
-            className={`treinos-tab${aba === "atribuidos" ? " treinos-tab--active" : ""}`}
+            className={`tab-btn${aba === "atribuidos" ? " tab-btn--active" : ""}`}
             onClick={() => setAba("atribuidos")}
           >
             Atribuídos
@@ -142,7 +123,7 @@ export default function Page() {
             type="button"
             role="tab"
             aria-selected={aba === "templates"}
-            className={`treinos-tab${aba === "templates" ? " treinos-tab--active" : ""}`}
+            className={`tab-btn${aba === "templates" ? " tab-btn--active" : ""}`}
             onClick={() => setAba("templates")}
           >
             Templates
@@ -150,44 +131,60 @@ export default function Page() {
         </div>
 
         {loadingConteudo ? (
-          <p className="text-muted" style={{ margin: "2rem 0", textAlign: "center" }}>
-            Carregando...
-          </p>
+          <p className="loading-center text-muted">Carregando...</p>
         ) : erroConteudo ? (
-          <p className="text-accent" style={{ margin: "2rem 0", textAlign: "center" }}>
-            {erroConteudo}
-          </p>
+          <p className="error-center text-accent">{erroConteudo}</p>
         ) : aba === "templates" ? (
           templates.length === 0 ? (
-            <p className="text-muted" style={{ margin: "2rem 0", textAlign: "center" }}>
-              Nenhum template criado ainda.
-            </p>
+            <EmptyState
+              icon={Dumbbell}
+              title="Nenhum template criado"
+              description="Crie um template para reutilizar em vários alunos."
+              action={
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => router.push("/professor/treinos/novo")}
+                >
+                  Novo template
+                </button>
+              }
+            />
           ) : (
             <div className="templates-grid">
               {templates.map((template) => (
                 <TemplateCard
                   key={template.id}
                   template={template}
-                  onAtribuir={handleAbrirAtribuir}
-                  onEditar={handleAbrirEditar}
-                  onSolicitarExclusao={handleSolicitarExclusaoTemplate}
+                  onAtribuir={setTemplateAtribuir}
+                  onEditar={setTemplateEditar}
+                  onSolicitarExclusao={setTemplateExcluir}
                 />
               ))}
             </div>
           )
         ) : treinosAtribuidos.length === 0 ? (
-          <p className="text-muted" style={{ margin: "2rem 0", textAlign: "center" }}>
-            Nenhum treino atribuído ainda. Use &quot;Novo treino&quot; para montar um plano.
-          </p>
+          <EmptyState
+            icon={Dumbbell}
+            title="Nenhum treino atribuído"
+            description='Use "Novo treino" para montar um plano personalizado.'
+            action={
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => router.push("/professor/treinos/montar")}
+              >
+                Montar treino
+              </button>
+            }
+          />
         ) : (
-          <div className="treinos-atribuidos-grid">
+          <div className="treinos-grid">
             {treinosAtribuidos.map((treino) => (
               <TreinoAtribuidoCard
                 key={treino.id}
                 treino={treino}
-                onEditar={(t) =>
-                  router.push(`/professor/treinos/montar/${t.id}`)
-                }
+                onEditar={(t) => router.push(`/professor/treinos/montar/${t.id}`)}
                 onExcluir={setTreinoExcluir}
               />
             ))}
@@ -198,18 +195,7 @@ export default function Page() {
       <button
         type="button"
         onClick={() => router.push("/professor/treinos/montar")}
-        className="btn-primary fab-above-nav"
-        style={{
-          position: "fixed",
-          right: "16px",
-          bottom: "24px",
-          borderRadius: "9999px",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          padding: "12px 16px",
-          boxShadow: "0 8px 20px rgba(0,0,0,0.28)",
-        }}
+        className="fab-primary"
       >
         <Plus size={18} />
         Novo treino
@@ -218,15 +204,7 @@ export default function Page() {
       <button
         type="button"
         onClick={() => router.push("/professor/treinos/novo")}
-        className="chip fab-template-secondary"
-        style={{
-          position: "fixed",
-          right: "16px",
-          bottom: "80px",
-          borderRadius: "9999px",
-          padding: "8px 14px",
-          fontSize: "0.8rem",
-        }}
+        className="fab-secondary chip"
       >
         Novo template
       </button>
@@ -259,7 +237,7 @@ export default function Page() {
         titulo="Excluir template?"
         mensagem={
           templateExcluir
-            ? `Tem certeza que deseja excluir o template "${templateExcluir.nome}"? Esta ação não pode ser desfeita.`
+            ? `Tem certeza que deseja excluir o template "${templateExcluir.nome}"?`
             : ""
         }
         confirmarLabel="Excluir"
@@ -274,7 +252,7 @@ export default function Page() {
         titulo="Excluir treino?"
         mensagem={
           treinoExcluir
-            ? `Excluir o treino "${treinoExcluir.nome}" de ${treinoExcluir.alunoNome ?? "aluno"}? Esta ação não pode ser desfeita.`
+            ? `Excluir o treino "${treinoExcluir.nome}" de ${treinoExcluir.alunoNome ?? "aluno"}?`
             : ""
         }
         confirmarLabel="Excluir"
@@ -283,95 +261,6 @@ export default function Page() {
         onConfirmar={() => void handleConfirmarExclusaoTreino()}
         onCancelar={() => !excluindo && setTreinoExcluir(null)}
       />
-
-      <style jsx global>{`
-        .treinos-tabs {
-          display: flex;
-          gap: 8px;
-          margin-bottom: 1rem;
-          padding: 4px;
-          background: var(--fraber-surface, #132035);
-          border-radius: 12px;
-          border: 1px solid var(--fraber-border, #1e3050);
-        }
-        .treinos-tab {
-          flex: 1;
-          min-height: 40px;
-          border: none;
-          border-radius: 8px;
-          background: transparent;
-          color: var(--fraber-text-muted, #7a9cc4);
-          font-weight: 600;
-          font-size: 0.9rem;
-          cursor: pointer;
-          font-family: Inter, sans-serif;
-        }
-        .treinos-tab--active {
-          background: var(--fraber-primary, #2e7fd9);
-          color: #f0f4ff;
-        }
-        .treinos-atribuidos-grid {
-          display: grid;
-          gap: 12px;
-        }
-        .treino-atribuido-card {
-          padding: 14px 16px;
-        }
-        .treino-atribuido-header {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 10px;
-          margin-bottom: 8px;
-        }
-        .treino-atribuido-title-row {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          min-width: 0;
-        }
-        .treino-atribuido-nome {
-          margin: 0;
-          font-size: 1rem;
-        }
-        .treino-atribuido-dia {
-          flex-shrink: 0;
-          background: var(--fraber-primary, #2e7fd9);
-          color: #f0f4ff;
-          border-radius: 999px;
-          padding: 4px 10px;
-          font-size: 0.75rem;
-          font-weight: 600;
-        }
-        .treino-atribuido-aluno {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          margin: 0 0 6px;
-          font-size: 0.9rem;
-          color: var(--fraber-text, #f0f4ff);
-        }
-        .treino-atribuido-meta,
-        .treino-atribuido-desc {
-          margin: 0;
-          font-size: 0.85rem;
-        }
-        .treino-atribuido-acoes {
-          display: flex;
-          gap: 8px;
-          margin-top: 12px;
-          flex-wrap: wrap;
-        }
-        .chip--danger {
-          border-color: var(--fraber-secondary, #e8001c);
-          color: var(--fraber-secondary, #e8001c);
-        }
-        @media (min-width: 640px) {
-          .treinos-atribuidos-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-      `}</style>
     </main>
   );
 }
