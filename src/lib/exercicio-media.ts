@@ -5,12 +5,15 @@ export function urlMidiaExercicio(
   exercicio: Pick<Exercicio, "nome" | "imagemUrl" | "gifUrl">
 ): string | null {
   return (
+    getExercicioImagemUrl(exercicio.nome) ??
     exercicio.imagemUrl ??
     exercicio.gifUrl ??
-    getExercicioImagemUrl(exercicio.nome)
+    null
   );
 }
 
 export function urlMidiaSubstituto(sub: ExercicioSubstituto): string | null {
-  return sub.imagemUrl ?? sub.gifUrl ?? getExercicioImagemUrl(sub.nome);
+  return (
+    getExercicioImagemUrl(sub.nome) ?? sub.imagemUrl ?? sub.gifUrl ?? null
+  );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ArrowLeftRight, X } from "lucide-react";
 import { ModalPortal } from "@/components/ModalPortal";
 import { ExercicioSubstituto } from "@/types";
@@ -60,36 +61,52 @@ export function WorkoutSubstituteModal({
                 Nenhum substituto neste grupo muscular.
               </p>
             ) : (
-              substitutos.map((item) => {
-                const img = urlMidiaSubstituto(item);
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className="workout-sub-item"
-                    onClick={() => onSelecionar(item)}
-                  >
-                    <div className="workout-sub-thumb">
-                      {img ? (
-                        <img src={img} alt="" />
-                      ) : (
-                        <span className="workout-sub-thumb-placeholder">?</span>
-                      )}
-                    </div>
-                    <div className="workout-sub-info">
-                      <p className="workout-sub-item-title">{item.nome}</p>
-                      <p className="workout-sub-item-meta">
-                        {item.equipamento ?? item.grupoMuscular}
-                      </p>
-                    </div>
-                    <ArrowLeftRight size={18} className="text-accent" />
-                  </button>
-                );
-              })
+              substitutos.map((item) => (
+                <SubstituteItem
+                  key={item.id}
+                  item={item}
+                  onSelecionar={onSelecionar}
+                />
+              ))
             )}
           </div>
         </div>
       </div>
     </ModalPortal>
+  );
+}
+
+function SubstituteItem({
+  item,
+  onSelecionar,
+}: {
+  item: ExercicioSubstituto;
+  onSelecionar: (item: ExercicioSubstituto) => void;
+}) {
+  const [imgSrc, setImgSrc] = useState<string | null>(() =>
+    urlMidiaSubstituto(item)
+  );
+
+  return (
+    <button
+      type="button"
+      className="workout-sub-item"
+      onClick={() => onSelecionar(item)}
+    >
+      <div className="workout-sub-thumb">
+        {imgSrc ? (
+          <img src={imgSrc} alt="" onError={() => setImgSrc(null)} />
+        ) : (
+          <span className="workout-sub-thumb-placeholder">?</span>
+        )}
+      </div>
+      <div className="workout-sub-info">
+        <p className="workout-sub-item-title">{item.nome}</p>
+        <p className="workout-sub-item-meta">
+          {item.equipamento ?? item.grupoMuscular}
+        </p>
+      </div>
+      <ArrowLeftRight size={18} className="text-accent" />
+    </button>
   );
 }

@@ -17,9 +17,14 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log("Iniciando seed...");
 
-  // Limpa dados existentes na ordem correta
+  // Limpa dados existentes na ordem correta (filhos antes dos pais)
+  await prisma.treinoSessaoSerie.deleteMany();
+  await prisma.treinoSessao.deleteMany();
   await prisma.exercicio.deleteMany();
   await prisma.treino.deleteMany();
+  await prisma.pagamento.deleteMany();
+  await prisma.checkin.deleteMany();
+  await prisma.medicaoFisica.deleteMany();
   await prisma.exercicioTemplate.deleteMany();
   await prisma.treinoTemplate.deleteMany();
   await prisma.exercicioCatalogo.deleteMany();
