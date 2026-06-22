@@ -10,13 +10,20 @@ export const PLANOS_LABEL: Record<string, string> = {
   gympass: "Gympass",
 };
 
-export const PLANOS_PRECO_LABEL: Record<string, string> = {
-  mensal: "R$ 99,90",
-  semestral: "R$ 499,90",
-  anual: "R$ 899,90",
-  avulso: "R$ 29,90",
-  gympass: "Grátis",
-};
+function formatarPrecoBRL(centavos: number): string {
+  if (centavos <= 0) return "Grátis";
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(centavos / 100);
+}
+
+export const PLANOS_PRECO_LABEL: Record<PlanoPagamentoId, string> = Object.fromEntries(
+  (Object.keys(PLANOS_STRIPE) as PlanoPagamentoId[]).map((id) => [
+    id,
+    formatarPrecoBRL(PLANOS_STRIPE[id].valor),
+  ])
+) as Record<PlanoPagamentoId, string>;
 
 const PAYMENT_LINK_ENV: Record<PlanoPagamentoId, string> = {
   mensal: "NEXT_PUBLIC_STRIPE_PAYMENT_LINK_MENSAL",

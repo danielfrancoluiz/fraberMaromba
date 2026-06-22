@@ -25,6 +25,34 @@ npx prisma db push
 npm run dev
 ```
 
+### Novo projeto Supabase (do zero)
+
+1. Acesse [supabase.com/dashboard](https://supabase.com/dashboard) e faça login (GitHub, Google ou e-mail).
+2. **New project** → nome ex.: `fraber-maromba`, senha do banco (anote), região **South America (São Paulo)**.
+3. Aguarde ~2 min até o projeto ficar **Active**.
+4. **Project Settings → API**
+   - `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
+   - `anon` / publishable → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `service_role` / secret → `SUPABASE_SERVICE_ROLE_KEY`
+5. **Project Settings → Database → Connection string**
+   - Aba **ORM** ou **URI**
+   - Método: **Session pooler**, porta **5432**
+   - Copie a URL e substitua `[YOUR-PASSWORD]` pela senha do passo 2
+   - Cole em `DATABASE_URL` e `DIRECT_URL` no `.env.local` (use o mesmo host que o painel mostrar, ex. `aws-0-sa-east-1.pooler.supabase.com`)
+6. No terminal do projeto:
+
+```bash
+cp .env.example .env.local   # ou edite o .env.local existente
+npm run db:check             # testa DNS e conexão
+npx prisma db push           # cria tabelas
+npx prisma db seed           # usuários de teste
+npm run dev
+```
+
+7. Login: `/login` — professor `ricardo@fraber.com` / `123456`, aluno `carlos@fraber.com` / `123456`.
+
+**Dica:** o host do pooler muda conforme região (`aws-0-sa-east-1`, `aws-1-sa-east-1`, etc.). Use sempre a string exata do painel, não copie de outro projeto.
+
 ### Erro P1001 (`Can't reach database server` no `db push`)
 
 O host direto `db.<ref>.supabase.co` costuma resolver **só em IPv6**. Redes/Windows sem IPv6 estável falham com P1001.
@@ -48,14 +76,23 @@ npx ts-node prisma/seed.ts
 
 Login unificado: `/login` (não use `/aluno/login` — redireciona automaticamente).
 
-### Stripe em desenvolvimento
+### Stripe (checkout com preço do combo)
 
-1. Crie produtos/preços ou use Checkout dinâmico (já suportado com `STRIPE_SECRET_KEY`).
-2. Webhook local: `stripe listen --forward-to localhost:3000/api/pagamentos/webhook`
-3. Copie o signing secret para `STRIPE_WEBHOOK_SECRET`.
-4. Fluxo: Perfil ou professor → pagamento → registro `Pagamento` pendente → redirect Stripe → webhook marca `pago` e ativa `Usuario` + `Aluno`.
+**Não é necessário cadastrar produtos/preços no Dashboard do Stripe.** O app envia o valor dinamicamente via Checkout Session (`price_data`) com base no plano escolhido no combo.
 
-Após pagar, se o dashboard ainda bloquear: **Sair e entrar de novo** (JWT traz `status` e `planoId` no login).
+1. Em [Stripe → Developers → API keys](https://dashboard.stripe.com/test/apikeys), copie:
+   - `STRIPE_SECRET_KEY` → `sk_test_...`
+   - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` → `pk_test_...` (opcional; o fluxo atual redireciona para o Checkout hospedado)
+2. Ajuste os valores em `src/lib/stripe.ts` (`PLANOS_STRIPE`, em centavos). O combo e o Stripe usam o mesmo preço.
+3. Webhook (produção ou local):
+   - Local: `stripe listen --forward-to localhost:3000/api/pagamentos/webhook`
+   - Copie o **signing secret** (`whsec_...`) para `STRIPE_WEBHOOK_SECRET`
+   - **Não use** `sk_test_` nem `rk_test_` aqui — só `whsec_`
+4. Payment Links (`NEXT_PUBLIC_STRIPE_PAYMENT_LINK_*`) são **fallback** se `STRIPE_SECRET_KEY` estiver ausente. Com a secret key configurada, eles não são usados.
+
+Fluxo: combo de plano → `POST /api/pagamentos/checkout` → redirect Stripe → página `/pagamento/sucesso` confirma a sessão → webhook também marca `pago` e ativa `Usuario` + `Aluno`.
+
+Após pagar, **saia e entre de novo** para o JWT trazer `status` e `planoId` atualizados.
 
 ## Testes manuais
 

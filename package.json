@@ -10,7 +10,8 @@
     "lint": "eslint",
     "db:seed": "node prisma/seed-runner.cjs",
     "db:seed-catalogo": "node prisma/seed-catalogo.cjs",
-    "db:check": "node scripts/db-connection-check.cjs"
+    "db:check": "node scripts/db-connection-check.cjs",
+    "db:setup": "prisma db push && node prisma/seed-runner.cjs"
   },
   "prisma": {
     "seed": "node prisma/seed-runner.cjs"
