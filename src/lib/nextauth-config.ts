@@ -54,7 +54,7 @@ export function getNextAuthSecretSource():
 }
 
 /**
- * URL do NextAuth: prioriza NEXTAUTH_URL definido na Vercel (ex.: fraber-maromba-hyyo.vercel.app).
+ * URL do NextAuth: prioriza NEXTAUTH_URL definido na Vercel (ex.: fraber-maromba.vercel.app).
  */
 export function getNextAuthUrl(): string {
   const explicit = process.env.NEXTAUTH_URL?.trim();
@@ -106,7 +106,7 @@ export function getNextAuthDiagnostics() {
     sessionDeveFuncionar:
       Boolean(secret) && secretSource !== "invalid_NEXTAUTH_SECRET",
     configureNaVercel: {
-      NEXTAUTH_URL: "https://fraber-maromba-hyyo.vercel.app",
+      NEXTAUTH_URL: "https://fraber-maromba.vercel.app",
       NEXTAUTH_SECRET:
         "gere com: openssl rand -base64 32 (NÃO use o domínio do site como secret)",
     },

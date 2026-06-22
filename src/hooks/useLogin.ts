@@ -55,7 +55,7 @@ export function useLogin(): UseLoginReturn {
         const detalhe = result?.error?.trim();
         if (detalhe === "Configuration") {
           setErro(
-            "Configuração incorreta: NEXTAUTH_URL deve ser https://fraber-maromba-hyyo.vercel.app e NEXTAUTH_SECRET deve ser uma senha aleatória longa (não o domínio do site). Veja /api/health/db"
+            "Configuração incorreta: defina NEXTAUTH_URL (ex.: https://fraber-maromba.vercel.app) e NEXTAUTH_SECRET na Vercel. Veja /api/health/db"
           );
           return;
         }
