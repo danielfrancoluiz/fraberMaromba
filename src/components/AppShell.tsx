@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
+import { StudentAppHeader } from "@/components/aluno/StudentAppHeader";
 
 type ShellRole = "aluno" | "professor";
 
@@ -10,11 +11,15 @@ interface AppShellProps {
   children: React.ReactNode;
 }
 
+function shouldHideAlunoChrome(pathname: string): boolean {
+  if (pathname.startsWith("/aluno/treino/")) return true;
+  if (pathname === "/aluno/inativo") return true;
+  return false;
+}
+
 function shouldHideBottomNav(pathname: string, role: ShellRole): boolean {
   if (role === "aluno") {
-    if (pathname.startsWith("/aluno/treino/")) return true;
-    if (pathname === "/aluno/inativo") return true;
-    return false;
+    return shouldHideAlunoChrome(pathname);
   }
 
   if (pathname === "/professor/alunos/novo") return true;
@@ -34,10 +39,22 @@ function isWideLayout(pathname: string, role: ShellRole): boolean {
 export function AppShell({ role, children }: AppShellProps) {
   const pathname = usePathname();
   const showNav = !shouldHideBottomNav(pathname, role);
+  const showAlunoHeader = role === "aluno" && !shouldHideAlunoChrome(pathname);
   const wide = isWideLayout(pathname, role);
+  const isAluno = role === "aluno";
 
   return (
-    <div className={`app-shell ${showNav ? "app-shell--with-nav" : ""}`}>
+    <div
+      className={[
+        "app-shell",
+        showNav ? "app-shell--with-nav" : "",
+        showAlunoHeader ? "app-shell--with-header" : "",
+        isAluno ? "aluno-shell" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      {showAlunoHeader ? <StudentAppHeader /> : null}
       <div className={`app-shell-inner${wide ? " app-shell-inner--wide" : ""}`}>
         {children}
       </div>

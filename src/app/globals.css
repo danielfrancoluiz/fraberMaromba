@@ -153,6 +153,353 @@ body {
   background: var(--fraber-primary);
 }
 
+/* —— Aluno FRABER 360° —— */
+.aluno-shell {
+  --fraber-bg: #0d0d0f;
+  --fraber-bg-soft: #111116;
+  --fraber-surface: #16161c;
+  --fraber-surface-hover: #1e1e26;
+  --fraber-border: rgba(255, 255, 255, 0.08);
+  --fraber-accent: #e02020;
+  background: var(--fraber-bg);
+}
+
+.aluno-shell body,
+.aluno-shell {
+  background: var(--fraber-bg);
+}
+
+.app-shell--with-header .app-shell-inner {
+  padding-top: 0;
+}
+
+.student-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2.5rem 1.25rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(to bottom, #0d0d0f 80%, transparent);
+}
+
+.student-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.student-header-logo {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.75rem;
+  object-fit: cover;
+}
+
+.student-header-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: #fff;
+  line-height: 1;
+}
+
+.student-header-subtitle {
+  margin: 0.125rem 0 0;
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #e02020;
+  line-height: 1;
+}
+
+.student-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.student-header-icon-btn {
+  position: relative;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.student-header-dot {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.375rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: #e02020;
+}
+
+.student-header-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(135deg, #e02020, #2b7de9);
+  text-decoration: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.student-header-avatar--active {
+  box-shadow: 0 0 0 3px rgba(224, 32, 32, 0.4);
+}
+
+.student-page-main {
+  padding-top: 0.5rem;
+}
+
+.student-home-stack {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.student-welcome-banner {
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, rgba(224, 32, 32, 0.18), rgba(43, 125, 233, 0.1));
+  border: 1px solid rgba(224, 32, 32, 0.25);
+}
+
+.student-welcome-kicker {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8888a0;
+}
+
+.student-welcome-title {
+  margin: 0.5rem 0 0;
+  font-size: 1.375rem;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.student-welcome-sub {
+  margin: 0.375rem 0 0;
+  font-size: 0.8125rem;
+  color: #8888a0;
+}
+
+.student-welcome-cta {
+  margin-top: 1rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 0.875rem;
+  font-weight: 800;
+  font-size: 0.875rem;
+  color: #fff;
+  background: linear-gradient(135deg, #e02020, #c41a1a);
+  cursor: pointer;
+}
+
+.student-stats-row {
+  display: flex;
+  gap: 0.625rem;
+}
+
+.student-stat-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.student-stat-value {
+  font-size: 1.25rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.student-stat-label {
+  margin-top: 0.25rem;
+  font-size: 0.625rem;
+  color: #8888a0;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.student-quick-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.student-quick-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.student-quick-link {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #e02020;
+  text-decoration: none;
+}
+
+.student-quick-grid {
+  display: grid;
+  gap: 0.625rem;
+}
+
+.student-quick-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  border-radius: 1rem;
+  border: 1px solid transparent;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.15s ease;
+}
+
+.student-quick-card:active {
+  transform: scale(0.98);
+}
+
+.student-quick-card--static {
+  opacity: 0.85;
+}
+
+.student-quick-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.student-quick-label {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.student-quick-desc {
+  margin: 0.125rem 0 0;
+  font-size: 0.6875rem;
+  color: #8888a0;
+}
+
+.student-quick-chevron {
+  opacity: 0.8;
+}
+
+.student-section-hero {
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  border: 1px solid transparent;
+}
+
+.student-section-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+.student-section-subtitle {
+  margin: 0.375rem 0 0;
+  font-size: 0.8125rem;
+  color: #8888a0;
+}
+
+.student-section-list {
+  display: grid;
+  gap: 0.625rem;
+}
+
+.student-section-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid transparent;
+}
+
+.student-section-item-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.student-section-item-label {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.student-section-item-desc {
+  margin: 0.125rem 0 0;
+  font-size: 0.6875rem;
+  color: #8888a0;
+}
+
+.bottom-nav--aluno {
+  background: linear-gradient(to top, #0d0d0f, #111116);
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.aluno-shell .bottom-nav-item {
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem 0.625rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #8888a0;
+}
+
+.aluno-shell .bottom-nav-item--active {
+  color: #e02020;
+  background: rgba(224, 32, 32, 0.12);
+  border-radius: 0.75rem;
+}
+
+.aluno-shell .bottom-nav-indicator {
+  width: 0.25rem;
+  height: 0.25rem;
+  border-radius: 999px;
+  background: #e02020;
+  bottom: 0.25rem;
+}
+
 .dashboard-hero {
   margin: 0 -1rem 1rem;
   padding: 1.25rem 1.25rem 1.5rem;

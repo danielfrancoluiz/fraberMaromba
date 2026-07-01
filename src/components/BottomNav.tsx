@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart2, Dumbbell, Home, User, Users } from "lucide-react";
+import { Dumbbell, Home, Salad, User, Users, Wind } from "lucide-react";
 
 type NavRole = "aluno" | "professor";
 
@@ -17,20 +17,27 @@ interface NavItem {
 const alunoNav: NavItem[] = [
   { id: "home", label: "Início", href: "/aluno/dashboard", icon: Home },
   {
-    id: "treinos",
-    label: "Treinos",
+    id: "musculacao",
+    label: "Musculação",
     href: "/aluno/treinos",
     icon: Dumbbell,
-    match: (path) => path.startsWith("/aluno/treinos"),
+    match: (path) =>
+      path.startsWith("/aluno/treinos") || path.startsWith("/aluno/treino/"),
   },
   {
-    id: "historico",
-    label: "Histórico",
-    href: "/aluno/historico",
-    icon: BarChart2,
-    match: (path) => path.startsWith("/aluno/historico"),
+    id: "corrida",
+    label: "Corrida",
+    href: "/aluno/corrida",
+    icon: Wind,
+    match: (path) => path.startsWith("/aluno/corrida"),
   },
-  { id: "perfil", label: "Perfil", href: "/aluno/perfil", icon: User },
+  {
+    id: "nutricao",
+    label: "Nutrição",
+    href: "/aluno/nutricao",
+    icon: Salad,
+    match: (path) => path.startsWith("/aluno/nutricao"),
+  },
 ];
 
 const professorNav: NavItem[] = [
@@ -68,8 +75,11 @@ export function BottomNav({ role }: BottomNavProps) {
   const pathname = usePathname();
   const items = role === "professor" ? professorNav : alunoNav;
 
+  const navClass =
+    role === "aluno" ? "bottom-nav bottom-nav--aluno" : "bottom-nav";
+
   return (
-    <nav className="bottom-nav" aria-label="Navegação principal">
+    <nav className={navClass} aria-label="Navegação principal">
       <div className="bottom-nav-inner">
         {items.map((item) => {
           const Icon = item.icon;

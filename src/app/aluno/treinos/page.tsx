@@ -10,7 +10,6 @@ import { TreinoResumoCard } from "@/components/aluno/TreinoResumoCard";
 import { contarSeriesConcluidasTreino } from "@/services/sessaoService";
 import { Treino } from "@/types";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { PageHeader } from "@/components/ui/PageHeader";
 
 const DIAS_SEMANA = [
   "segunda",
@@ -69,16 +68,22 @@ export default function Page() {
   }, [diaSelecionado, treinosPorDia]);
 
   return (
-    <main className="page-main">
+    <main className="page-main student-page-main">
       <div className="page-container page-stack">
-        <PageHeader
-          title="Meus treinos"
-          subtitle={
-            primeiroNome
+        <div
+          className="student-section-hero"
+          style={{
+            background: "linear-gradient(135deg, rgba(224,32,32,0.12), rgba(224,32,32,0.04))",
+            borderColor: "rgba(224,32,32,0.2)",
+          }}
+        >
+          <h2 className="student-section-title">Musculação</h2>
+          <p className="student-section-subtitle">
+            {primeiroNome
               ? `Olá, ${primeiroNome} — sua programação semanal`
-              : "Sua programação semanal"
-          }
-        />
+              : "Sua programação semanal de treinos"}
+          </p>
+        </div>
 
         <NavDiasSemana
           dias={DIAS_SEMANA}
