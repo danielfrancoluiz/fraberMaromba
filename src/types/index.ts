@@ -47,15 +47,41 @@ export interface FormErrors {
 
 export interface ExercicioCatalogo {
   id: string;
+  professorId?: string | null;
   nome: string;
   slug: string;
   grupoMuscular: string;
+  subGrupoMuscular?: string | null;
   equipamento?: string | null;
   dificuldade?: string | null;
   descricao?: string | null;
   gifUrl?: string | null;
   imagemUrl?: string | null;
+  seriesPadrao?: number;
+  repeticoesPadrao?: number;
+  descansoPadrao?: number;
   ativo: boolean;
+  criadoEm?: string;
+}
+
+export interface CriarExercicioForm {
+  nome: string;
+  gifUrl: string;
+  grupoMuscular: string;
+  subGrupoMuscular: string;
+  series: string;
+  repeticoes: string;
+  descanso: string;
+}
+
+export interface CriarExercicioFormErrors {
+  nome?: string;
+  gifUrl?: string;
+  grupoMuscular?: string;
+  subGrupoMuscular?: string;
+  series?: string;
+  repeticoes?: string;
+  descanso?: string;
 }
 
 export interface Exercicio {

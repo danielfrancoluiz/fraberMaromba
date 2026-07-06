@@ -144,11 +144,15 @@ export function AlunoHome360() {
                 >
                   <Icon size={20} style={{ color: item.color }} />
                 </div>
-                <div>
+                <div className="student-quick-text">
                   <p className="student-quick-label">{item.label}</p>
                   <p className="student-quick-desc">{item.desc}</p>
                 </div>
-                <ChevronRight size={14} className="student-quick-chevron" style={{ color: item.color }} />
+                <ChevronRight
+                  size={14}
+                  className="student-quick-chevron"
+                  style={{ color: item.color }}
+                />
               </>
             );
 

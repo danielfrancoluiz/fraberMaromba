@@ -27,8 +27,17 @@ export async function GET(req: NextRequest) {
 
     const grupo = grupoParam ? normalizarGrupoMuscular(grupoParam) : "";
 
+    const professorId =
+      session.user.role === "professor"
+        ? session.user.id
+        : session.user.professorId;
+
     const where = {
       ativo: true,
+      OR: [
+        { professorId: null },
+        ...(professorId ? [{ professorId }] : []),
+      ],
       ...(grupo ? { grupoMuscular: grupo } : {}),
       ...(busca
         ? {

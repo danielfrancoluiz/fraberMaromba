@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Dumbbell, Home, Salad, User, Users, Wind } from "lucide-react";
+import { Dumbbell, Home, Library, Salad, User, Users, Wind } from "lucide-react";
 
 type NavRole = "aluno" | "professor";
 
@@ -58,6 +58,13 @@ const professorNav: NavItem[] = [
     href: "/professor/treinos",
     icon: Dumbbell,
     match: (path) => path.startsWith("/professor/treinos"),
+  },
+  {
+    id: "exercicios",
+    label: "Exercícios",
+    href: "/professor/exercicios",
+    icon: Library,
+    match: (path) => path.startsWith("/professor/exercicios"),
   },
   { id: "perfil", label: "Perfil", href: "/professor/perfil", icon: User },
 ];

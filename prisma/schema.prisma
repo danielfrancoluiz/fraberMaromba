@@ -22,6 +22,7 @@ model Usuario {
   convitesGerados  Convite[] @relation("ProfessorConvites")
   treinos          Treino[]  @relation("ProfessorTreinos")
   templates        TreinoTemplate[] @relation("ProfessorTemplates")
+  exerciciosCatalogo ExercicioCatalogo[] @relation("ProfessorExerciciosCatalogo")
 }
 
 model Aluno {
@@ -68,18 +69,24 @@ model Treino {
 }
 
 model ExercicioCatalogo {
-  id             String   @id @default(uuid())
-  nome           String
-  slug           String   @unique
-  grupoMuscular  String
-  equipamento    String?
-  dificuldade    String?
-  descricao      String?
-  gifUrl         String?
-  imagemUrl      String?
-  ativo          Boolean  @default(true)
-  criadoEm       DateTime @default(now())
+  id               String   @id @default(uuid())
+  professorId      String?
+  nome             String
+  slug             String   @unique
+  grupoMuscular    String
+  subGrupoMuscular String?
+  equipamento      String?
+  dificuldade      String?
+  descricao        String?
+  gifUrl           String?
+  imagemUrl        String?
+  seriesPadrao     Int      @default(3)
+  repeticoesPadrao Int      @default(12)
+  descansoPadrao   Int      @default(60)
+  ativo            Boolean  @default(true)
+  criadoEm         DateTime @default(now())
 
+  professor            Usuario?            @relation("ProfessorExerciciosCatalogo", fields: [professorId], references: [id], onDelete: SetNull)
   exerciciosTreino     Exercicio[]
   exerciciosTemplate   ExercicioTemplate[]
 }
