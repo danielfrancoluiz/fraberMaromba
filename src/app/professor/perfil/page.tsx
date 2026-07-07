@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { PerfilPageLayout } from "@/components/perfil/PerfilPageLayout";
+import { RedefinirSenhaCard } from "@/components/auth/RedefinirSenhaCard";
 
 export default function Page() {
   const { data: session } = useSession();
@@ -25,6 +26,8 @@ export default function Page() {
           <p className="perfil-campo-valor">Professor</p>
         </div>
       </div>
+
+      <RedefinirSenhaCard />
     </PerfilPageLayout>
   );
 }

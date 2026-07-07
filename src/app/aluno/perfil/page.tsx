@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { PerfilPageLayout } from "@/components/perfil/PerfilPageLayout";
+import { RedefinirSenhaCard } from "@/components/auth/RedefinirSenhaCard";
 import { PlanoStatus } from "@/components/aluno/PlanoStatus";
 import { HistoricoPagamentos } from "@/components/pagamento/HistoricoPagamentos";
 import { PLANOS_LABEL } from "@/lib/planos-pagamento";
@@ -41,6 +42,8 @@ export default function Page() {
       />
 
       {alunoId ? <HistoricoPagamentos alunoId={alunoId} /> : null}
+
+      <RedefinirSenhaCard />
     </PerfilPageLayout>
   );
 }

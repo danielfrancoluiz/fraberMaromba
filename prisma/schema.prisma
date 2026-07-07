@@ -23,6 +23,20 @@ model Usuario {
   treinos          Treino[]  @relation("ProfessorTreinos")
   templates        TreinoTemplate[] @relation("ProfessorTemplates")
   exerciciosCatalogo ExercicioCatalogo[] @relation("ProfessorExerciciosCatalogo")
+  tokensRedefinirSenha TokenRedefinirSenha[]
+}
+
+model TokenRedefinirSenha {
+  id        String   @id @default(uuid())
+  usuarioId String
+  token     String   @unique
+  expiraEm  DateTime
+  usado     Boolean  @default(false)
+  criadoEm  DateTime @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
 }
 
 model Aluno {

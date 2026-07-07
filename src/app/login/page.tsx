@@ -115,6 +115,10 @@ function LoginContent() {
             </div>
           </div>
 
+          <p className="auth-forgot-wrap">
+            <Link href="/esqueci-senha">Esqueci minha senha</Link>
+          </p>
+
           {erro ? <p className="field-error">{erro}</p> : null}
 
           <button type="submit" disabled={loading} className="btn-primary">
