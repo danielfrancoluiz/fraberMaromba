@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireProfessorSession } from "@/lib/get-api-session";
 import { prisma } from "@/lib/prisma";
 import { mensagemErroBanco } from "@/lib/erro-banco";
+import { normalizarEmail } from "@/lib/email";
 
 export async function GET(req: NextRequest) {
   try {
@@ -70,7 +71,11 @@ export async function POST(req: NextRequest) {
     }
 
     const aluno = await prisma.aluno.create({
-      data: { ...body, professorId: session.user.id },
+      data: {
+        ...body,
+        email: normalizarEmail(body.email),
+        professorId: session.user.id,
+      },
     });
 
     return NextResponse.json(aluno, { status: 201 });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { mensagemErroBanco } from "@/lib/erro-banco";
+import { normalizarEmail } from "@/lib/email";
+import { redefinirSenhaPorEmail } from "@/lib/redefinir-senha-conta";
 import { hashSenha, validarNovaSenha } from "@/lib/senha";
 
 interface EsqueciSenhaBody {
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
     }
 
-    const email = body.email.trim().toLowerCase();
+    const email = normalizarEmail(body.email);
     if (!email) {
       return NextResponse.json({ error: "Informe o e-mail" }, { status: 400 });
     }
@@ -40,19 +41,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: erroSenha }, { status: 400 });
     }
 
-    const usuario = await prisma.usuario.findFirst({
-      where: { email: { equals: email, mode: "insensitive" } },
-      select: { id: true },
-    });
+    const resultado = await redefinirSenhaPorEmail(email, await hashSenha(body.novaSenha));
 
-    if (!usuario) {
+    if (resultado === "nao_encontrado") {
       return NextResponse.json({ error: "E-mail não cadastrado" }, { status: 404 });
     }
-
-    await prisma.usuario.update({
-      where: { id: usuario.id },
-      data: { senha: await hashSenha(body.novaSenha) },
-    });
 
     return NextResponse.json({
       ok: true,

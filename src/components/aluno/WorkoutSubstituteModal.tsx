@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { ArrowLeftRight, X } from "lucide-react";
 import { ModalPortal } from "@/components/ModalPortal";
 import { ExercicioSubstituto } from "@/types";
-import { urlMidiaSubstituto } from "@/lib/exercicio-media";
+import { ExercicioMidia } from "@/components/exercicio/ExercicioMidia";
 
 interface WorkoutSubstituteModalProps {
   open: boolean;
@@ -83,9 +82,7 @@ function SubstituteItem({
   item: ExercicioSubstituto;
   onSelecionar: (item: ExercicioSubstituto) => void;
 }) {
-  const [imgSrc, setImgSrc] = useState<string | null>(() =>
-    urlMidiaSubstituto(item)
-  );
+  const midiaUrl = item.gifUrl ?? item.imagemUrl ?? null;
 
   return (
     <button
@@ -94,8 +91,13 @@ function SubstituteItem({
       onClick={() => onSelecionar(item)}
     >
       <div className="workout-sub-thumb">
-        {imgSrc ? (
-          <img src={imgSrc} alt="" onError={() => setImgSrc(null)} />
+        {midiaUrl ? (
+          <ExercicioMidia
+            url={midiaUrl}
+            alt={item.nome}
+            compact
+            mediaClassName="workout-sub-thumb-media"
+          />
         ) : (
           <span className="workout-sub-thumb-placeholder">?</span>
         )}

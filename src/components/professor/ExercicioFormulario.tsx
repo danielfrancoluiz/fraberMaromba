@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { ImageIcon } from "lucide-react";
+import { ExercicioMidia } from "@/components/exercicio/ExercicioMidia";
 import { useExercicioForm } from "@/hooks/useExercicioForm";
 import { PageTopBar } from "@/components/ui/PageTopBar";
 import { GRUPOS_MUSCULARES } from "@/lib/grupos-musculares";
@@ -121,19 +122,19 @@ export function ExercicioFormulario({ exercicioId }: ExercicioFormularioProps) {
           <Campo label="Vídeo / GIF (URL)" erro={errors.gifUrl} className="field-span2">
             <input
               className="input-field"
-              placeholder="https://exemplo.com/exercicio.gif"
+              placeholder="Link direto, GIF ou Google Drive"
               value={form.gifUrl}
               onChange={(e) => handleChange("gifUrl", e.target.value)}
             />
+            <p className="text-muted exercicio-midia-hint">
+              Google Drive: compartilhe o arquivo como &quot;Qualquer pessoa com o link&quot; e cole o link de visualização.
+            </p>
             {form.gifUrl.trim() ? (
               <div className="exercicio-form-preview">
-                <img
-                  src={form.gifUrl.trim()}
+                <ExercicioMidia
+                  url={form.gifUrl.trim()}
                   alt="Prévia do exercício"
-                  className="exercicio-form-preview-media"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
+                  mediaClassName="exercicio-form-preview-media"
                 />
               </div>
             ) : (

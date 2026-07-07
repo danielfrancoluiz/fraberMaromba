@@ -13,6 +13,7 @@ import { Treino } from "@/types";
 import { useWorkoutExecution } from "@/hooks/useWorkoutExecution";
 import { formatTime } from "@/hooks/useTimer";
 import { urlMidiaExercicio } from "@/lib/exercicio-media";
+import { ExercicioMidia } from "@/components/exercicio/ExercicioMidia";
 import { labelDificuldade } from "@/lib/dificuldade-label";
 import { UnilateralIndicator } from "@/components/exercicio/UnilateralIndicator";
 import { WorkoutSubstituteModal } from "@/components/aluno/WorkoutSubstituteModal";
@@ -89,8 +90,12 @@ export function WorkoutExecution({
     );
   }
 
-  const midiaUrl = urlMidiaExercicio(exercicioAtual);
-  const proximaMidia = proximoExercicio ? urlMidiaExercicio(proximoExercicio) : null;
+  const midiaUrl =
+    exercicioAtual.gifUrl ??
+    exercicioAtual.imagemUrl ??
+    null;
+  const proximaMidia =
+    proximoExercicio?.gifUrl ?? proximoExercicio?.imagemUrl ?? null;
   const setsDone = completedSets[exercicioAtual.id] ?? [];
   const descansoPadrao = exercicioAtual.restSeconds ?? 60;
 
@@ -124,8 +129,12 @@ export function WorkoutExecution({
 
       <div className="workout-exec-body">
         <div className="workout-exec-media">
-          {midiaUrl ? (
-            <img src={midiaUrl} alt={exercicioAtual.nome} className="workout-exec-media-img" />
+          {midiaUrl || urlMidiaExercicio(exercicioAtual) ? (
+            <ExercicioMidia
+              url={midiaUrl ?? urlMidiaExercicio(exercicioAtual)}
+              alt={exercicioAtual.nome}
+              mediaClassName="workout-exec-media-img"
+            />
           ) : (
             <div className="workout-exec-media-empty">
               <ImageIcon size={48} />
@@ -272,8 +281,13 @@ export function WorkoutExecution({
           <div className="workout-exec-next card">
             <span className="workout-exec-next-label">A seguir</span>
             <div className="workout-exec-next-thumb">
-              {proximaMidia ? (
-                <img src={proximaMidia} alt="" />
+              {proximaMidia || (proximoExercicio && urlMidiaExercicio(proximoExercicio)) ? (
+                <ExercicioMidia
+                  url={proximaMidia ?? urlMidiaExercicio(proximoExercicio!)}
+                  alt={proximoExercicio!.nome}
+                  compact
+                  mediaClassName="workout-exec-next-thumb-media"
+                />
               ) : (
                 <ImageIcon size={16} />
               )}

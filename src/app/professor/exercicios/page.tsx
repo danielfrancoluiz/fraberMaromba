@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { labelGrupoMuscular } from "@/lib/grupos-musculares";
 import { labelSubGrupoMuscular } from "@/lib/sub-grupos-musculares";
+import { ExercicioMidia } from "@/components/exercicio/ExercicioMidia";
 
 export default function Page() {
   const router = useRouter();
@@ -100,10 +101,10 @@ export default function Page() {
             {itens.map((item) => (
               <article key={item.id} className="exercicio-catalogo-card card">
                 {item.gifUrl ? (
-                  <img
-                    src={item.gifUrl}
-                    alt=""
-                    className="exercicio-catalogo-card-media"
+                  <ExercicioMidia
+                    url={item.gifUrl}
+                    alt={item.nome}
+                    mediaClassName="exercicio-catalogo-card-media"
                   />
                 ) : (
                   <div className="exercicio-catalogo-card-media exercicio-catalogo-card-media--empty">

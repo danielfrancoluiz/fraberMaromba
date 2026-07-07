@@ -26,7 +26,11 @@ export default function Page() {
       const res = await fetch("/api/auth/esqueci-senha", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, novaSenha, confirmarSenha }),
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          novaSenha,
+          confirmarSenha,
+        }),
       });
 
       const data = (await res.json().catch(() => null)) as {
