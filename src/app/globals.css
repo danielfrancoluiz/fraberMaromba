@@ -2899,6 +2899,65 @@ body {
   text-decoration: none;
 }
 
+.auth-suporte-hint {
+  margin: 0.5rem 0 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--fraber-text-muted);
+}
+
+.auth-suporte-hint a {
+  color: var(--fraber-primary);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.esqueci-senha-info {
+  margin-bottom: 1rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--fraber-radius-sm);
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--fraber-text-muted);
+}
+
+.esqueci-senha-info p {
+  margin: 0;
+}
+
+.esqueci-senha-mail-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-decoration: none;
+}
+
+.esqueci-senha-alternativa {
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+  margin-top: 1.25rem;
+  padding: 0.875rem;
+  border-radius: var(--fraber-radius-sm);
+  background: var(--fraber-bg-soft);
+  font-size: 0.8125rem;
+  color: var(--fraber-text-muted);
+  line-height: 1.45;
+}
+
+.esqueci-senha-alternativa p {
+  margin: 0;
+}
+
+.redefinir-senha-desc a {
+  color: var(--fraber-primary);
+  font-weight: 600;
+}
+
 .redefinir-senha-card {
   display: grid;
   gap: 0.75rem;
