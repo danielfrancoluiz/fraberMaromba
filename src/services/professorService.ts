@@ -39,6 +39,7 @@ interface ExercicioCatalogoApi {
   descricao?: string | null;
   gifUrl?: string | null;
   imagemUrl?: string | null;
+  unilateral?: boolean;
 }
 
 interface ExercicioApi {
@@ -160,6 +161,7 @@ function mapExercicio(exercicio: ExercicioApi): Exercicio {
     equipamento: exercicio.catalogo?.equipamento ?? undefined,
     dificuldade: exercicio.catalogo?.dificuldade ?? undefined,
     restSeconds: exercicio.restSeconds ?? 60,
+    unilateral: exercicio.catalogo?.unilateral ?? false,
   };
 }
 

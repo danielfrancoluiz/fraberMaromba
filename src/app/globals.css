@@ -3723,6 +3723,66 @@ body {
   color: var(--fraber-primary);
 }
 
+.exercicio-catalogo-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.exercicio-badge-unilateral {
+  flex-shrink: 0;
+  font-size: 0.625rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+.exercicio-catalogo-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.exercicio-unilateral-wrap {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.exercicio-unilateral-btn {
+  width: fit-content;
+  min-width: 7rem;
+  justify-content: center;
+}
+
+.exercicio-unilateral-hint {
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.exercicio-unilateral-readonly {
+  pointer-events: none;
+  cursor: default;
+  opacity: 1;
+}
+
+.workout-exec-ex-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.workout-exec-ex-title-row .exercicio-badge-unilateral {
+  margin-top: 0.35rem;
+}
+
 .exercicio-form-preview {
   margin-top: 0.75rem;
   border-radius: 0.75rem;

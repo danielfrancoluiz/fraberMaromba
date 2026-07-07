@@ -14,6 +14,7 @@ import { useWorkoutExecution } from "@/hooks/useWorkoutExecution";
 import { formatTime } from "@/hooks/useTimer";
 import { urlMidiaExercicio } from "@/lib/exercicio-media";
 import { labelDificuldade } from "@/lib/dificuldade-label";
+import { UnilateralIndicator } from "@/components/exercicio/UnilateralIndicator";
 import { WorkoutSubstituteModal } from "@/components/aluno/WorkoutSubstituteModal";
 import { WorkoutDoneModal } from "@/components/aluno/WorkoutDoneModal";
 
@@ -151,7 +152,10 @@ export function WorkoutExecution({
 
           <div className="workout-exec-media-footer">
             <div>
-              <h1 className="workout-exec-ex-nome">{exercicioAtual.nome}</h1>
+              <div className="workout-exec-ex-title-row">
+                <h1 className="workout-exec-ex-nome">{exercicioAtual.nome}</h1>
+                <UnilateralIndicator unilateral={exercicioAtual.unilateral ?? false} />
+              </div>
               <p className="workout-exec-ex-grupo">{exercicioAtual.grupoMuscular ?? ""}</p>
             </div>
             <button
@@ -210,6 +214,11 @@ export function WorkoutExecution({
               <p>{exercicioAtual.observacao}</p>
             </div>
           ) : null}
+
+          <UnilateralIndicator
+            unilateral={exercicioAtual.unilateral ?? false}
+            variant="chip"
+          />
         </section>
 
         {(exercicioAtual.descricao || exercicioAtual.equipamento || exercicioAtual.dificuldade) && (

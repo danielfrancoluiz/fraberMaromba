@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CheckCircle, Dumbbell, RefreshCw } from "lucide-react";
 import { Exercicio } from "@/types";
 import { getExercicioImagemUrl, getGrupoMuscularCor } from "@/lib/exercicio-imagem";
+import { UnilateralIndicator } from "@/components/exercicio/UnilateralIndicator";
 
 interface ExercicioItemProps {
   exercicio: Exercicio;
@@ -139,6 +140,7 @@ export function ExercicioItem({
               {exercicio.grupoMuscular}
             </span>
           ) : null}
+          <UnilateralIndicator unilateral={exercicio.unilateral ?? false} />
         </div>
 
         {exercicio.observacao ? (

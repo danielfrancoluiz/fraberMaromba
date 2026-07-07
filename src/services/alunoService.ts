@@ -54,6 +54,7 @@ interface ExercicioCatalogoApi {
   descricao?: string | null;
   imagemUrl?: string | null;
   gifUrl?: string | null;
+  unilateral?: boolean;
 }
 
 interface ExercicioApi {
@@ -109,6 +110,7 @@ function mapTreino(treino: TreinoApi): Treino {
       equipamento: exercicio.catalogo?.equipamento ?? undefined,
       dificuldade: exercicio.catalogo?.dificuldade ?? undefined,
       restSeconds: exercicio.restSeconds ?? 60,
+      unilateral: exercicio.catalogo?.unilateral ?? false,
     })),
   };
 }
@@ -202,6 +204,7 @@ export async function listarSubstitutos(
           imagemUrl: item.imagemUrl ?? item.gifUrl ?? undefined,
           gifUrl: item.gifUrl ?? undefined,
           slug: item.slug,
+          unilateral: item.unilateral ?? false,
         }));
       if (itens.length > 0) return itens;
     }

@@ -1,0 +1,1 @@
+ALTER TABLE "ExercicioCatalogo" ADD COLUMN IF NOT EXISTS "unilateral" BOOLEAN NOT NULL DEFAULT false;

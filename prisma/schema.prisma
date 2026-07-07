@@ -97,6 +97,7 @@ model ExercicioCatalogo {
   seriesPadrao     Int      @default(3)
   repeticoesPadrao Int      @default(12)
   descansoPadrao   Int      @default(60)
+  unilateral       Boolean  @default(false)
   ativo            Boolean  @default(true)
   criadoEm         DateTime @default(now())
 

@@ -131,6 +131,7 @@ export async function mapSessaoComCatalogo(sessao: SessaoComInclude | null) {
         descricao: c.descricao,
         equipamento: c.equipamento,
         dificuldade: c.dificuldade,
+        unilateral: c.unilateral,
       },
     ])
   );

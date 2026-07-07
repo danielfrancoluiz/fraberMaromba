@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { ImageIcon } from "lucide-react";
-import { useCriarExercicio } from "@/hooks/useCriarExercicio";
+import { useExercicioForm } from "@/hooks/useExercicioForm";
 import { PageTopBar } from "@/components/ui/PageTopBar";
 import { GRUPOS_MUSCULARES } from "@/lib/grupos-musculares";
 import { subGruposDoMembro } from "@/lib/sub-grupos-musculares";
@@ -27,18 +27,26 @@ function Campo({ label, children, erro, className }: CampoProps) {
   );
 }
 
-export function CriarExercicioForm() {
+interface ExercicioFormularioProps {
+  exercicioId?: string;
+}
+
+export function ExercicioFormulario({ exercicioId }: ExercicioFormularioProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const {
     form,
     errors,
     loadingSubmit,
+    loadingDados,
+    erroCarregar,
     feedbackSucesso,
     feedbackErro,
+    modoEdicao,
     handleChange,
+    toggleUnilateral,
     handleSubmit,
-  } = useCriarExercicio();
+  } = useExercicioForm({ exercicioId });
 
   const subGrupos = form.grupoMuscular
     ? subGruposDoMembro(normalizarGrupoMuscular(form.grupoMuscular))
@@ -51,7 +59,7 @@ export function CriarExercicioForm() {
     }
   }, [session, status, router]);
 
-  if (status === "loading") {
+  if (status === "loading" || loadingDados) {
     return (
       <main className="page-main">
         <p className="loading-center text-muted">Carregando...</p>
@@ -63,12 +71,30 @@ export function CriarExercicioForm() {
     return null;
   }
 
+  if (erroCarregar) {
+    return (
+      <main className="page-main">
+        <div className="page-container page-stack">
+          <PageTopBar
+            title="Exercício"
+            onBack={() => router.push("/professor/exercicios")}
+          />
+          <p className="error-center text-accent">{erroCarregar}</p>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="page-main">
       <div className="page-container page-stack">
         <PageTopBar
-          title="Novo exercício"
-          subtitle="Cadastre no catálogo para usar nos treinos"
+          title={modoEdicao ? "Editar exercício" : "Novo exercício"}
+          subtitle={
+            modoEdicao
+              ? "Atualize os dados do exercício"
+              : "Cadastre no catálogo para usar nos treinos"
+          }
           onBack={() => router.push("/professor/exercicios")}
         />
 
@@ -177,7 +203,7 @@ export function CriarExercicioForm() {
             />
           </Campo>
 
-          <Campo label="Descanso (segundos)" erro={errors.descanso} className="field-span2">
+          <Campo label="Descanso (segundos)" erro={errors.descanso}>
             <input
               className="input-field"
               type="number"
@@ -187,6 +213,23 @@ export function CriarExercicioForm() {
               onChange={(e) => handleChange("descanso", e.target.value)}
             />
           </Campo>
+
+          <div className="exercicio-unilateral-wrap">
+            <span className="field-label">Lado do exercício</span>
+            <button
+              type="button"
+              className={`chip exercicio-unilateral-btn ${form.unilateral ? "chip-active" : ""}`}
+              onClick={toggleUnilateral}
+              aria-pressed={form.unilateral}
+            >
+              Unilateral
+            </button>
+            <p className="text-muted exercicio-unilateral-hint">
+              {form.unilateral
+                ? "Marcado: trabalha um lado de cada vez"
+                : "Desmarcado: exercício bilateral"}
+            </p>
+          </div>
 
           {feedbackSucesso ? (
             <p className="field-span2 auth-alert auth-alert--success">{feedbackSucesso}</p>
@@ -206,7 +249,11 @@ export function CriarExercicioForm() {
               Cancelar
             </button>
             <button type="submit" className="btn-primary" disabled={loadingSubmit}>
-              {loadingSubmit ? "Salvando..." : "Criar exercício"}
+              {loadingSubmit
+                ? "Salvando..."
+                : modoEdicao
+                  ? "Salvar alterações"
+                  : "Criar exercício"}
             </button>
           </div>
         </form>
@@ -214,3 +261,6 @@ export function CriarExercicioForm() {
     </main>
   );
 }
+
+/** @deprecated Use ExercicioFormulario */
+export const CriarExercicioForm = ExercicioFormulario;

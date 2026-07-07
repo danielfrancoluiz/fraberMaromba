@@ -1,5 +1,5 @@
-import { CriarExercicioForm } from "@/components/professor/CriarExercicioForm";
+import { ExercicioFormulario } from "@/components/professor/ExercicioFormulario";
 
 export default function Page() {
-  return <CriarExercicioForm />;
+  return <ExercicioFormulario />;
 }

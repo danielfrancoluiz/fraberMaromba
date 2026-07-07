@@ -26,6 +26,7 @@ function aplicarSubstituto(
     dificuldade: substituto.dificuldade ?? exercicio.dificuldade,
     imagemUrl: substituto.imagemUrl ?? substituto.gifUrl,
     gifUrl: substituto.gifUrl ?? substituto.imagemUrl,
+    unilateral: substituto.unilateral ?? false,
   };
 }
 
@@ -41,6 +42,7 @@ function catalogoParaSubstituto(
     dificuldade: cat.dificuldade ?? undefined,
     imagemUrl: cat.imagemUrl ?? cat.gifUrl ?? undefined,
     gifUrl: cat.gifUrl ?? undefined,
+    unilateral: cat.unilateral ?? false,
   };
 }
 

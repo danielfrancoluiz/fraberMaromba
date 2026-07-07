@@ -52,6 +52,7 @@ export async function criarExercicioProfessor(dados: {
   series: number;
   repeticoes: number;
   descanso: number;
+  unilateral: boolean;
 }): Promise<ExercicioCatalogo> {
   const res = await fetch("/api/professor/exercicios", {
     method: "POST",
@@ -98,4 +99,78 @@ export async function listarExerciciosProfessor(busca?: string): Promise<Exercic
 
   const data = (await res.json()) as { itens: ExercicioCatalogo[] };
   return data.itens;
+}
+
+export async function buscarExercicioProfessor(id: string): Promise<ExercicioCatalogo> {
+  const res = await fetch(`/api/professor/exercicios/${id}`, {
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const body: unknown = await res.json().catch(() => null);
+    const erro =
+      typeof body === "object" &&
+      body !== null &&
+      "error" in body &&
+      typeof (body as { error?: string }).error === "string"
+        ? (body as { error: string }).error
+        : "Erro ao carregar exercício";
+    throw new Error(erro);
+  }
+
+  return res.json() as Promise<ExercicioCatalogo>;
+}
+
+export async function atualizarExercicioProfessor(
+  id: string,
+  dados: {
+    nome: string;
+    gifUrl?: string;
+    grupoMuscular: string;
+    subGrupoMuscular: string;
+    series: number;
+    repeticoes: number;
+    descanso: number;
+    unilateral: boolean;
+  }
+): Promise<ExercicioCatalogo> {
+  const res = await fetch(`/api/professor/exercicios/${id}`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(dados),
+  });
+
+  if (!res.ok) {
+    const body: unknown = await res.json().catch(() => null);
+    const erro =
+      typeof body === "object" &&
+      body !== null &&
+      "error" in body &&
+      typeof (body as { error?: string }).error === "string"
+        ? (body as { error: string }).error
+        : "Erro ao atualizar exercício";
+    throw new Error(erro);
+  }
+
+  return res.json() as Promise<ExercicioCatalogo>;
+}
+
+export async function excluirExercicioProfessor(id: string): Promise<void> {
+  const res = await fetch(`/api/professor/exercicios/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const body: unknown = await res.json().catch(() => null);
+    const erro =
+      typeof body === "object" &&
+      body !== null &&
+      "error" in body &&
+      typeof (body as { error?: string }).error === "string"
+        ? (body as { error: string }).error
+        : "Erro ao excluir exercício";
+    throw new Error(erro);
+  }
 }

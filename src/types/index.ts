@@ -60,6 +60,7 @@ export interface ExercicioCatalogo {
   seriesPadrao?: number;
   repeticoesPadrao?: number;
   descansoPadrao?: number;
+  unilateral?: boolean;
   ativo: boolean;
   criadoEm?: string;
 }
@@ -72,6 +73,7 @@ export interface CriarExercicioForm {
   series: string;
   repeticoes: string;
   descanso: string;
+  unilateral: boolean;
 }
 
 export interface CriarExercicioFormErrors {
@@ -98,6 +100,7 @@ export interface Exercicio {
   equipamento?: string;
   dificuldade?: string;
   restSeconds?: number;
+  unilateral?: boolean;
 }
 
 export interface TreinoComAluno extends Treino {
@@ -225,6 +228,7 @@ export interface CatalogoResumoSessao {
   descricao?: string | null;
   equipamento?: string | null;
   dificuldade?: string | null;
+  unilateral?: boolean;
 }
 
 export interface TreinoSessao {
@@ -272,6 +276,7 @@ export interface ExercicioSubstituto {
   imagemUrl?: string;
   gifUrl?: string;
   slug?: string;
+  unilateral?: boolean;
 }
 
 export interface Convite {
