@@ -3,6 +3,8 @@ export type MidiaTipo = "image" | "video" | "embed";
 export interface MidiaResolvida {
   tipo: MidiaTipo;
   src: string;
+  driveVideoSrc?: string;
+  driveViewUrl?: string;
 }
 
 const VIDEO_EXT = /\.(mp4|webm|mov|m4v|ogg)(\?|#|$)/i;
@@ -32,6 +34,10 @@ export function urlDownloadGoogleDrive(fileId: string): string {
   return `https://drive.google.com/uc?export=download&id=${fileId}`;
 }
 
+export function urlViewGoogleDrive(fileId: string): string {
+  return `https://drive.google.com/file/d/${fileId}/view`;
+}
+
 /** Converte links de compartilhamento (view, drive_link) em URL reproduzível. */
 export function resolverUrlMidia(url: string | null | undefined): MidiaResolvida | null {
   const trimmed = url?.trim();
@@ -39,7 +45,12 @@ export function resolverUrlMidia(url: string | null | undefined): MidiaResolvida
 
   const driveId = extrairGoogleDriveFileId(trimmed);
   if (driveId) {
-    return { tipo: "embed", src: urlPreviewGoogleDrive(driveId) };
+    return {
+      tipo: "embed",
+      src: urlPreviewGoogleDrive(driveId),
+      driveVideoSrc: urlDownloadGoogleDrive(driveId),
+      driveViewUrl: urlViewGoogleDrive(driveId),
+    };
   }
 
   if (VIDEO_EXT.test(trimmed)) {
