@@ -1,13 +1,12 @@
-import { AlunoSectionPage } from "@/components/aluno/AlunoSectionPage";
-import { NUTRICAO_ITEMS } from "@/data/alunoSections";
+import { AlunoComingSoon } from "@/components/aluno/AlunoComingSoon";
 
 export default function Page() {
   return (
-    <AlunoSectionPage
+    <AlunoComingSoon
       title="Nutrição"
       subtitle="Plano alimentar e acompanhamento"
-      accentColor="#27ae60"
-      items={NUTRICAO_ITEMS}
+      icon="salad"
+      description="Planos alimentares e acompanhamento nutricional estarão disponíveis em uma próxima versão."
     />
   );
 }

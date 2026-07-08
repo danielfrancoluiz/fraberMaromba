@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ImageIcon, Play } from "lucide-react";
 import {
   resolverUrlMidia,
@@ -12,7 +12,7 @@ interface ExercicioMidiaProps {
   alt: string;
   className?: string;
   mediaClassName?: string;
-  /** Em miniaturas: não embute iframe do Drive (mostra ícone). */
+  /** Em miniaturas: mostra o frame do vídeo com ícone de play (sem reproduzir). */
   compact?: boolean;
   onError?: () => void;
 }
@@ -21,84 +21,181 @@ export function resolverMidiaDeUrl(url?: string | null): MidiaResolvida | null {
   return resolverUrlMidia(url);
 }
 
-function usePreferDriveVideo(): boolean {
-  const [prefer, setPrefer] = useState(false);
-
-  useEffect(() => {
-    const mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-    const touch = window.matchMedia("(pointer: coarse)").matches;
-    const narrow = window.matchMedia("(max-width: 768px)").matches;
-    setPrefer(mobile || touch || narrow);
-  }, []);
-
-  return prefer;
-}
-
-function DriveFallbackLink({
-  viewUrl,
-  mediaClassName,
-  className,
+function MidiaPlayOverlay({
+  alt,
+  compact,
+  onClick,
 }: {
-  viewUrl: string;
-  mediaClassName: string;
-  className?: string;
+  alt: string;
+  compact?: boolean;
+  onClick: () => void;
 }) {
   return (
-    <a
-      href={viewUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={`${mediaClassName} exercicio-midia-drive-fallback${className ? ` ${className}` : ""}`}
+    <button
+      type="button"
+      className="exercicio-midia-play-overlay"
+      onClick={onClick}
+      aria-label={`Reproduzir ${alt}`}
     >
-      <Play size={32} />
-      <span>Toque para assistir o vídeo</span>
-    </a>
+      <Play size={compact ? 22 : 40} />
+      {!compact ? <span>Assistir vídeo</span> : null}
+    </button>
   );
 }
 
-function DriveVideoPlayer({
-  videoSrc,
-  viewUrl,
-  alt,
+function VideoPosterThumb({
+  src,
   mediaClassName,
   className,
   onError,
 }: {
-  videoSrc: string;
-  viewUrl: string;
-  alt: string;
+  src: string;
   mediaClassName: string;
   className?: string;
   onError?: () => void;
 }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const captureFrame = () => {
+      if (video.paused && video.currentTime < 0.01) {
+        video.currentTime = 0.01;
+      }
+    };
+
+    video.addEventListener("loadeddata", captureFrame);
+    return () => video.removeEventListener("loadeddata", captureFrame);
+  }, [src]);
 
   if (failed) {
     return (
-      <DriveFallbackLink
-        viewUrl={viewUrl}
-        mediaClassName={mediaClassName}
-        className={className}
-      />
+      <div
+        className={`${mediaClassName} exercicio-midia--empty${className ? ` ${className}` : ""}`}
+      >
+        <Play size={18} />
+      </div>
     );
   }
 
   return (
-    <video
-      src={videoSrc}
-      className={`${mediaClassName} exercicio-midia--video${className ? ` ${className}` : ""}`}
-      autoPlay
-      loop
-      muted
-      playsInline
-      controls
-      preload="metadata"
-      onError={() => {
-        setFailed(true);
-        onError?.();
-      }}
-      aria-label={alt}
-    />
+    <div
+      className={`exercicio-midia-video-wrap exercicio-midia-video-wrap--compact ${mediaClassName}${className ? ` ${className}` : ""}`}
+    >
+      <video
+        ref={videoRef}
+        src={src}
+        className="exercicio-midia--video"
+        playsInline
+        preload="metadata"
+        muted
+        aria-hidden
+        tabIndex={-1}
+        onError={() => {
+          setFailed(true);
+          onError?.();
+        }}
+      />
+      <div className="exercicio-midia-poster-play-icon" aria-hidden>
+        <Play size={16} />
+      </div>
+    </div>
+  );
+}
+
+function ProtectedVideo({
+  src,
+  alt,
+  mediaClassName,
+  className,
+  compact,
+  onError,
+}: {
+  src: string;
+  alt: string;
+  mediaClassName: string;
+  className?: string;
+  compact?: boolean;
+  onError?: () => void;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [started, setStarted] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const captureFrame = () => {
+      if (!started && video.paused && video.currentTime < 0.01) {
+        video.currentTime = 0.01;
+      }
+    };
+
+    video.addEventListener("loadeddata", captureFrame);
+    return () => video.removeEventListener("loadeddata", captureFrame);
+  }, [src, started]);
+
+  const handleStart = async () => {
+    const video = videoRef.current;
+    if (!video || loadError) return;
+
+    setStarted(true);
+    video.muted = false;
+
+    try {
+      await video.play();
+    } catch {
+      video.muted = true;
+      try {
+        await video.play();
+      } catch {
+        setLoadError(true);
+      }
+    }
+  };
+
+  const handleVideoError = () => {
+    setLoadError(true);
+    onError?.();
+  };
+
+  return (
+    <div
+      className={`exercicio-midia-video-wrap ${mediaClassName}${className ? ` ${className}` : ""}`}
+    >
+      <video
+        ref={videoRef}
+        src={src}
+        className="exercicio-midia--video"
+        playsInline
+        preload="auto"
+        muted={!started}
+        controls={started}
+        controlsList="nodownload noplaybackrate"
+        disablePictureInPicture
+        onContextMenu={(event) => event.preventDefault()}
+        onError={handleVideoError}
+        aria-label={alt}
+      />
+
+      {!started && !loadError ? (
+        <MidiaPlayOverlay
+          alt={alt}
+          compact={compact}
+          onClick={() => void handleStart()}
+        />
+      ) : null}
+
+      {loadError ? (
+        <div className="exercicio-midia-video-error">
+          <p>Não foi possível carregar o vídeo.</p>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -110,7 +207,6 @@ export function ExercicioMidia({
   compact = false,
   onError,
 }: ExercicioMidiaProps) {
-  const preferDriveVideo = usePreferDriveVideo();
   const midia = resolverUrlMidia(url);
 
   if (!midia) {
@@ -123,55 +219,24 @@ export function ExercicioMidia({
     );
   }
 
-  if (midia.tipo === "embed" && compact) {
+  if (midia.tipo === "video" && compact) {
     return (
-      <div
-        className={`${mediaClassName} exercicio-midia--drive${className ? ` ${className}` : ""}`}
-      >
-        <Play size={compact ? 18 : 32} />
-      </div>
-    );
-  }
-
-  if (midia.tipo === "embed") {
-    const videoSrc = midia.driveVideoSrc ?? midia.src;
-    const viewUrl = midia.driveViewUrl ?? midia.src;
-
-    if (preferDriveVideo) {
-      return (
-        <DriveVideoPlayer
-          videoSrc={videoSrc}
-          viewUrl={viewUrl}
-          alt={alt}
-          mediaClassName={mediaClassName}
-          className={className}
-          onError={onError}
-        />
-      );
-    }
-
-    return (
-      <iframe
+      <VideoPosterThumb
         src={midia.src}
-        title={alt}
-        className={`${mediaClassName} exercicio-midia--embed${className ? ` ${className}` : ""}`}
-        allow="autoplay; fullscreen"
-        allowFullScreen
+        mediaClassName={mediaClassName}
+        className={className}
+        onError={onError}
       />
     );
   }
 
   if (midia.tipo === "video") {
     return (
-      <video
+      <ProtectedVideo
         src={midia.src}
-        className={`${mediaClassName} exercicio-midia--video${className ? ` ${className}` : ""}`}
-        autoPlay
-        loop
-        muted
-        playsInline
-        controls
-        preload="metadata"
+        alt={alt}
+        mediaClassName={mediaClassName}
+        className={className}
         onError={onError}
       />
     );

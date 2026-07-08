@@ -70,13 +70,7 @@ export default function Page() {
   return (
     <main className="page-main student-page-main">
       <div className="page-container page-stack">
-        <div
-          className="student-section-hero"
-          style={{
-            background: "linear-gradient(135deg, rgba(224,32,32,0.12), rgba(224,32,32,0.04))",
-            borderColor: "rgba(224,32,32,0.2)",
-          }}
-        >
+        <div className="student-section-hero">
           <h2 className="student-section-title">Musculação</h2>
           <p className="student-section-subtitle">
             {primeiroNome

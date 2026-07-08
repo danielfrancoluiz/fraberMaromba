@@ -1,13 +1,12 @@
-import { AlunoSectionPage } from "@/components/aluno/AlunoSectionPage";
-import { CORRIDA_ITEMS } from "@/data/alunoSections";
+import { AlunoComingSoon } from "@/components/aluno/AlunoComingSoon";
 
 export default function Page() {
   return (
-    <AlunoSectionPage
+    <AlunoComingSoon
       title="Corrida"
       subtitle="Planilhas, pace e seus melhores tempos"
-      accentColor="#2b7de9"
-      items={CORRIDA_ITEMS}
+      icon="wind"
+      description="Seu professor poderá prescrever treinos de corrida aqui. Por enquanto, use a aba Musculação."
     />
   );
 }

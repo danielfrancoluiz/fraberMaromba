@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, User } from "lucide-react";
+import { User } from "lucide-react";
 
 export function StudentAppHeader() {
   const pathname = usePathname();
@@ -22,19 +22,13 @@ export function StudentAppHeader() {
         </div>
       </div>
 
-      <div className="student-header-actions">
-        <button type="button" className="student-header-icon-btn" aria-label="Notificações">
-          <Bell size={16} />
-          <span className="student-header-dot" />
-        </button>
-        <Link
-          href="/aluno/perfil"
-          className={`student-header-avatar ${onProfile ? "student-header-avatar--active" : ""}`}
-          aria-label="Perfil"
-        >
-          <User size={18} />
-        </Link>
-      </div>
+      <Link
+        href="/aluno/perfil"
+        className={`student-header-avatar ${onProfile ? "student-header-avatar--active" : ""}`}
+        aria-label="Perfil"
+      >
+        <User size={18} />
+      </Link>
     </header>
   );
 }

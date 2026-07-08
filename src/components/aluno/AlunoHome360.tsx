@@ -2,82 +2,38 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import {
-  ClipboardList,
-  Trophy,
-  Activity,
-  User,
-  CreditCard,
-  ChevronRight,
-  LucideIcon,
-} from "lucide-react";
+import { ChevronRight, Dumbbell, Trophy } from "lucide-react";
+import { listarTreinosDoAlunoPorDia } from "@/services/alunoService";
 import { buscarEstatisticasSessaoAluno } from "@/services/sessaoService";
-import { EstatisticasSessaoAluno } from "@/types";
+import { EstatisticasSessaoAluno, Treino } from "@/types";
 
-interface MenuItem {
-  id: string;
-  label: string;
-  icon: LucideIcon;
-  color: string;
-  bg: string;
-  desc: string;
-  href?: string;
+function getDiaSemanaAtual(): string {
+  const dias: Record<number, string> = {
+    0: "domingo",
+    1: "segunda",
+    2: "terca",
+    3: "quarta",
+    4: "quinta",
+    5: "sexta",
+    6: "sabado",
+  };
+  return dias[new Date().getDay()] ?? "segunda";
 }
 
-const MENU_ITEMS: MenuItem[] = [
-  {
-    id: "treino",
-    label: "Treino",
-    icon: ClipboardList,
-    color: "#e02020",
-    bg: "rgba(224,32,32,0.12)",
-    desc: "Seu plano de treino",
-    href: "/aluno/treinos",
-  },
-  {
-    id: "records",
-    label: "Records",
-    icon: Trophy,
-    color: "#f5a623",
-    bg: "rgba(245,166,35,0.12)",
-    desc: "Seus recordes pessoais",
-    href: "/aluno/historico",
-  },
-  {
-    id: "avaliacao",
-    label: "Avaliação Física",
-    icon: Activity,
-    color: "#2b7de9",
-    bg: "rgba(43,125,233,0.12)",
-    desc: "Acompanhe seu corpo",
-  },
-  {
-    id: "perfil",
-    label: "Meu Perfil",
-    icon: User,
-    color: "#9b59b6",
-    bg: "rgba(155,89,182,0.12)",
-    desc: "Suas informações",
-    href: "/aluno/perfil",
-  },
-  {
-    id: "plano",
-    label: "Plano",
-    icon: CreditCard,
-    color: "#27ae60",
-    bg: "rgba(39,174,96,0.12)",
-    desc: "Gerencie seu plano",
-    href: "/aluno/perfil",
-  },
-];
-
-function StatCard({ value, label, color }: { value: string; label: string; color: string }) {
+function StatCard({
+  value,
+  label,
+  highlight,
+}: {
+  value: string;
+  label: string;
+  highlight?: boolean;
+}) {
   return (
-    <div className="student-stat-card">
-      <span className="student-stat-value" style={{ color }}>
-        {value}
-      </span>
+    <div className={`student-stat-card${highlight ? " student-stat-card--highlight" : ""}`}>
+      <span className="student-stat-value">{value}</span>
       <span className="student-stat-label">{label}</span>
     </div>
   );
@@ -85,7 +41,12 @@ function StatCard({ value, label, color }: { value: string; label: string; color
 
 export function AlunoHome360() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [stats, setStats] = useState<EstatisticasSessaoAluno | null>(null);
+  const [treinoHoje, setTreinoHoje] = useState<Treino | null>(null);
+
+  const primeiroNome = session?.user?.name?.split(" ")[0];
+  const diaAtual = getDiaSemanaAtual();
 
   useEffect(() => {
     let ativo = true;
@@ -101,92 +62,89 @@ export function AlunoHome360() {
     };
   }, []);
 
+  useEffect(() => {
+    const alunoId = session?.user?.id;
+    if (!alunoId) return;
+
+    let ativo = true;
+
+    void listarTreinosDoAlunoPorDia(alunoId)
+      .then((treinos) => {
+        if (!ativo) return;
+        const doDia = treinos[diaAtual] ?? [];
+        setTreinoHoje(doDia[0] ?? null);
+      })
+      .catch(() => {
+        if (ativo) setTreinoHoje(null);
+      });
+
+    return () => {
+      ativo = false;
+    };
+  }, [session?.user?.id, diaAtual]);
+
   const completed = stats?.treinosConcluidos ?? 0;
   const frequency =
     completed > 0 ? Math.min(100, Math.round((completed / 12) * 100)) : 0;
 
   return (
     <div className="student-home-stack">
-      <div className="student-welcome-banner">
-        <p className="student-welcome-kicker">Bem-vindo de volta</p>
-        <h2 className="student-welcome-title">Bora treinar hoje? 💪</h2>
-        <p className="student-welcome-sub">Continue sua jornada FRABER 360°</p>
+      <section className="student-greeting">
+        <p className="student-greeting-label">
+          {primeiroNome ? `Olá, ${primeiroNome}` : "Olá"}
+        </p>
+        <p className="student-greeting-sub">Sua rotina FRABER 360°</p>
+      </section>
+
+      {treinoHoje ? (
         <button
           type="button"
-          className="student-welcome-cta"
-          onClick={() => router.push("/aluno/treinos")}
+          className="student-today-card"
+          onClick={() => router.push(`/aluno/treino/${treinoHoje.id}`)}
         >
-          Ver meu treino
+          <div className="student-today-icon">
+            <Dumbbell size={20} />
+          </div>
+          <div className="student-today-body">
+            <p className="student-today-kicker">Treino de hoje</p>
+            <p className="student-today-title">{treinoHoje.nome}</p>
+            <p className="student-today-meta">
+              {treinoHoje.exercicios.length} exercícios
+            </p>
+          </div>
+          <ChevronRight size={18} className="student-today-chevron" />
         </button>
-      </div>
+      ) : (
+        <div className="student-today-card student-today-card--empty">
+          <p className="student-today-empty-title">Sem treino hoje</p>
+          <p className="student-today-empty-desc">
+            Confira sua programação na aba Musculação.
+          </p>
+          <button
+            type="button"
+            className="student-cta"
+            onClick={() => router.push("/aluno/treinos")}
+          >
+            Ver programação
+          </button>
+        </div>
+      )}
 
       <div className="student-stats-row">
-        <StatCard value={String(completed)} label="Treinos" color="#e02020" />
-        <StatCard value={`${frequency}%`} label="Frequência" color="#2b7de9" />
-        <StatCard value="—" label="Evolução" color="#27ae60" />
+        <StatCard value={String(completed)} label="Treinos" highlight />
+        <StatCard value={`${frequency}%`} label="Frequência" />
       </div>
 
-      <div>
-        <div className="student-quick-header">
-          <h3 className="student-quick-title">Acesso Rápido</h3>
-          <Link href="/aluno/treinos" className="student-quick-link">
-            Ver tudo
-          </Link>
+      <Link href="/aluno/historico" className="student-link-row">
+        <div className="student-link-row-icon">
+          <Trophy size={18} />
         </div>
-        <div className="student-quick-grid">
-          {MENU_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const inner = (
-              <>
-                <div
-                  className="student-quick-icon"
-                  style={{ background: `${item.color}22` }}
-                >
-                  <Icon size={20} style={{ color: item.color }} />
-                </div>
-                <div className="student-quick-text">
-                  <p className="student-quick-label">{item.label}</p>
-                  <p className="student-quick-desc">{item.desc}</p>
-                </div>
-                <ChevronRight
-                  size={14}
-                  className="student-quick-chevron"
-                  style={{ color: item.color }}
-                />
-              </>
-            );
-
-            if (item.href) {
-              return (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  className="student-quick-card"
-                  style={{
-                    background: item.bg,
-                    borderColor: `${item.color}22`,
-                  }}
-                >
-                  {inner}
-                </Link>
-              );
-            }
-
-            return (
-              <div
-                key={item.id}
-                className="student-quick-card student-quick-card--static"
-                style={{
-                  background: item.bg,
-                  borderColor: `${item.color}22`,
-                }}
-              >
-                {inner}
-              </div>
-            );
-          })}
+        <div className="student-link-row-body">
+          <p className="student-link-row-label">Histórico e records</p>
+          <p className="student-link-row-desc">Acompanhe sua evolução</p>
         </div>
-      </div>
+        <ChevronRight size={16} className="student-link-row-chevron" />
+      </Link>
     </div>
   );
 }

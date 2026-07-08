@@ -36,7 +36,8 @@ export function TreinoResumoCard({
       title={treino.nome}
       icon={Play}
       onClick={onClick}
-      badge={<Badge variant="primary">{DIA_LABELS[treino.diaSemana]}</Badge>}
+      accent="accent"
+      badge={<Badge variant="muted">{DIA_LABELS[treino.diaSemana]}</Badge>}
       meta={
         <>
           <span>{treino.exercicios.length} exercícios</span>

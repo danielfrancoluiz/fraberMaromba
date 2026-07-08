@@ -9,6 +9,8 @@ import { WorkoutExecution } from "@/components/aluno/WorkoutExecution";
 import { TreinoExerciciosLista } from "@/components/aluno/TreinoExerciciosLista";
 import { useTreinoListaProgresso } from "@/hooks/useTreinoListaProgresso";
 
+const EXERCICIOS_VAZIOS: Treino["exercicios"] = [];
+
 export default function Page() {
   const params = useParams();
   const router = useRouter();
@@ -23,7 +25,7 @@ export default function Page() {
 
   const { completedSets, sessaoId, loading: loadingProgresso } = useTreinoListaProgresso(
     treino?.id,
-    treino?.exercicios ?? [],
+    treino?.exercicios ?? EXERCICIOS_VAZIOS,
     refreshKey
   );
 

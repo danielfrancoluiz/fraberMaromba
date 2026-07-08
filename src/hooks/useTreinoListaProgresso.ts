@@ -1,9 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Exercicio, TreinoSessao } from "@/types";
 import { iniciarSessao } from "@/services/sessaoService";
 import { montarProgressoSeries } from "@/lib/treino-progresso";
+
+function chaveProgresso(
+  treinoId: string | undefined,
+  exerciciosKey: string,
+  refreshKey: number
+): string | null {
+  if (!treinoId || !exerciciosKey) return null;
+  return `${treinoId}|${exerciciosKey}|${refreshKey}`;
+}
 
 export function useTreinoListaProgresso(
   treinoId: string | undefined,
@@ -12,36 +21,55 @@ export function useTreinoListaProgresso(
 ) {
   const [completedSets, setCompletedSets] = useState<Record<string, boolean[]>>({});
   const [sessaoId, setSessaoId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [chaveResolvida, setChaveResolvida] = useState<string | null>(null);
 
-  const carregar = useCallback(async () => {
-    if (!treinoId || exercicios.length === 0) {
-      setCompletedSets({});
-      setSessaoId(null);
-      setLoading(false);
-      return;
-    }
+  const exerciciosKey = useMemo(
+    () =>
+      exercicios.length > 0
+        ? exercicios.map((e) => `${e.id}:${e.series}`).join("|")
+        : "",
+    [exercicios]
+  );
 
-    setLoading(true);
-    setErro(null);
-
-    try {
-      const sessao: TreinoSessao = await iniciarSessao(treinoId);
-      setSessaoId(sessao.id);
-      setCompletedSets(montarProgressoSeries(exercicios, sessao));
-    } catch (error) {
-      setErro(error instanceof Error ? error.message : "Erro ao carregar progresso");
-      setCompletedSets({});
-      setSessaoId(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [treinoId, exercicios]);
+  const chaveAtual = chaveProgresso(treinoId, exerciciosKey, refreshKey);
+  const semDados = chaveAtual === null;
+  const loading = !semDados && chaveResolvida !== chaveAtual;
 
   useEffect(() => {
-    void carregar();
-  }, [carregar, refreshKey]);
+    if (!chaveAtual || !treinoId) return;
 
-  return { completedSets, sessaoId, loading, erro, recarregar: carregar };
+    let cancelled = false;
+    const chave = chaveAtual;
+
+    void (async () => {
+      try {
+        const sessao: TreinoSessao = await iniciarSessao(treinoId);
+        if (cancelled) return;
+        setSessaoId(sessao.id);
+        setCompletedSets(montarProgressoSeries(exercicios, sessao));
+        setErro(null);
+        setChaveResolvida(chave);
+      } catch (error) {
+        if (cancelled) return;
+        setErro(
+          error instanceof Error ? error.message : "Erro ao carregar progresso"
+        );
+        setCompletedSets({});
+        setSessaoId(null);
+        setChaveResolvida(chave);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [chaveAtual, treinoId, exercicios]);
+
+  return {
+    completedSets: semDados ? {} : completedSets,
+    sessaoId: semDados ? null : sessaoId,
+    loading,
+    erro: semDados ? null : erro,
+  };
 }
