@@ -104,8 +104,16 @@ function hydrateFromSessao(
 export function useWorkoutExecution(
   treino: Treino | null,
   _alunoId: string,
-  onTreinoConcluido?: () => void
+  onTreinoConcluido?: () => void,
+  options?: {
+    initialExIdx?: number;
+    modoEscolhaLivre?: boolean;
+    onExercicioConcluido?: () => void;
+  }
 ) {
+  const initialExIdx = options?.initialExIdx;
+  const modoEscolhaLivre = options?.modoEscolhaLivre ?? false;
+  const onExercicioConcluido = options?.onExercicioConcluido;
   const [sessaoId, setSessaoId] = useState<string | null>(null);
   const [sessaoLoading, setSessaoLoading] = useState(true);
   const [sessaoErro, setSessaoErro] = useState<string | null>(null);
@@ -173,8 +181,17 @@ export function useWorkoutExecution(
         const hydrated = hydrateFromSessao(sessao, treino.exercicios);
         setCompletedSets(hydrated.completedSets);
         setSubstituicoes(hydrated.substituicoes);
-        setExIdx(hydrated.exIdx);
-        setSetIdx(hydrated.setIdx);
+
+        if (initialExIdx !== undefined && treino.exercicios[initialExIdx]) {
+          const ex = treino.exercicios[initialExIdx];
+          const arr = hydrated.completedSets[ex.id] ?? [];
+          const firstIncomplete = arr.findIndex((done) => !done);
+          setExIdx(initialExIdx);
+          setSetIdx(firstIncomplete >= 0 ? firstIncomplete : 0);
+        } else {
+          setExIdx(hydrated.exIdx);
+          setSetIdx(hydrated.setIdx);
+        }
 
         if (sessao.status === "concluido") {
           setPhase("done");
@@ -198,7 +215,7 @@ export function useWorkoutExecution(
     return () => {
       ativo = false;
     };
-  }, [treino?.id]);
+  }, [treino?.id, initialExIdx]);
 
   const finalizarTreino = useCallback(async () => {
     if (!sessaoId) return;
@@ -210,7 +227,6 @@ export function useWorkoutExecution(
       setShowDoneModal(true);
       onTreinoConcluido?.();
     } catch {
-      /* mantém modal local se API falhar */
       sessionTimer.pause();
       setPhase("done");
       setShowDoneModal(true);
@@ -218,6 +234,30 @@ export function useWorkoutExecution(
       setSyncing(false);
     }
   }, [sessaoId, sessionTimer, onTreinoConcluido]);
+
+  const concluirExercicioAtual = useCallback(() => {
+    if (modoEscolhaLivre) {
+      sessionTimer.pause();
+      onExercicioConcluido?.();
+      return;
+    }
+
+    if (exIdx < exercicios.length - 1) {
+      setExIdx((i) => i + 1);
+      setSetIdx(0);
+      setPhase("exercise");
+      return;
+    }
+
+    void finalizarTreino();
+  }, [
+    modoEscolhaLivre,
+    onExercicioConcluido,
+    sessionTimer,
+    exIdx,
+    exercicios.length,
+    finalizarTreino,
+  ]);
 
   const avancarAposDescanso = useCallback(() => {
     if (!exercicioAtual) return;
@@ -230,15 +270,8 @@ export function useWorkoutExecution(
       return;
     }
 
-    if (exIdx < exercicios.length - 1) {
-      setExIdx((i) => i + 1);
-      setSetIdx(0);
-      setPhase("exercise");
-      return;
-    }
-
-    void finalizarTreino();
-  }, [exercicioAtual, setIdx, exIdx, exercicios.length, finalizarTreino]);
+    concluirExercicioAtual();
+  }, [exercicioAtual, setIdx, concluirExercicioAtual]);
 
   const countdown = useCountdown(avancarAposDescanso);
 
@@ -290,11 +323,18 @@ export function useWorkoutExecution(
 
     const descanso = exercicioAtual.restSeconds ?? 60;
     const isUltimaSerie = setIdx >= total - 1;
-    const isUltimoExercicio = exIdx >= exercicios.length - 1;
 
-    if (isUltimaSerie && isUltimoExercicio) {
-      void finalizarTreino();
-      return;
+    if (isUltimaSerie) {
+      if (modoEscolhaLivre) {
+        concluirExercicioAtual();
+        return;
+      }
+
+      const isUltimoExercicio = exIdx >= exercicios.length - 1;
+      if (isUltimoExercicio) {
+        void finalizarTreino();
+        return;
+      }
     }
 
     setPhase("rest");
@@ -308,6 +348,8 @@ export function useWorkoutExecution(
     exercicios.length,
     countdown,
     finalizarTreino,
+    modoEscolhaLivre,
+    concluirExercicioAtual,
   ]);
 
   const pularDescanso = useCallback(() => {

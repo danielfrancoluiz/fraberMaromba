@@ -6,6 +6,8 @@ import { useSession } from "next-auth/react";
 import { Treino } from "@/types";
 import { listarTreinosDoAlunoPorDia } from "@/services/alunoService";
 import { WorkoutExecution } from "@/components/aluno/WorkoutExecution";
+import { TreinoExerciciosLista } from "@/components/aluno/TreinoExerciciosLista";
+import { useTreinoListaProgresso } from "@/hooks/useTreinoListaProgresso";
 
 export default function Page() {
   const params = useParams();
@@ -16,6 +18,14 @@ export default function Page() {
   const [treino, setTreino] = useState<Treino | null>(null);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [exercicioAtivoIdx, setExercicioAtivoIdx] = useState<number | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const { completedSets, sessaoId, loading: loadingProgresso } = useTreinoListaProgresso(
+    treino?.id,
+    treino?.exercicios ?? [],
+    refreshKey
+  );
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -64,20 +74,40 @@ export default function Page() {
         <button
           type="button"
           className="btn-primary"
-          onClick={() => router.push("/aluno/dashboard")}
+          onClick={() => router.push("/aluno/treinos")}
         >
-          Voltar ao início
+          Voltar
         </button>
       </main>
     );
   }
 
+  if (exercicioAtivoIdx !== null) {
+    return (
+      <WorkoutExecution
+        treino={treino}
+        alunoId={session?.user?.id ?? ""}
+        initialExIdx={exercicioAtivoIdx}
+        modoEscolhaLivre
+        onSair={() => setExercicioAtivoIdx(null)}
+        onExercicioConcluido={() => {
+          setExercicioAtivoIdx(null);
+          setRefreshKey((k) => k + 1);
+        }}
+        onFinalizar={() => router.push("/aluno/treinos")}
+      />
+    );
+  }
+
   return (
-    <WorkoutExecution
+    <TreinoExerciciosLista
       treino={treino}
-      alunoId={session?.user?.id ?? ""}
-      onSair={() => router.back()}
-      onFinalizar={() => router.push("/aluno/dashboard")}
+      completedSets={completedSets}
+      sessaoId={sessaoId}
+      loading={loadingProgresso}
+      onSelecionarExercicio={setExercicioAtivoIdx}
+      onVoltar={() => router.push("/aluno/treinos")}
+      onTreinoFinalizado={() => router.push("/aluno/treinos")}
     />
   );
 }

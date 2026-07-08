@@ -3892,3 +3892,180 @@ body {
   color: var(--fraber-text-muted);
   font-size: 0.8rem;
 }
+
+/* Lista de exercícios do treino (aluno) */
+.treino-lista-page {
+  padding-bottom: 2rem;
+}
+
+.treino-lista-header {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.treino-lista-voltar {
+  width: fit-content;
+  border: none;
+  background: transparent;
+  color: var(--fraber-text-muted);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.treino-lista-titulo {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.treino-lista-subtitulo {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+}
+
+.treino-lista-progresso {
+  padding: 0.875rem 1rem;
+}
+
+.treino-lista-progresso-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.treino-lista-progresso-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--fraber-bg-soft);
+  overflow: hidden;
+}
+
+.treino-lista-progresso-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--fraber-primary), #22c55e);
+  border-radius: inherit;
+  transition: width 0.25s ease;
+}
+
+.treino-lista-exercicios {
+  gap: 0.75rem;
+}
+
+.treino-exercicio-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--fraber-border);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.treino-exercicio-card:active {
+  transform: scale(0.99);
+}
+
+.treino-exercicio-card--done {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.06);
+}
+
+.treino-exercicio-card-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--fraber-bg-soft);
+}
+
+.treino-exercicio-card-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.treino-exercicio-card-media--empty {
+  display: grid;
+  place-items: center;
+  color: var(--fraber-text-muted);
+}
+
+.treino-exercicio-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.treino-exercicio-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.treino-exercicio-card-num {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--fraber-text-muted);
+  text-transform: uppercase;
+}
+
+.treino-exercicio-card-badge {
+  font-size: 0.625rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+}
+
+.treino-exercicio-card-badge--progress {
+  background: rgba(46, 127, 217, 0.15);
+  color: #93c5fd;
+}
+
+.treino-exercicio-card-nome {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.treino-exercicio-card--done .treino-exercicio-card-nome {
+  text-decoration: line-through;
+  opacity: 0.85;
+}
+
+.treino-exercicio-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--fraber-text-muted);
+}
+
+.treino-exercicio-card-action {
+  flex-shrink: 0;
+  color: var(--fraber-text-muted);
+}
+
+.treino-exercicio-card--done .treino-exercicio-card-action {
+  color: #22c55e;
+}
+
+.treino-lista-finalizar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}

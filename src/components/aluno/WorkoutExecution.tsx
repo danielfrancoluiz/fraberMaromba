@@ -24,6 +24,9 @@ interface WorkoutExecutionProps {
   alunoId: string;
   onSair: () => void;
   onFinalizar: () => void;
+  initialExIdx?: number;
+  modoEscolhaLivre?: boolean;
+  onExercicioConcluido?: () => void;
 }
 
 export function WorkoutExecution({
@@ -31,6 +34,9 @@ export function WorkoutExecution({
   alunoId,
   onSair,
   onFinalizar,
+  initialExIdx,
+  modoEscolhaLivre = false,
+  onExercicioConcluido,
 }: WorkoutExecutionProps) {
   const {
     exercicios,
@@ -56,7 +62,11 @@ export function WorkoutExecution({
     substituirExercicio,
     sessaoLoading,
     sessaoErro,
-  } = useWorkoutExecution(treino, alunoId, onFinalizar);
+  } = useWorkoutExecution(treino, alunoId, onFinalizar, {
+    initialExIdx,
+    modoEscolhaLivre,
+    onExercicioConcluido,
+  });
 
   if (sessaoLoading) {
     return (
@@ -223,11 +233,6 @@ export function WorkoutExecution({
               <p>{exercicioAtual.observacao}</p>
             </div>
           ) : null}
-
-          <UnilateralIndicator
-            unilateral={exercicioAtual.unilateral ?? false}
-            variant="chip"
-          />
         </section>
 
         {(exercicioAtual.descricao || exercicioAtual.equipamento || exercicioAtual.dificuldade) && (
@@ -277,7 +282,7 @@ export function WorkoutExecution({
           )}
         </div>
 
-        {proximoExercicio ? (
+        {proximoExercicio && !modoEscolhaLivre ? (
           <div className="workout-exec-next card">
             <span className="workout-exec-next-label">A seguir</span>
             <div className="workout-exec-next-thumb">
