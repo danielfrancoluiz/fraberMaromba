@@ -7,6 +7,7 @@ import {
   buscarExercicioProfessor,
   criarExercicioProfessor,
 } from "@/services/exercicioCatalogoService";
+import { uploadMidiaExercicioProfessor } from "@/services/exercicioMidiaService";
 import { normalizarGrupoMuscular } from "@/lib/grupos-musculares";
 import { subGruposDoMembro } from "@/lib/sub-grupos-musculares";
 
@@ -65,12 +66,9 @@ function validarForm(form: CriarExercicioForm): CriarExercicioFormErrors {
 
   if (form.gifUrl.trim()) {
     try {
-      const url = new URL(form.gifUrl.trim());
-      if (!["http:", "https:"].includes(url.protocol)) {
-        errors.gifUrl = "URL inválida";
-      }
+      new URL(form.gifUrl.trim());
     } catch {
-      errors.gifUrl = "URL inválida";
+      errors.gifUrl = "URL da mídia inválida";
     }
   }
 
@@ -103,6 +101,9 @@ export function useExercicioForm({ exercicioId }: UseExercicioFormOptions = {}) 
   const [erroCarregar, setErroCarregar] = useState<string | null>(null);
   const [feedbackSucesso, setFeedbackSucesso] = useState<string | null>(null);
   const [feedbackErro, setFeedbackErro] = useState<string | null>(null);
+  const [loadingUpload, setLoadingUpload] = useState(false);
+  const [previewLocal, setPreviewLocal] = useState<string | null>(null);
+  const [previewMime, setPreviewMime] = useState<string | null>(null);
 
   useEffect(() => {
     if (!exercicioId) return;
@@ -152,6 +153,53 @@ export function useExercicioForm({ exercicioId }: UseExercicioFormOptions = {}) 
     setFeedbackErro(null);
     setFeedbackSucesso(null);
   }, []);
+
+  const removerMidia = useCallback(() => {
+    setPreviewLocal((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    setPreviewMime(null);
+    handleChange("gifUrl", "");
+    setErrors((prev) => ({ ...prev, gifUrl: undefined }));
+  }, [handleChange]);
+
+  const enviarMidia = useCallback(
+    async (file: File) => {
+      setLoadingUpload(true);
+      setFeedbackErro(null);
+      setErrors((prev) => ({ ...prev, gifUrl: undefined }));
+
+      const preview = URL.createObjectURL(file);
+      setPreviewMime(file.type);
+      setPreviewLocal((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return preview;
+      });
+
+      try {
+        const url = await uploadMidiaExercicioProfessor(file);
+        setPreviewLocal((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return null;
+        });
+        setPreviewMime(null);
+        handleChange("gifUrl", url);
+      } catch (error) {
+        setPreviewLocal((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return null;
+        });
+        setPreviewMime(null);
+        setFeedbackErro(
+          error instanceof Error ? error.message : "Erro ao enviar arquivo"
+        );
+      } finally {
+        setLoadingUpload(false);
+      }
+    },
+    [handleChange]
+  );
 
   const handleSubmit = useCallback(async (): Promise<boolean> => {
     const novosErros = validarForm(form);
@@ -203,6 +251,11 @@ export function useExercicioForm({ exercicioId }: UseExercicioFormOptions = {}) 
     handleChange,
     toggleUnilateral,
     handleSubmit,
+    loadingUpload,
+    previewLocal,
+    previewMime,
+    enviarMidia,
+    removerMidia,
   };
 }
 

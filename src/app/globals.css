@@ -3813,6 +3813,23 @@ body {
   font-size: 0.75rem;
 }
 
+.exercicio-midia-input-hidden {
+  display: none;
+}
+
+.exercicio-midia-upload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.exercicio-midia-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .exercicio-midia--embed {
   border: 0;
 }

@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useEffect } from "react";
-import { ImageIcon } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { ImageIcon, Trash2, Upload } from "lucide-react";
 import { ExercicioMidia } from "@/components/exercicio/ExercicioMidia";
 import { useExercicioForm } from "@/hooks/useExercicioForm";
 import { PageTopBar } from "@/components/ui/PageTopBar";
@@ -47,7 +47,15 @@ export function ExercicioFormulario({ exercicioId }: ExercicioFormularioProps) {
     handleChange,
     toggleUnilateral,
     handleSubmit,
+    loadingUpload,
+    previewLocal,
+    previewMime,
+    enviarMidia,
+    removerMidia,
   } = useExercicioForm({ exercicioId });
+
+  const inputMidiaRef = useRef<HTMLInputElement>(null);
+  const midiaSalvaUrl = form.gifUrl.trim() || null;
 
   const subGrupos = form.grupoMuscular
     ? subGruposDoMembro(normalizarGrupoMuscular(form.grupoMuscular))
@@ -119,20 +127,67 @@ export function ExercicioFormulario({ exercicioId }: ExercicioFormularioProps) {
             />
           </Campo>
 
-          <Campo label="Vídeo / GIF (URL)" erro={errors.gifUrl} className="field-span2">
+          <Campo label="Vídeo / GIF" erro={errors.gifUrl} className="field-span2">
             <input
-              className="input-field"
-              placeholder="Link direto, GIF ou Google Drive"
-              value={form.gifUrl}
-              onChange={(e) => handleChange("gifUrl", e.target.value)}
+              ref={inputMidiaRef}
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime,image/gif,image/webp,image/png,image/jpeg"
+              className="exercicio-midia-input-hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void enviarMidia(file);
+                e.target.value = "";
+              }}
             />
+            <div className="exercicio-midia-upload-actions">
+              <button
+                type="button"
+                className="btn-secondary exercicio-midia-upload-btn"
+                disabled={loadingUpload}
+                onClick={() => inputMidiaRef.current?.click()}
+              >
+                <Upload size={16} />
+                {loadingUpload ? "Enviando..." : "Selecionar arquivo"}
+              </button>
+              {midiaSalvaUrl || previewLocal ? (
+                <button
+                  type="button"
+                  className="btn-secondary exercicio-midia-upload-btn"
+                  disabled={loadingUpload}
+                  onClick={removerMidia}
+                >
+                  <Trash2 size={16} />
+                  Remover
+                </button>
+              ) : null}
+            </div>
             <p className="text-muted exercicio-midia-hint">
-              Google Drive: compartilhe o arquivo como &quot;Qualquer pessoa com o link&quot; e cole o link de visualização.
+              MP4, WebM, MOV, GIF ou imagem — até 50 MB. O arquivo fica salvo no Supabase Storage.
             </p>
-            {form.gifUrl.trim() ? (
+            {previewLocal ? (
+              <div className="exercicio-form-preview">
+                {previewMime?.startsWith("video/") ? (
+                  <video
+                    src={previewLocal}
+                    className="exercicio-form-preview-media exercicio-midia--video"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    controls
+                  />
+                ) : (
+                  <img
+                    src={previewLocal}
+                    alt="Prévia do exercício"
+                    className="exercicio-form-preview-media"
+                  />
+                )}
+              </div>
+            ) : midiaSalvaUrl ? (
               <div className="exercicio-form-preview">
                 <ExercicioMidia
-                  url={form.gifUrl.trim()}
+                  url={midiaSalvaUrl}
                   alt="Prévia do exercício"
                   mediaClassName="exercicio-form-preview-media"
                 />
@@ -140,7 +195,7 @@ export function ExercicioFormulario({ exercicioId }: ExercicioFormularioProps) {
             ) : (
               <div className="exercicio-form-preview exercicio-form-preview--empty">
                 <ImageIcon size={28} />
-                <span>Cole o link do GIF ou vídeo</span>
+                <span>Envie um vídeo ou GIF do exercício</span>
               </div>
             )}
           </Campo>
@@ -249,7 +304,7 @@ export function ExercicioFormulario({ exercicioId }: ExercicioFormularioProps) {
             >
               Cancelar
             </button>
-            <button type="submit" className="btn-primary" disabled={loadingSubmit}>
+            <button type="submit" className="btn-primary" disabled={loadingSubmit || loadingUpload}>
               {loadingSubmit
                 ? "Salvando..."
                 : modoEdicao
