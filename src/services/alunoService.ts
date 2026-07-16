@@ -62,6 +62,7 @@ interface ExercicioApi {
   nome: string;
   series: number;
   repeticoes: number;
+  repeticoesPorSerie?: number[] | null;
   grupoMuscular?: string | null;
   observacao?: string | null;
   restSeconds?: number | null;
@@ -98,6 +99,10 @@ function mapTreino(treino: TreinoApi): Treino {
       nome: exercicio.nome,
       series: exercicio.series,
       repeticoes: exercicio.repeticoes,
+      repeticoesPorSerie:
+        exercicio.repeticoesPorSerie && exercicio.repeticoesPorSerie.length > 0
+          ? exercicio.repeticoesPorSerie
+          : undefined,
       observacao: exercicio.observacao ?? undefined,
       grupoMuscular: exercicio.grupoMuscular ?? undefined,
       exercicioCatalogoId: exercicio.exercicioCatalogoId ?? undefined,

@@ -47,6 +47,7 @@ interface ExercicioApi {
   nome: string;
   series: number;
   repeticoes: number;
+  repeticoesPorSerie?: number[] | null;
   grupoMuscular?: string | null;
   observacao?: string | null;
   restSeconds?: number | null;
@@ -135,6 +136,7 @@ function mapExercicioPayload(exercicio: Exercicio, index: number) {
     nome: exercicio.nome,
     series: exercicio.series,
     repeticoes: exercicio.repeticoes,
+    repeticoesPorSerie: exercicio.repeticoesPorSerie ?? [],
     grupoMuscular: exercicio.grupoMuscular,
     observacao: exercicio.observacao,
     ordem: index + 1,
@@ -149,6 +151,10 @@ function mapExercicio(exercicio: ExercicioApi): Exercicio {
     nome: exercicio.nome,
     series: exercicio.series,
     repeticoes: exercicio.repeticoes,
+    repeticoesPorSerie:
+      exercicio.repeticoesPorSerie && exercicio.repeticoesPorSerie.length > 0
+        ? exercicio.repeticoesPorSerie
+        : undefined,
     observacao: exercicio.observacao ?? undefined,
     grupoMuscular: exercicio.grupoMuscular ?? undefined,
     exercicioCatalogoId: exercicio.exercicioCatalogoId ?? undefined,

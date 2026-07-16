@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useMontarTreino } from "@/hooks/useMontarTreino";
 import { ExercisePickerModal } from "@/components/professor/ExercisePickerModal";
+import { SeriesModeControls } from "@/components/professor/SeriesModeControls";
 import { OBJETIVOS_TREINO } from "@/lib/treino-objetivos";
 import { PageTopBar } from "@/components/ui/PageTopBar";
 
@@ -49,6 +50,7 @@ export function MontarTreinoBuilder({
     moverExercicio,
     ajustarExercicio,
     handleExercicioChange,
+    patchExercicio,
     handleSubmit,
   } = useMontarTreino({ treinoId, alunoIdInicial, onSucesso });
 
@@ -296,10 +298,26 @@ export function MontarTreinoBuilder({
                     <CounterGroup
                       label="Descanso"
                       value={`${exercicio.restSeconds}s`}
-                      onMinus={() => ajustarExercicio(exercicio.id, "restSeconds", -5)}
-                      onPlus={() => ajustarExercicio(exercicio.id, "restSeconds", 5)}
+                      onMinus={() =>
+                        ajustarExercicio(exercicio.id, "restSeconds", -5)
+                      }
+                      onPlus={() =>
+                        ajustarExercicio(exercicio.id, "restSeconds", 5)
+                      }
                     />
                   </div>
+
+                  <SeriesModeControls
+                    compact
+                    exercicio={exercicio}
+                    onChange={(campo, valor) =>
+                      handleExercicioChange(exercicio.id, campo, valor)
+                    }
+                    onPatch={(patch) => patchExercicio(exercicio.id, patch)}
+                    onAjustarPasso={(delta) =>
+                      ajustarExercicio(exercicio.id, "passoDecrescente", delta)
+                    }
+                  />
 
                   <div>
                     <label className="field-label" htmlFor={`obs-${exercicio.id}`}>

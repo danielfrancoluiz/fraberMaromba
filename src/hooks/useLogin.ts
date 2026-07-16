@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSession, signIn } from "next-auth/react";
 import type { Session } from "next-auth";
+import { clearConviteCookie, setConviteCookie } from "@/lib/convite-cookie";
 
 function redirectBySession(session: Session, router: ReturnType<typeof useRouter>): void {
   const { role, status } = session.user;
@@ -29,7 +30,7 @@ interface UseLoginReturn {
   setEmail: (v: string) => void;
   setSenha: (v: string) => void;
   handleLogin: () => Promise<void>;
-  handleGoogle: () => Promise<void>;
+  handleGoogle: (tokenConvite?: string) => Promise<void>;
 }
 
 export function useLogin(): UseLoginReturn {
@@ -79,14 +80,22 @@ export function useLogin(): UseLoginReturn {
     }
   };
 
-  const handleGoogle = async (): Promise<void> => {
+  const handleGoogle = async (tokenConvite?: string): Promise<void> => {
     setLoadingGoogle(true);
     setErro(null);
 
     try {
+      if (tokenConvite) {
+        setConviteCookie(tokenConvite);
+      } else {
+        clearConviteCookie();
+      }
       await signIn("google", { callbackUrl: "/auth/redirect" });
     } catch {
       setLoadingGoogle(false);
+      setErro(
+        "Não foi possível iniciar o login com Google. Verifique GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET."
+      );
     }
   };
 

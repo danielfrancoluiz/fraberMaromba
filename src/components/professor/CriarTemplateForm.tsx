@@ -24,6 +24,7 @@ export function CriarTemplateForm({ onCancelar, onSucesso }: CriarTemplateFormPr
     removerExercicio,
     substituirCatalogo,
     handleExercicioChange,
+    patchExercicio,
     handleSubmit,
   } = useCriarTemplate(onSucesso);
 
@@ -92,6 +93,7 @@ export function CriarTemplateForm({ onCancelar, onSucesso }: CriarTemplateFormPr
                 onChange={(campo, valor) =>
                   handleExercicioChange(exercicio.id, campo, valor)
                 }
+                onPatch={(patch) => patchExercicio(exercicio.id, patch)}
                 onSubstituirCatalogo={substituirCatalogo}
               />
             </div>

@@ -12,6 +12,8 @@ Variáveis em `.env.local`:
 | `DIRECT_URL` | `prisma db push` / migrations (session pooler 5432) |
 | `NEXTAUTH_SECRET` | JWT NextAuth |
 | `NEXTAUTH_URL` | URL base (`http://localhost:3000`) |
+| `GOOGLE_CLIENT_ID` | Login/cadastro com Google (OAuth) |
+| `GOOGLE_CLIENT_SECRET` | Secret do OAuth Google |
 | `STRIPE_SECRET_KEY` | Checkout Session (recomendado) |
 | `STRIPE_WEBHOOK_SECRET` | Webhook `checkout.session.completed` |
 | `NEXT_PUBLIC_STRIPE_PAYMENT_LINK_MENSAL` | Fallback Payment Link |
@@ -75,6 +77,23 @@ npx ts-node prisma/seed.ts
 ```
 
 Login unificado: `/login` (não use `/aluno/login` — redireciona automaticamente).
+
+### Google OAuth (conta pessoal funciona)
+
+Sim — você pode usar Gmail pessoal. No [Google Cloud Console](https://console.cloud.google.com/):
+
+1. Crie um projeto (ou use um existente).
+2. **APIs e serviços → Tela de consentimento OAuth** → tipo **Externo**.
+   - Em modo **Teste**, adicione seu Gmail em **Usuários de teste**.
+3. **Credenciais → Criar credenciais → ID do cliente OAuth** → tipo **Aplicativo da Web**.
+4. **URIs de redirecionamento autorizados**:
+   - `http://localhost:3000/api/auth/callback/google`
+   - `https://SEU-DOMINIO/api/auth/callback/google` (produção)
+5. Copie Client ID e Client Secret para `.env.local`:
+   - `GOOGLE_CLIENT_ID=...`
+   - `GOOGLE_CLIENT_SECRET=...`
+
+Com isso, **Entrar com Google** / **Continuar com Google** cria a conta automaticamente (professor sem convite; aluno se vier pelo link de convite).
 
 ### Stripe (checkout com preço do combo)
 

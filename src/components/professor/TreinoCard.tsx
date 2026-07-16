@@ -4,6 +4,7 @@ import { Dumbbell, Pencil, Trash2 } from "lucide-react";
 import { Treino } from "@/types";
 import { labelObjetivoTreino } from "@/lib/treino-objetivos";
 import { Badge } from "@/components/ui/Badge";
+import { formatarPrescricaoSeries } from "@/lib/series-reps";
 
 interface TreinoCardProps {
   treino: Treino;
@@ -58,7 +59,11 @@ export function TreinoCard({ treino, onEditar, onExcluir }: TreinoCardProps) {
                 <li key={exercicio.id}>
                   <strong className="treino-exercise-name">{exercicio.nome}</strong>
                   <span className="treino-exercise-meta">
-                    {exercicio.series} x {exercicio.repeticoes}
+                    {formatarPrescricaoSeries(
+                      exercicio.series,
+                      exercicio.repeticoes,
+                      exercicio.repeticoesPorSerie
+                    )}
                   </span>
                   {exercicio.observacao ? (
                     <p className="treino-exercise-note">{exercicio.observacao}</p>

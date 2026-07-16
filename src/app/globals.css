@@ -3063,6 +3063,54 @@ body {
   cursor: not-allowed;
 }
 
+.series-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.series-mode--compact {
+  margin-top: 4px;
+}
+
+.series-mode-toggle {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: var(--fraber-radius-sm);
+  background: var(--fraber-bg-soft);
+  border: 1px solid var(--fraber-border);
+  width: fit-content;
+}
+
+.series-mode-btn {
+  border: none;
+  background: transparent;
+  color: var(--fraber-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: calc(var(--fraber-radius-sm) - 2px);
+  cursor: pointer;
+}
+
+.series-mode-btn--active {
+  background: var(--fraber-surface);
+  color: var(--fraber-text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.series-mode-preview {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.series-mode-passo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .status-page {
   min-height: 100vh;
   display: grid;

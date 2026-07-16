@@ -11,6 +11,7 @@ import {
   todosExerciciosConcluidos,
 } from "@/lib/treino-progresso";
 import { finalizarSessao } from "@/services/sessaoService";
+import { formatarPrescricaoSeries } from "@/lib/series-reps";
 
 interface TreinoExerciciosListaProps {
   treino: Treino;
@@ -165,7 +166,12 @@ function TreinoExercicioCard({
         <h2 className="treino-exercicio-card-nome">{exercicio.nome}</h2>
         <div className="treino-exercicio-card-meta">
           <span>
-            {seriesFeitas}/{exercicio.series} séries · {exercicio.repeticoes} reps
+            {seriesFeitas}/{exercicio.series} séries ·{" "}
+            {formatarPrescricaoSeries(
+              exercicio.series,
+              exercicio.repeticoes,
+              exercicio.repeticoesPorSerie
+            )}
           </span>
           {exercicio.grupoMuscular ? <span>{exercicio.grupoMuscular}</span> : null}
           <UnilateralIndicator unilateral={exercicio.unilateral ?? false} />

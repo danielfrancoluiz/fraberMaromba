@@ -27,6 +27,7 @@ interface UseCriarTemplateReturn {
     campo: keyof ExercicioForm,
     valor: string
   ) => void;
+  patchExercicio: (id: string, patch: Partial<ExercicioForm>) => void;
   handleSubmit: () => Promise<void>;
 }
 
@@ -130,6 +131,15 @@ export function useCriarTemplate(onSucesso: () => void): UseCriarTemplateReturn 
     }));
   };
 
+  const patchExercicio = (id: string, patch: Partial<ExercicioForm>): void => {
+    setForm((prev) => ({
+      ...prev,
+      exercicios: prev.exercicios.map((exercicio) =>
+        exercicio.id === id ? { ...exercicio, ...patch } : exercicio
+      ),
+    }));
+  };
+
   const handleSubmit = async (): Promise<void> => {
     const erros = validarFormulario(form);
     if (Object.keys(erros).length > 0) {
@@ -153,6 +163,7 @@ export function useCriarTemplate(onSucesso: () => void): UseCriarTemplateReturn 
             nome: payload.nome,
             series: payload.series,
             repeticoes: payload.repeticoes,
+            repeticoesPorSerie: payload.repeticoesPorSerie,
             observacao: payload.observacao,
             grupoMuscular: payload.grupoMuscular,
             exercicioCatalogoId: payload.exercicioCatalogoId,
@@ -184,6 +195,7 @@ export function useCriarTemplate(onSucesso: () => void): UseCriarTemplateReturn 
     removerExercicio,
     substituirCatalogo,
     handleExercicioChange,
+    patchExercicio,
     handleSubmit,
   };
 }

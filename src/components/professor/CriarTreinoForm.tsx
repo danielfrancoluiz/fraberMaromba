@@ -28,6 +28,7 @@ export function CriarTreinoForm({
     removerExercicio,
     substituirCatalogo,
     handleExercicioChange,
+    patchExercicio,
     handleSubmit,
   } = useCriarTreino(alunoId, onSucesso);
 
@@ -104,6 +105,7 @@ export function CriarTreinoForm({
               onChange={(campo, valor) =>
                 handleExercicioChange(exercicio.id, campo, valor)
               }
+              onPatch={(patch) => patchExercicio(exercicio.id, patch)}
               onSubstituirCatalogo={substituirCatalogo}
             />
           </div>

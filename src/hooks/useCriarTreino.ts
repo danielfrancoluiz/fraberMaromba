@@ -24,6 +24,7 @@ interface UseCriarTreinoReturn {
     campo: keyof ExercicioForm,
     valor: string
   ) => void;
+  patchExercicio: (id: string, patch: Partial<ExercicioForm>) => void;
   handleSubmit: () => Promise<void>;
 }
 
@@ -150,6 +151,15 @@ export function useCriarTreino(
     });
   };
 
+  const patchExercicio = (id: string, patch: Partial<ExercicioForm>): void => {
+    setForm((prev) => ({
+      ...prev,
+      exercicios: prev.exercicios.map((exercicio) =>
+        exercicio.id === id ? { ...exercicio, ...patch } : exercicio
+      ),
+    }));
+  };
+
   const handleSubmit = async (): Promise<void> => {
     const erros = validarTreino(form);
     if (Object.keys(erros).length > 0) {
@@ -176,6 +186,7 @@ export function useCriarTreino(
             nome: payload.nome,
             series: payload.series,
             repeticoes: payload.repeticoes,
+            repeticoesPorSerie: payload.repeticoesPorSerie,
             observacao: payload.observacao,
             grupoMuscular: payload.grupoMuscular,
             exercicioCatalogoId: payload.exercicioCatalogoId,
@@ -207,6 +218,7 @@ export function useCriarTreino(
     removerExercicio,
     substituirCatalogo,
     handleExercicioChange,
+    patchExercicio,
     handleSubmit,
   };
 }

@@ -5,6 +5,7 @@ import { CheckCircle, Dumbbell, RefreshCw } from "lucide-react";
 import { Exercicio } from "@/types";
 import { getExercicioImagemUrl, getGrupoMuscularCor } from "@/lib/exercicio-imagem";
 import { UnilateralIndicator } from "@/components/exercicio/UnilateralIndicator";
+import { formatarPrescricaoSeries } from "@/lib/series-reps";
 
 interface ExercicioItemProps {
   exercicio: Exercicio;
@@ -125,7 +126,11 @@ export function ExercicioItem({
               fontWeight: 600,
             }}
           >
-            {exercicio.series} x {exercicio.repeticoes}
+            {formatarPrescricaoSeries(
+              exercicio.series,
+              exercicio.repeticoes,
+              exercicio.repeticoesPorSerie
+            )}
           </span>
           {exercicio.grupoMuscular ? (
             <span

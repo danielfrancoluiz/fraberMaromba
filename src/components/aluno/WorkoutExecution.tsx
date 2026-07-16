@@ -18,6 +18,7 @@ import { labelDificuldade } from "@/lib/dificuldade-label";
 import { UnilateralIndicator } from "@/components/exercicio/UnilateralIndicator";
 import { WorkoutSubstituteModal } from "@/components/aluno/WorkoutSubstituteModal";
 import { WorkoutDoneModal } from "@/components/aluno/WorkoutDoneModal";
+import { repsDaSerie } from "@/lib/series-reps";
 
 interface WorkoutExecutionProps {
   treino: Treino;
@@ -200,7 +201,9 @@ export function WorkoutExecution({
             </div>
             <div>
               <p className="workout-exec-stat-label">Repetições</p>
-              <p className="workout-exec-stat-value">{exercicioAtual.repeticoes}</p>
+              <p className="workout-exec-stat-value">
+                {repsDaSerie(exercicioAtual, setIdx)}
+              </p>
             </div>
             <div>
               <p className="workout-exec-stat-label">Descanso</p>

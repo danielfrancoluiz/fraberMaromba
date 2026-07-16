@@ -2,14 +2,14 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { autenticarUsuario } from "@/lib/autenticar-usuario";
-import { carregarDadosSessaoPorEmail } from "@/lib/sessao-usuario";
+import { garantirUsuarioGoogle } from "@/lib/criar-usuario-google";
 import { applyNextAuthEnv, getNextAuthSecret } from "@/lib/nextauth-config";
 
 applyNextAuthEnv();
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim();
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
-const googleConfigurado = Boolean(
+export const googleConfigurado = Boolean(
   googleClientId &&
     googleClientSecret &&
     googleClientId !== "placeholder_configure_later"
@@ -65,14 +65,19 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, account }) {
       if (user) {
         if (account?.provider === "google" && user.email) {
-          const dados = await carregarDadosSessaoPorEmail(user.email);
-          if (dados) {
+          try {
+            const dados = await garantirUsuarioGoogle({
+              nome: user.name ?? user.email,
+              email: user.email,
+            });
             token.id = dados.id;
             token.role = dados.role;
             token.status = dados.status;
             token.professorId = dados.professorId;
             token.alunoId = dados.alunoId;
             token.planoId = dados.planoId;
+          } catch (error) {
+            console.error("[auth] falha no cadastro/login Google:", error);
           }
         } else {
           token.id = user.id;

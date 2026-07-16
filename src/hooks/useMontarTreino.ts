@@ -12,6 +12,7 @@ import {
   exercicioFormFromExercicio,
   exercicioFormParaPayload,
   exercicioFormValido,
+  sincronizarRepsPorSerie,
 } from "@/lib/form-exercicio";
 
 interface UseMontarTreinoOptions {
@@ -40,7 +41,7 @@ interface UseMontarTreinoReturn {
   moverExercicio: (index: number, direcao: "cima" | "baixo") => void;
   ajustarExercicio: (
     id: string,
-    campo: "series" | "repeticoes" | "restSeconds",
+    campo: "series" | "repeticoes" | "restSeconds" | "passoDecrescente",
     delta: number
   ) => void;
   handleExercicioChange: (
@@ -48,6 +49,7 @@ interface UseMontarTreinoReturn {
     campo: keyof ExercicioForm,
     valor: string
   ) => void;
+  patchExercicio: (id: string, patch: Partial<ExercicioForm>) => void;
   handleSubmit: () => Promise<void>;
 }
 
@@ -222,16 +224,27 @@ export function useMontarTreino({
   }, []);
 
   const ajustarExercicio = useCallback(
-    (id: string, campo: "series" | "repeticoes" | "restSeconds", delta: number) => {
+    (
+      id: string,
+      campo: "series" | "repeticoes" | "restSeconds" | "passoDecrescente",
+      delta: number
+    ) => {
       setForm((prev) => ({
         ...prev,
         exercicios: prev.exercicios.map((ex) => {
           if (ex.id !== id) return ex;
           const atual = Number.parseInt(ex[campo], 10) || 0;
           const min = campo === "restSeconds" ? 0 : 1;
-          const max = campo === "restSeconds" ? 600 : campo === "series" ? 20 : 100;
+          const max =
+            campo === "restSeconds"
+              ? 600
+              : campo === "series"
+                ? 20
+                : campo === "passoDecrescente"
+                  ? 20
+                  : 100;
           const novo = Math.min(max, Math.max(min, atual + delta));
-          return { ...ex, [campo]: String(novo) };
+          return sincronizarRepsPorSerie({ ...ex, [campo]: String(novo) });
         }),
       }));
     },
@@ -243,12 +256,23 @@ export function useMontarTreino({
       setForm((prev) => ({
         ...prev,
         exercicios: prev.exercicios.map((ex) =>
-          ex.id === id ? { ...ex, [campo]: valor } : ex
+          ex.id === id
+            ? sincronizarRepsPorSerie({ ...ex, [campo]: valor })
+            : ex
         ),
       }));
     },
     []
   );
+
+  const patchExercicio = useCallback((id: string, patch: Partial<ExercicioForm>) => {
+    setForm((prev) => ({
+      ...prev,
+      exercicios: prev.exercicios.map((ex) =>
+        ex.id === id ? sincronizarRepsPorSerie({ ...ex, ...patch }) : ex
+      ),
+    }));
+  }, []);
 
   const handleSubmit = async (): Promise<void> => {
     const erros = validarMontar(form);
@@ -270,6 +294,7 @@ export function useMontarTreino({
         nome: p.nome,
         series: p.series,
         repeticoes: p.repeticoes,
+        repeticoesPorSerie: p.repeticoesPorSerie,
         observacao: p.observacao,
         grupoMuscular: p.grupoMuscular,
         exercicioCatalogoId: p.exercicioCatalogoId,
@@ -325,6 +350,7 @@ export function useMontarTreino({
     moverExercicio,
     ajustarExercicio,
     handleExercicioChange,
+    patchExercicio,
     handleSubmit,
   };
 }

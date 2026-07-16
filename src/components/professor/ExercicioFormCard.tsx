@@ -4,7 +4,8 @@ import { useState } from "react";
 import { ImageIcon, Search, Trash2 } from "lucide-react";
 import { ExercicioForm } from "@/types";
 import { ExercisePickerModal } from "@/components/professor/ExercisePickerModal";
-import { exercicioFormFromCatalogo } from "@/lib/form-exercicio";
+import { SeriesModeControls } from "@/components/professor/SeriesModeControls";
+import { exercicioFormFromCatalogo, sincronizarRepsPorSerie } from "@/lib/form-exercicio";
 import { GRUPOS_MUSCULARES } from "@/lib/grupos-musculares";
 
 interface ExercicioFormCardProps {
@@ -13,6 +14,7 @@ interface ExercicioFormCardProps {
   errors?: { nome?: string; series?: string; repeticoes?: string };
   onRemover: () => void;
   onChange: (campo: keyof ExercicioForm, valor: string) => void;
+  onPatch: (patch: Partial<ExercicioForm>) => void;
   onSubstituirCatalogo: (id: string, exercicio: ExercicioForm) => void;
 }
 
@@ -22,10 +24,20 @@ export function ExercicioFormCard({
   errors,
   onRemover,
   onChange,
+  onPatch,
   onSubstituirCatalogo,
 }: ExercicioFormCardProps) {
   const [pickerAberto, setPickerAberto] = useState(false);
   const temCatalogo = Boolean(exercicio.exercicioCatalogoId && exercicio.nome);
+
+  const handleCampo = (campo: keyof ExercicioForm, valor: string) => {
+    onPatch(
+      sincronizarRepsPorSerie({
+        ...exercicio,
+        [campo]: valor,
+      })
+    );
+  };
 
   return (
     <>
@@ -89,30 +101,15 @@ export function ExercicioFormCard({
           </p>
         ) : null}
 
+        <SeriesModeControls
+          exercicio={exercicio}
+          onChange={handleCampo}
+          onPatch={onPatch}
+          errors={errors}
+        />
+
         <div className="modal-exercicio-campos-row">
-          <div>
-            <label className="field-label">Séries</label>
-            <input
-              className="input-field"
-              value={exercicio.series}
-              onChange={(e) => onChange("series", e.target.value)}
-            />
-            {errors?.series ? (
-              <p className="field-error">{errors.series}</p>
-            ) : null}
-          </div>
-          <div>
-            <label className="field-label">Repetições</label>
-            <input
-              className="input-field"
-              value={exercicio.repeticoes}
-              onChange={(e) => onChange("repeticoes", e.target.value)}
-            />
-            {errors?.repeticoes ? (
-              <p className="field-error">{errors.repeticoes}</p>
-            ) : null}
-          </div>
-          <div>
+          <div style={{ gridColumn: "1 / -1" }}>
             <label className="field-label">Grupo</label>
             <select
               className="input-field"
@@ -152,6 +149,9 @@ export function ExercicioFormCard({
             id: exercicio.id,
             series: exercicio.series,
             repeticoes: exercicio.repeticoes,
+            modoSeries: exercicio.modoSeries,
+            passoDecrescente: exercicio.passoDecrescente,
+            repeticoesPorSerie: exercicio.repeticoesPorSerie,
             observacao: exercicio.observacao,
           });
         }}

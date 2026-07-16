@@ -91,6 +91,8 @@ export interface Exercicio {
   nome: string;
   series: number;
   repeticoes: number;
+  /** Ex.: [12, 10, 8]. Vazio/ausente = todas as séries usam `repeticoes`. */
+  repeticoesPorSerie?: number[];
   observacao?: string;
   grupoMuscular?: string;
   exercicioCatalogoId?: string;
@@ -134,6 +136,8 @@ export interface TreinoForm {
   exercicios: ExercicioForm[];
 }
 
+export type ModoSeriesForm = "iguais" | "decrescente";
+
 export interface ExercicioForm {
   id: string;
   nome: string;
@@ -142,6 +146,11 @@ export interface ExercicioForm {
   restSeconds: string;
   observacao: string;
   grupoMuscular: string;
+  /** Iguais (padrão) ou decrescente (12 → 10 → 8). */
+  modoSeries: ModoSeriesForm;
+  /** Quanto diminui a cada série no modo decrescente. */
+  passoDecrescente: string;
+  repeticoesPorSerie?: number[];
   exercicioCatalogoId?: string;
   imagemUrl?: string;
 }

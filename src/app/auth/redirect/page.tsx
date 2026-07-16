@@ -18,6 +18,11 @@ export default function Page() {
 
     const { role, status: userStatus } = session.user;
 
+    if (!role) {
+      router.replace("/login?error=AccessDenied");
+      return;
+    }
+
     if (role === "professor") {
       router.replace("/professor/dashboard");
       return;

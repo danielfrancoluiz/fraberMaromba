@@ -113,6 +113,8 @@ model Exercicio {
   nome                String
   series              Int
   repeticoes          Int
+  /// Quando preenchido (ex.: [12,10,8]), cada série tem reps próprias. Vazio = todas iguais a `repeticoes`.
+  repeticoesPorSerie  Int[]   @default([])
   grupoMuscular       String?
   observacao          String?
   restSeconds         Int     @default(60)
@@ -141,6 +143,7 @@ model ExercicioTemplate {
   nome                String
   series              Int
   repeticoes          Int
+  repeticoesPorSerie  Int[]   @default([])
   grupoMuscular       String?
   observacao          String?
   restSeconds         Int     @default(60)

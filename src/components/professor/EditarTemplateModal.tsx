@@ -68,6 +68,7 @@ export function EditarTemplateModal({
             nome: payload.nome,
             series: payload.series,
             repeticoes: payload.repeticoes,
+            repeticoesPorSerie: payload.repeticoesPorSerie,
             observacao: payload.observacao,
             grupoMuscular: payload.grupoMuscular,
             exercicioCatalogoId: payload.exercicioCatalogoId,
@@ -89,6 +90,12 @@ export function EditarTemplateModal({
   ) {
     setExercicios((prev) =>
       prev.map((ex) => (ex.id === id ? { ...ex, [campo]: valor } : ex))
+    );
+  }
+
+  function patchExercicio(id: string, patch: Partial<ExercicioForm>) {
+    setExercicios((prev) =>
+      prev.map((ex) => (ex.id === id ? { ...ex, ...patch } : ex))
     );
   }
 
@@ -169,6 +176,7 @@ export function EditarTemplateModal({
                     onChange={(campo, valor) =>
                       handleExercicioChange(exercicio.id, campo, valor)
                     }
+                    onPatch={(patch) => patchExercicio(exercicio.id, patch)}
                     onSubstituirCatalogo={substituirCatalogo}
                   />
                 ))}
