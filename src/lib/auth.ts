@@ -3,7 +3,12 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { autenticarUsuario } from "@/lib/autenticar-usuario";
 import { garantirUsuarioGoogle } from "@/lib/criar-usuario-google";
+import { CONVITE_COOKIE } from "@/lib/convite-cookie-name";
+import { GOOGLE_ROLE_COOKIE } from "@/lib/google-role-cookie-name";
 import { applyNextAuthEnv, getNextAuthSecret } from "@/lib/nextauth-config";
+import { prisma } from "@/lib/prisma";
+import { carregarDadosSessaoPorEmail } from "@/lib/sessao-usuario";
+import { cookies } from "next/headers";
 
 applyNextAuthEnv();
 
@@ -62,6 +67,38 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider !== "google" || !user.email) return true;
+
+      const existente = await carregarDadosSessaoPorEmail(user.email);
+      if (existente) return true;
+
+      const cookieStore = await cookies();
+      const tokenConvite = cookieStore.get(CONVITE_COOKIE)?.value?.trim();
+      const roleIntent = cookieStore.get(GOOGLE_ROLE_COOKIE)?.value?.trim();
+      const querAluno = roleIntent === "aluno" || Boolean(tokenConvite);
+
+      if (querAluno && !tokenConvite) {
+        return "/cadastro?erro=convite";
+      }
+
+      if (querAluno && tokenConvite) {
+        const convite = await prisma.convite.findUnique({
+          where: { token: tokenConvite },
+        });
+        if (!convite || convite.usado) {
+          return "/cadastro?erro=convite-invalido";
+        }
+        if (
+          convite.email &&
+          convite.email.trim().toLowerCase() !== user.email.trim().toLowerCase()
+        ) {
+          return "/cadastro?erro=convite-invalido";
+        }
+      }
+
+      return true;
+    },
     async jwt({ token, user, account }) {
       if (user) {
         if (account?.provider === "google" && user.email) {

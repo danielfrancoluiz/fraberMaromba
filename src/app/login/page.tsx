@@ -7,6 +7,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useLogin } from "@/hooks/useLogin";
 import { Logo } from "@/components/Logo";
 import { GoogleIcon } from "@/components/GoogleIcon";
+import { GoogleRolePicker } from "@/components/GoogleRolePicker";
 
 function LoginContent() {
   const searchParams = useSearchParams();
@@ -19,8 +20,10 @@ function LoginContent() {
     loading,
     loadingGoogle,
     erro,
+    googleRole,
     setEmail,
     setSenha,
+    setGoogleRole,
     handleLogin,
     handleGoogle,
   } = useLogin();
@@ -106,15 +109,26 @@ function LoginContent() {
 
         <div className="auth-divider">ou</div>
 
+        <GoogleRolePicker value={googleRole} onChange={setGoogleRole} />
+
         <button
           type="button"
           className="btn-google"
           disabled={loadingGoogle}
           onClick={() => void handleGoogle()}
+          style={{ marginTop: 12 }}
         >
           <GoogleIcon />
           {loadingGoogle ? "Aguardando Google..." : "Entrar com Google"}
         </button>
+
+        {googleRole === "aluno" ? (
+          <p className="text-muted" style={{ margin: "8px 0 0", fontSize: "0.85rem", textAlign: "center" }}>
+            Conta nova de aluno: use o{" "}
+            <Link href="/cadastro">link de convite</Link> do professor.
+            Quem já tem conta pode entrar normalmente.
+          </p>
+        ) : null}
 
         <p className="auth-footer">
           <Link href="/cadastro">Não tem conta? Cadastre-se</Link>

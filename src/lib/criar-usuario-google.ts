@@ -1,11 +1,22 @@
 import { cookies } from "next/headers";
 import { CONVITE_COOKIE } from "@/lib/convite-cookie-name";
+import { GOOGLE_ROLE_COOKIE } from "@/lib/google-role-cookie-name";
 import { prisma } from "@/lib/prisma";
 import { hashSenha } from "@/lib/senha";
 import {
   carregarDadosSessaoPorEmail,
   type DadosSessaoUsuario,
 } from "@/lib/sessao-usuario";
+
+export class GoogleCadastroError extends Error {
+  constructor(
+    message: string,
+    public readonly codigo: "CONVITE_OBRIGATORIO" | "CONVITE_INVALIDO"
+  ) {
+    super(message);
+    this.name = "GoogleCadastroError";
+  }
+}
 
 async function senhaOAuthPlaceholder(): Promise<string> {
   const aleatorio = `oauth-${crypto.randomUUID()}-${Date.now()}`;
@@ -39,18 +50,26 @@ async function criarAlunoGoogle(
   nome: string,
   email: string,
   tokenConvite: string
-): Promise<DadosSessaoUsuario | null> {
+): Promise<DadosSessaoUsuario> {
   const convite = await prisma.convite.findUnique({
     where: { token: tokenConvite },
   });
 
-  if (!convite || convite.usado) return null;
+  if (!convite || convite.usado) {
+    throw new GoogleCadastroError(
+      "Convite inválido ou já utilizado.",
+      "CONVITE_INVALIDO"
+    );
+  }
 
   if (
     convite.email &&
     convite.email.trim().toLowerCase() !== email.trim().toLowerCase()
   ) {
-    return null;
+    throw new GoogleCadastroError(
+      "Este convite é para outro email.",
+      "CONVITE_INVALIDO"
+    );
   }
 
   const senha = await senhaOAuthPlaceholder();
@@ -90,12 +109,17 @@ async function criarAlunoGoogle(
     });
   });
 
-  return carregarDadosSessaoPorEmail(email);
+  const dados = await carregarDadosSessaoPorEmail(email);
+  if (!dados) {
+    throw new Error("Falha ao carregar sessão após cadastro Google");
+  }
+  return dados;
 }
 
 /**
  * Garante usuário no banco para login Google.
- * Com cookie de convite válido → aluno; senão → professor.
+ * Role definida pelo cookie (escolha antes do OAuth).
+ * Aluno exige convite válido.
  */
 export async function garantirUsuarioGoogle(params: {
   nome: string;
@@ -109,19 +133,31 @@ export async function garantirUsuarioGoogle(params: {
 
   const cookieStore = await cookies();
   const tokenConvite = cookieStore.get(CONVITE_COOKIE)?.value?.trim();
+  const roleIntent = cookieStore.get(GOOGLE_ROLE_COOKIE)?.value?.trim();
 
-  if (tokenConvite) {
+  cookieStore.delete(GOOGLE_ROLE_COOKIE);
+
+  const querAluno = roleIntent === "aluno" || Boolean(tokenConvite);
+
+  if (querAluno) {
+    if (!tokenConvite) {
+      cookieStore.delete(CONVITE_COOKIE);
+      throw new GoogleCadastroError(
+        "Alunos precisam de um link de convite do professor.",
+        "CONVITE_OBRIGATORIO"
+      );
+    }
+
     try {
       const aluno = await criarAlunoGoogle(nome, email, tokenConvite);
-      if (aluno) {
-        cookieStore.delete(CONVITE_COOKIE);
-        return aluno;
-      }
+      cookieStore.delete(CONVITE_COOKIE);
+      return aluno;
     } catch (error) {
-      console.error("[auth] falha ao criar aluno via Google + convite:", error);
+      cookieStore.delete(CONVITE_COOKIE);
+      throw error;
     }
-    cookieStore.delete(CONVITE_COOKIE);
   }
 
+  cookieStore.delete(CONVITE_COOKIE);
   return criarProfessorGoogle(nome, email);
 }

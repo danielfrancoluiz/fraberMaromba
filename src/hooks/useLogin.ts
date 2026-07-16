@@ -2,7 +2,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSession, signIn } from "next-auth/react";
 import type { Session } from "next-auth";
-import { clearConviteCookie, setConviteCookie } from "@/lib/convite-cookie";
+import {
+  prepareGoogleSignIn,
+  type GoogleRoleIntent,
+} from "@/lib/google-role-cookie";
 
 function redirectBySession(session: Session, router: ReturnType<typeof useRouter>): void {
   const { role, status } = session.user;
@@ -27,19 +30,24 @@ interface UseLoginReturn {
   loading: boolean;
   loadingGoogle: boolean;
   erro: string | null;
+  googleRole: GoogleRoleIntent;
   setEmail: (v: string) => void;
   setSenha: (v: string) => void;
+  setGoogleRole: (v: GoogleRoleIntent) => void;
   handleLogin: () => Promise<void>;
   handleGoogle: (tokenConvite?: string) => Promise<void>;
 }
 
-export function useLogin(): UseLoginReturn {
+export function useLogin(
+  roleInicial: GoogleRoleIntent = "professor"
+): UseLoginReturn {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [googleRole, setGoogleRole] = useState<GoogleRoleIntent>(roleInicial);
 
   const handleLogin = async (): Promise<void> => {
     setLoading(true);
@@ -84,12 +92,14 @@ export function useLogin(): UseLoginReturn {
     setLoadingGoogle(true);
     setErro(null);
 
+    // Conta nova como aluno exige convite; quem já tem conta entra mesmo assim.
+    // A validação final fica no callback do NextAuth.
+
     try {
-      if (tokenConvite) {
-        setConviteCookie(tokenConvite);
-      } else {
-        clearConviteCookie();
-      }
+      prepareGoogleSignIn({
+        role: googleRole,
+        tokenConvite,
+      });
       await signIn("google", { callbackUrl: "/auth/redirect" });
     } catch {
       setLoadingGoogle(false);
@@ -105,8 +115,10 @@ export function useLogin(): UseLoginReturn {
     loading,
     loadingGoogle,
     erro,
+    googleRole,
     setEmail,
     setSenha,
+    setGoogleRole,
     handleLogin,
     handleGoogle,
   };
