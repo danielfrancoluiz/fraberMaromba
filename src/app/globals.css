@@ -3111,6 +3111,24 @@ body {
   gap: 10px;
 }
 
+.series-piramide-reps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.series-piramide-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+
+.series-piramide-inputs {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+}
+
 .status-page {
   min-height: 100vh;
   display: grid;

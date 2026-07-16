@@ -282,40 +282,41 @@ export function MontarTreinoBuilder({
                     </div>
                   </div>
 
-                  <div className="montar-treino-counter-grid">
-                    <CounterGroup
-                      label="Séries"
-                      value={String(exercicio.series)}
-                      onMinus={() => ajustarExercicio(exercicio.id, "series", -1)}
-                      onPlus={() => ajustarExercicio(exercicio.id, "series", 1)}
-                    />
-                    <CounterGroup
-                      label="Repetições"
-                      value={String(exercicio.repeticoes)}
-                      onMinus={() => ajustarExercicio(exercicio.id, "repeticoes", -1)}
-                      onPlus={() => ajustarExercicio(exercicio.id, "repeticoes", 1)}
-                    />
-                    <CounterGroup
-                      label="Descanso"
-                      value={`${exercicio.restSeconds}s`}
-                      onMinus={() =>
-                        ajustarExercicio(exercicio.id, "restSeconds", -5)
-                      }
-                      onPlus={() =>
-                        ajustarExercicio(exercicio.id, "restSeconds", 5)
-                      }
-                    />
-                  </div>
-
                   <SeriesModeControls
                     compact
                     exercicio={exercicio}
-                    onChange={(campo, valor) =>
-                      handleExercicioChange(exercicio.id, campo, valor)
-                    }
                     onPatch={(patch) => patchExercicio(exercicio.id, patch)}
-                    onAjustarPasso={(delta) =>
-                      ajustarExercicio(exercicio.id, "passoDecrescente", delta)
+                    afterToggle={
+                      <div className="montar-treino-counter-grid">
+                        <CounterGroup
+                          label="Séries"
+                          value={String(exercicio.series)}
+                          onMinus={() => ajustarExercicio(exercicio.id, "series", -1)}
+                          onPlus={() => ajustarExercicio(exercicio.id, "series", 1)}
+                        />
+                        {exercicio.modoSeries !== "decrescente" ? (
+                          <CounterGroup
+                            label="Repetições"
+                            value={String(exercicio.repeticoes)}
+                            onMinus={() =>
+                              ajustarExercicio(exercicio.id, "repeticoes", -1)
+                            }
+                            onPlus={() =>
+                              ajustarExercicio(exercicio.id, "repeticoes", 1)
+                            }
+                          />
+                        ) : null}
+                        <CounterGroup
+                          label="Descanso"
+                          value={`${exercicio.restSeconds}s`}
+                          onMinus={() =>
+                            ajustarExercicio(exercicio.id, "restSeconds", -5)
+                          }
+                          onPlus={() =>
+                            ajustarExercicio(exercicio.id, "restSeconds", 5)
+                          }
+                        />
+                      </div>
                     }
                   />
 

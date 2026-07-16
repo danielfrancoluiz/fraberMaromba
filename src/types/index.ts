@@ -146,10 +146,11 @@ export interface ExercicioForm {
   restSeconds: string;
   observacao: string;
   grupoMuscular: string;
-  /** Iguais (padrão) ou decrescente (12 → 10 → 8). */
+  /** Normal (padrão) ou pirâmide com reps por série. */
   modoSeries: ModoSeriesForm;
-  /** Quanto diminui a cada série no modo decrescente. */
+  /** @deprecated mantido por compatibilidade de formulário */
   passoDecrescente: string;
+  /** Reps de cada série no modo pirâmide. */
   repeticoesPorSerie?: number[];
   exercicioCatalogoId?: string;
   imagemUrl?: string;

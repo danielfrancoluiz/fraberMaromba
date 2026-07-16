@@ -29,6 +29,7 @@ export function ExercicioFormCard({
 }: ExercicioFormCardProps) {
   const [pickerAberto, setPickerAberto] = useState(false);
   const temCatalogo = Boolean(exercicio.exercicioCatalogoId && exercicio.nome);
+  const isPiramide = exercicio.modoSeries === "decrescente";
 
   const handleCampo = (campo: keyof ExercicioForm, valor: string) => {
     onPatch(
@@ -103,9 +104,36 @@ export function ExercicioFormCard({
 
         <SeriesModeControls
           exercicio={exercicio}
-          onChange={handleCampo}
           onPatch={onPatch}
           errors={errors}
+          afterToggle={
+            <div className="modal-exercicio-campos-row">
+              <div>
+                <label className="field-label">Séries</label>
+                <input
+                  className="input-field"
+                  value={exercicio.series}
+                  onChange={(e) => handleCampo("series", e.target.value)}
+                  inputMode="numeric"
+                />
+                {errors?.series ? <p className="field-error">{errors.series}</p> : null}
+              </div>
+              {!isPiramide ? (
+                <div>
+                  <label className="field-label">Repetições</label>
+                  <input
+                    className="input-field"
+                    value={exercicio.repeticoes}
+                    onChange={(e) => handleCampo("repeticoes", e.target.value)}
+                    inputMode="numeric"
+                  />
+                  {errors?.repeticoes ? (
+                    <p className="field-error">{errors.repeticoes}</p>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          }
         />
 
         <div className="modal-exercicio-campos-row">

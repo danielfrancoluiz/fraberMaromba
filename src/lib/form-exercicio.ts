@@ -1,10 +1,5 @@
 import { Exercicio, ExercicioCatalogo, ExercicioForm, ModoSeriesForm } from "@/types";
 import { labelGrupoMuscular, normalizarGrupoMuscular } from "@/lib/grupos-musculares";
-import {
-  gerarRepsDecrescentes,
-  inferirPassoDecrescente,
-  isPrescricaoDecrescente,
-} from "@/lib/series-reps";
 
 export function criarExercicioFormVazio(): ExercicioForm {
   return {
@@ -23,15 +18,14 @@ export function criarExercicioFormVazio(): ExercicioForm {
 function modoFromPrescricao(
   series: number,
   porSerie?: number[] | null
-): { modoSeries: ModoSeriesForm; passoDecrescente: string; repeticoesPorSerie?: number[] } {
-  if (isPrescricaoDecrescente(porSerie) && porSerie && porSerie.length === series) {
+): { modoSeries: ModoSeriesForm; repeticoesPorSerie?: number[] } {
+  if (porSerie && porSerie.length === series && porSerie.length > 0) {
     return {
       modoSeries: "decrescente",
-      passoDecrescente: String(inferirPassoDecrescente(porSerie)),
       repeticoesPorSerie: porSerie,
     };
   }
-  return { modoSeries: "iguais", passoDecrescente: "2" };
+  return { modoSeries: "iguais" };
 }
 
 export function exercicioFormFromExercicio(ex: Exercicio): ExercicioForm {
@@ -50,6 +44,7 @@ export function exercicioFormFromExercicio(ex: Exercicio): ExercicioForm {
     observacao: ex.observacao ?? "",
     grupoMuscular: ex.grupoMuscular ?? "",
     imagemUrl: ex.imagemUrl ?? ex.gifUrl,
+    passoDecrescente: "2",
     ...modo,
   };
 }
@@ -70,29 +65,53 @@ export function exercicioFormFromCatalogo(item: ExercicioCatalogo): ExercicioFor
   };
 }
 
+/** Mantém o array de reps alinhado à quantidade de séries no modo pirâmide. */
 export function sincronizarRepsPorSerie(exercicio: ExercicioForm): ExercicioForm {
   if (exercicio.modoSeries !== "decrescente") {
     return { ...exercicio, repeticoesPorSerie: undefined };
   }
 
   const series = Number.parseInt(exercicio.series, 10);
-  const inicio = Number.parseInt(exercicio.repeticoes, 10);
-  const passo = Number.parseInt(exercicio.passoDecrescente, 10);
+  if (Number.isNaN(series) || series < 1) return exercicio;
 
-  if (
-    Number.isNaN(series) ||
-    Number.isNaN(inicio) ||
-    Number.isNaN(passo) ||
-    series < 1 ||
-    inicio < 1 ||
-    passo < 1
-  ) {
-    return exercicio;
+  const base = Number.parseInt(exercicio.repeticoes, 10);
+  const baseSafe = Number.isNaN(base) || base < 1 ? 12 : Math.min(100, base);
+  const atual = exercicio.repeticoesPorSerie ?? [];
+
+  const lista: number[] = [];
+  for (let i = 0; i < series; i++) {
+    const valor = atual[i];
+    if (typeof valor === "number" && Number.isFinite(valor) && valor >= 1) {
+      lista.push(Math.min(100, Math.floor(valor)));
+    } else {
+      lista.push(i > 0 ? lista[i - 1] : baseSafe);
+    }
   }
 
   return {
     ...exercicio,
-    repeticoesPorSerie: gerarRepsDecrescentes(inicio, series, passo),
+    repeticoes: String(lista[0] ?? baseSafe),
+    repeticoesPorSerie: lista,
+  };
+}
+
+export function setRepsDaSerie(
+  exercicio: ExercicioForm,
+  setIdx: number,
+  valor: number
+): ExercicioForm {
+  const sync = sincronizarRepsPorSerie({
+    ...exercicio,
+    modoSeries: "decrescente",
+  });
+  const lista = [...(sync.repeticoesPorSerie ?? [])];
+  if (setIdx < 0 || setIdx >= lista.length) return sync;
+
+  lista[setIdx] = Math.max(1, Math.min(100, Math.floor(valor)));
+  return {
+    ...sync,
+    repeticoesPorSerie: lista,
+    repeticoes: String(lista[0]),
   };
 }
 
@@ -106,15 +125,16 @@ export function exercicioFormParaPayload(exercicio: ExercicioForm) {
   const series = Number.parseInt(sync.series, 10);
   const repeticoes = Number.parseInt(sync.repeticoes, 10);
   const porSerie =
-    sync.modoSeries === "decrescente" && sync.repeticoesPorSerie?.length
+    sync.modoSeries === "decrescente" &&
+    sync.repeticoesPorSerie &&
+    sync.repeticoesPorSerie.length === series
       ? sync.repeticoesPorSerie
       : [];
 
   return {
     nome: sync.nome.trim(),
     series,
-    repeticoes:
-      porSerie.length > 0 ? porSerie[0] : repeticoes,
+    repeticoes: porSerie.length > 0 ? porSerie[0] : repeticoes,
     repeticoesPorSerie: porSerie,
     restSeconds: Number.isNaN(rest) ? 60 : rest,
     observacao: sync.observacao.trim() || undefined,

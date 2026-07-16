@@ -41,7 +41,7 @@ interface UseMontarTreinoReturn {
   moverExercicio: (index: number, direcao: "cima" | "baixo") => void;
   ajustarExercicio: (
     id: string,
-    campo: "series" | "repeticoes" | "restSeconds" | "passoDecrescente",
+    campo: "series" | "repeticoes" | "restSeconds",
     delta: number
   ) => void;
   handleExercicioChange: (
@@ -93,14 +93,24 @@ function validarMontar(
       erro.series = "1–20";
     }
 
-    const repeticoes = Number.parseInt(exercicio.repeticoes, 10);
-    if (
-      !exercicio.repeticoes.trim() ||
-      Number.isNaN(repeticoes) ||
-      repeticoes < 1 ||
-      repeticoes > 100
-    ) {
-      erro.repeticoes = "1–100";
+    if (exercicio.modoSeries === "decrescente") {
+      const lista = exercicio.repeticoesPorSerie ?? [];
+      const invalido =
+        lista.length !== series ||
+        lista.some((r) => !Number.isFinite(r) || r < 1 || r > 100);
+      if (invalido) {
+        erro.repeticoes = "Defina reps de 1–100 em cada série";
+      }
+    } else {
+      const repeticoes = Number.parseInt(exercicio.repeticoes, 10);
+      if (
+        !exercicio.repeticoes.trim() ||
+        Number.isNaN(repeticoes) ||
+        repeticoes < 1 ||
+        repeticoes > 100
+      ) {
+        erro.repeticoes = "1–100";
+      }
     }
 
     const rest = Number.parseInt(exercicio.restSeconds, 10);
@@ -224,25 +234,14 @@ export function useMontarTreino({
   }, []);
 
   const ajustarExercicio = useCallback(
-    (
-      id: string,
-      campo: "series" | "repeticoes" | "restSeconds" | "passoDecrescente",
-      delta: number
-    ) => {
+    (id: string, campo: "series" | "repeticoes" | "restSeconds", delta: number) => {
       setForm((prev) => ({
         ...prev,
         exercicios: prev.exercicios.map((ex) => {
           if (ex.id !== id) return ex;
           const atual = Number.parseInt(ex[campo], 10) || 0;
           const min = campo === "restSeconds" ? 0 : 1;
-          const max =
-            campo === "restSeconds"
-              ? 600
-              : campo === "series"
-                ? 20
-                : campo === "passoDecrescente"
-                  ? 20
-                  : 100;
+          const max = campo === "restSeconds" ? 600 : campo === "series" ? 20 : 100;
           const novo = Math.min(max, Math.max(min, atual + delta));
           return sincronizarRepsPorSerie({ ...ex, [campo]: String(novo) });
         }),

@@ -1,42 +1,57 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Minus, Plus } from "lucide-react";
 import { ExercicioForm, ModoSeriesForm } from "@/types";
-import { sincronizarRepsPorSerie } from "@/lib/form-exercicio";
+import { setRepsDaSerie, sincronizarRepsPorSerie } from "@/lib/form-exercicio";
 
 interface SeriesModeControlsProps {
   exercicio: ExercicioForm;
-  onChange: (campo: keyof ExercicioForm, valor: string) => void;
   onPatch: (patch: Partial<ExercicioForm>) => void;
-  /** Quando true, usa layout compacto com chips (montar treino). */
+  /** Conteúdo entre o toggle e as reps por série (séries / reps / descanso). */
+  afterToggle?: ReactNode;
+  /** Layout compacto (montar treino) com counters +/-. */
   compact?: boolean;
-  /** Ajuste +/- do passo no modo compacto (montar treino). */
-  onAjustarPasso?: (delta: number) => void;
   errors?: { series?: string; repeticoes?: string };
 }
 
 export function SeriesModeControls({
   exercicio,
-  onChange,
   onPatch,
+  afterToggle,
   compact = false,
-  onAjustarPasso,
   errors,
 }: SeriesModeControlsProps) {
-  const sync = sincronizarRepsPorSerie(exercicio);
   const isPiramide = exercicio.modoSeries === "decrescente";
-  const preview =
-    isPiramide && sync.repeticoesPorSerie?.length
-      ? sync.repeticoesPorSerie.join(" → ")
-      : null;
+  const sync = isPiramide ? sincronizarRepsPorSerie(exercicio) : exercicio;
+  const lista = sync.repeticoesPorSerie ?? [];
 
   const setModo = (modo: ModoSeriesForm) => {
-    onPatch(
-      sincronizarRepsPorSerie({
-        ...exercicio,
-        modoSeries: modo,
-      })
-    );
+    if (modo === "decrescente") {
+      onPatch(
+        sincronizarRepsPorSerie({
+          ...exercicio,
+          modoSeries: "decrescente",
+        })
+      );
+      return;
+    }
+    onPatch({
+      modoSeries: "iguais",
+      repeticoesPorSerie: undefined,
+    });
+  };
+
+  const ajustarRepSerie = (setIdx: number, delta: number) => {
+    const atual =
+      lista[setIdx] ?? (Number.parseInt(exercicio.repeticoes, 10) || 12);
+    onPatch(setRepsDaSerie(exercicio, setIdx, atual + delta));
+  };
+
+  const setRepSerieInput = (setIdx: number, raw: string) => {
+    const n = Number.parseInt(raw, 10);
+    if (Number.isNaN(n)) return;
+    onPatch(setRepsDaSerie(exercicio, setIdx, n));
   };
 
   return (
@@ -44,10 +59,10 @@ export function SeriesModeControls({
       <div className="series-mode-toggle" role="group" aria-label="Tipo de séries">
         <button
           type="button"
-          className={`series-mode-btn${exercicio.modoSeries === "iguais" ? " series-mode-btn--active" : ""}`}
+          className={`series-mode-btn${exercicio.modoSeries !== "decrescente" ? " series-mode-btn--active" : ""}`}
           onClick={() => setModo("iguais")}
         >
-          Iguais
+          Normal
         </button>
         <button
           type="button"
@@ -58,77 +73,59 @@ export function SeriesModeControls({
         </button>
       </div>
 
-      {!compact ? (
-        <div className="modal-exercicio-campos-row">
-          <div>
-            <label className="field-label">Séries</label>
-            <input
-              className="input-field"
-              value={exercicio.series}
-              onChange={(e) => onChange("series", e.target.value)}
-              inputMode="numeric"
-            />
-            {errors?.series ? <p className="field-error">{errors.series}</p> : null}
-          </div>
-          <div>
-            <label className="field-label">Repetições</label>
-            <input
-              className="input-field"
-              value={exercicio.repeticoes}
-              onChange={(e) => onChange("repeticoes", e.target.value)}
-              inputMode="numeric"
-            />
-            {errors?.repeticoes ? (
-              <p className="field-error">{errors.repeticoes}</p>
-            ) : null}
-          </div>
-          {isPiramide ? (
-            <div>
-              <label className="field-label">Passo (−)</label>
-              <input
-                className="input-field"
-                value={exercicio.passoDecrescente}
-                onChange={(e) => onChange("passoDecrescente", e.target.value)}
-                inputMode="numeric"
-              />
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+      {afterToggle}
 
-      {compact && isPiramide && onAjustarPasso ? (
-        <div className="series-mode-passo-row">
-          <div className="montar-treino-counter-card" style={{ maxWidth: 160 }}>
-            <span className="montar-treino-counter-label">Passo (−)</span>
-            <div className="montar-treino-counter-controls">
-              <button
-                type="button"
-                className="montar-treino-counter-btn"
-                onClick={() => onAjustarPasso(-1)}
-                aria-label="Diminuir passo"
-              >
-                <Minus size={14} />
-              </button>
-              <span className="montar-treino-counter-val">
-                {exercicio.passoDecrescente}
-              </span>
-              <button
-                type="button"
-                className="montar-treino-counter-btn"
-                onClick={() => onAjustarPasso(1)}
-                aria-label="Aumentar passo"
-              >
-                <Plus size={14} />
-              </button>
+      {isPiramide && lista.length > 0 ? (
+        <div className="series-piramide-reps">
+          <p className="field-label" style={{ margin: 0 }}>
+            Repetições por série
+          </p>
+          {compact ? (
+            <div className="series-piramide-grid">
+              {lista.map((reps, idx) => (
+                <div key={idx} className="montar-treino-counter-card">
+                  <span className="montar-treino-counter-label">Série {idx + 1}</span>
+                  <div className="montar-treino-counter-controls">
+                    <button
+                      type="button"
+                      className="montar-treino-counter-btn"
+                      onClick={() => ajustarRepSerie(idx, -1)}
+                      aria-label={`Diminuir reps da série ${idx + 1}`}
+                    >
+                      <Minus size={14} />
+                    </button>
+                    <span className="montar-treino-counter-val">{reps}</span>
+                    <button
+                      type="button"
+                      className="montar-treino-counter-btn"
+                      onClick={() => ajustarRepSerie(idx, 1)}
+                      aria-label={`Aumentar reps da série ${idx + 1}`}
+                    >
+                      <Plus size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
+          ) : (
+            <div className="series-piramide-inputs">
+              {lista.map((reps, idx) => (
+                <div key={idx}>
+                  <label className="field-label">Série {idx + 1}</label>
+                  <input
+                    className="input-field"
+                    value={String(reps)}
+                    onChange={(e) => setRepSerieInput(idx, e.target.value)}
+                    inputMode="numeric"
+                  />
+                  {idx === 0 && errors?.repeticoes ? (
+                    <p className="field-error">{errors.repeticoes}</p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      ) : null}
-
-      {preview ? (
-        <p className="series-mode-preview text-muted" aria-live="polite">
-          Prévia: {preview}
-        </p>
       ) : null}
     </div>
   );
