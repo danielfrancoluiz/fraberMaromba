@@ -1,6 +1,5 @@
 import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
-import { isPlanoPagamentoId } from "@/lib/planos-pagamento";
 
 export async function ativarAlunoAposPagamento(
   alunoId: string,
@@ -17,7 +16,7 @@ export async function ativarAlunoAposPagamento(
     where: { id: alunoId },
     data: {
       status: "ativo_plataforma",
-      ...(planoId && isPlanoPagamentoId(planoId) ? { planoId } : {}),
+      ...(planoId?.trim() ? { planoId: planoId.trim() } : {}),
     },
   });
 

@@ -166,7 +166,7 @@ export function CadastroAlunoForm() {
               {!loadingPlanos &&
                 planos.map((plano) => (
                   <option key={plano.id} value={plano.id}>
-                    {plano.nome}
+                    {plano.preco ? `${plano.nome} — ${plano.preco}` : plano.nome}
                   </option>
                 ))}
             </select>

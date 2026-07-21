@@ -21,14 +21,7 @@ import { buscarEstatisticasSessaoAlunoProfessor } from "@/services/sessaoService
 import { EstatisticasSessaoProfessor } from "@/types";
 import { Section } from "@/components/ui/Section";
 import { EmptyState } from "@/components/ui/EmptyState";
-
-const planosPadrao = [
-  { id: "mensal", nome: "Mensal" },
-  { id: "semestral", nome: "Semestral" },
-  { id: "anual", nome: "Anual" },
-  { id: "avulso", nome: "Avulso" },
-  { id: "gympass", nome: "Gympass" },
-];
+import { labelPlano } from "@/lib/planos-pagamento";
 
 function isMedicaoFisica(value: unknown): value is MedicaoFisica {
   if (typeof value !== "object" || value === null) return false;
@@ -120,8 +113,7 @@ export default function Page() {
     );
   }
 
-  const nomePlano =
-    planosPadrao.find((plano) => plano.id === aluno.planoId)?.nome ?? aluno.planoId;
+  const nomePlano = labelPlano(aluno.planoId);
 
   return (
     <main className="page-main">

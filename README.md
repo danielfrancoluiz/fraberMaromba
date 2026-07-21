@@ -102,12 +102,12 @@ Com isso, **Entrar com Google** / **Continuar com Google** cria a conta automati
 1. Em [Stripe → Developers → API keys](https://dashboard.stripe.com/test/apikeys), copie:
    - `STRIPE_SECRET_KEY` → `sk_test_...`
    - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` → `pk_test_...` (opcional; o fluxo atual redireciona para o Checkout hospedado)
-2. Ajuste os valores em `src/lib/stripe.ts` (`PLANOS_STRIPE`, em centavos). O combo e o Stripe usam o mesmo preço.
+2. Os preços ficam na tabela **`Plano`** no banco (edite em **Perfil → Planos e preços**). O Checkout Session usa esses valores dinamicamente — **não** precisa cadastrar produto/preço no Dashboard do Stripe.
 3. Webhook (produção ou local):
    - Local: `stripe listen --forward-to localhost:3000/api/pagamentos/webhook`
    - Copie o **signing secret** (`whsec_...`) para `STRIPE_WEBHOOK_SECRET`
    - **Não use** `sk_test_` nem `rk_test_` aqui — só `whsec_`
-4. Payment Links (`NEXT_PUBLIC_STRIPE_PAYMENT_LINK_*`) são **fallback** se `STRIPE_SECRET_KEY` estiver ausente. Com a secret key configurada, eles não são usados.
+4. Payment Links (`NEXT_PUBLIC_STRIPE_PAYMENT_LINK_*`) são opcionais/legado. O fluxo atual **exige** `STRIPE_SECRET_KEY` para cobrar o preço da tabela `Plano`.
 
 Fluxo: combo de plano → `POST /api/pagamentos/checkout` → redirect Stripe → página `/pagamento/sucesso` confirma a sessão → webhook também marca `pago` e ativa `Usuario` + `Aluno`.
 

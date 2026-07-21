@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { PLANOS_LABEL } from "@/lib/planos-pagamento";
+import { labelPlano } from "@/lib/planos-pagamento";
 
 export interface PagamentoHistoricoItem {
   id: string;
@@ -104,7 +104,7 @@ export function HistoricoPagamentos({
           {itens.map((item) => (
             <li key={item.id} className="historico-pagamentos-item">
               <div className="historico-pagamentos-item-top">
-                <strong>{PLANOS_LABEL[item.planoId] ?? item.planoId}</strong>
+                <strong>{labelPlano(item.planoId)}</strong>
                 <span
                   className={`historico-pagamentos-status historico-pagamentos-status--${item.status}`}
                 >

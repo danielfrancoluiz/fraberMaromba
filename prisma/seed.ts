@@ -3,6 +3,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 import bcrypt from "bcryptjs";
 import { EXERCICIOS_CATALOGO_SEED } from "./data/exercicios-catalogo";
+import { PLANOS_SEED } from "./data/planos";
 
 const pool = new Pool({
   connectionString:
@@ -31,6 +32,22 @@ async function main() {
   await prisma.convite.deleteMany();
   await prisma.aluno.deleteMany();
   await prisma.usuario.deleteMany();
+
+  console.log("Populando planos/preços...");
+  for (const plano of PLANOS_SEED) {
+    await prisma.plano.upsert({
+      where: { id: plano.id },
+      create: { ...plano },
+      update: {
+        nome: plano.nome,
+        valorCentavos: plano.valorCentavos,
+        diasValidade: plano.diasValidade,
+        permiteCheckout: plano.permiteCheckout,
+        ativo: plano.ativo,
+        ordem: plano.ordem,
+      },
+    });
+  }
 
   console.log("Populando catálogo de exercícios...");
   await prisma.exercicioCatalogo.createMany({

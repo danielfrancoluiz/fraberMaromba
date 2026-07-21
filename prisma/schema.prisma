@@ -208,6 +208,19 @@ model Pagamento {
   aluno           Aluno    @relation(fields: [alunoId], references: [id])
 }
 
+/// Catálogo de planos/preços. O Stripe Checkout lê `valorCentavos` daqui.
+model Plano {
+  id               String   @id
+  nome             String
+  valorCentavos    Int
+  diasValidade     Int
+  permiteCheckout  Boolean  @default(true)
+  ativo            Boolean  @default(true)
+  ordem            Int      @default(0)
+  criadoEm         DateTime @default(now())
+  atualizadoEm     DateTime @updatedAt
+}
+
 model Checkin {
   id         String   @id @default(uuid())
   alunoId    String

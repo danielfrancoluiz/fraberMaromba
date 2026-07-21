@@ -5,7 +5,7 @@ import { PerfilPageLayout } from "@/components/perfil/PerfilPageLayout";
 import { RedefinirSenhaCard } from "@/components/auth/RedefinirSenhaCard";
 import { PlanoStatus } from "@/components/aluno/PlanoStatus";
 import { HistoricoPagamentos } from "@/components/pagamento/HistoricoPagamentos";
-import { PLANOS_LABEL } from "@/lib/planos-pagamento";
+import { labelPlano } from "@/lib/planos-pagamento";
 
 const STATUS_LABELS: Record<string, string> = {
   ativo_professor: "Ativo (professor)",
@@ -26,7 +26,7 @@ export default function Page() {
       <div className="card perfil-dados-grid">
         <div>
           <p className="text-muted perfil-campo-label">Plano</p>
-          <p className="perfil-campo-valor">{PLANOS_LABEL[planoId] ?? planoId}</p>
+          <p className="perfil-campo-valor">{labelPlano(planoId)}</p>
         </div>
         <div>
           <p className="text-muted perfil-campo-label">Status</p>

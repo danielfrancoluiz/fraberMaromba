@@ -17,6 +17,11 @@ export interface Aluno {
 export interface Plano {
   id: string;
   nome: string;
+  preco?: string;
+  valorCentavos?: number;
+  diasValidade?: number;
+  permiteCheckout?: boolean;
+  ativo?: boolean;
 }
 
 export interface CadastroAlunoForm {

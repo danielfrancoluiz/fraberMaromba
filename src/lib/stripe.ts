@@ -32,10 +32,6 @@ export const stripe: Stripe = new Proxy({} as Stripe, {
   },
 });
 
-export const PLANOS_STRIPE = {
-  mensal: { nome: "Plano Mensal", valor: 9990 },
-  semestral: { nome: "Plano Semestral", valor: 49990 },
-  anual: { nome: "Plano Anual", valor: 89990 },
-  avulso: { nome: "Aula Avulsa", valor: 2990 },
-  gympass: { nome: "Gympass", valor: 0 },
-} as const;
+export function isStripeConfigurado(): boolean {
+  return Boolean(process.env.STRIPE_SECRET_KEY?.trim());
+}
