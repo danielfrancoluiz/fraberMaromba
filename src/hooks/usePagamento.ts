@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { isStripePublishableConfigured } from "@/lib/stripe-browser";
 
 interface UsePagamentoProps {
   planoId: string;
@@ -11,10 +12,17 @@ interface UsePagamentoProps {
 export function usePagamento({ alunoId, planoId }: UsePagamentoProps) {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
 
   async function iniciarPagamento() {
     setLoading(true);
     setErro(null);
+
+    if (!isStripePublishableConfigured()) {
+      setErro("Pagamento não configurado. Contate o suporte.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const payload: { planoId: string; alunoId?: string } = { planoId };
@@ -41,26 +49,37 @@ export function usePagamento({ alunoId, planoId }: UsePagamentoProps) {
         return;
       }
 
-      const url =
+      const secret =
         typeof body === "object" &&
         body !== null &&
-        "url" in body &&
-        typeof (body as { url: string }).url === "string"
-          ? (body as { url: string }).url
+        "clientSecret" in body &&
+        typeof (body as { clientSecret: string }).clientSecret === "string"
+          ? (body as { clientSecret: string }).clientSecret
           : null;
 
-      if (!url) {
+      if (!secret) {
         setErro("Resposta de pagamento inválida.");
         return;
       }
 
-      window.location.href = url;
+      setClientSecret(secret);
     } catch {
-      setErro("Erro ao redirecionar para o pagamento.");
+      setErro("Erro ao iniciar o pagamento.");
     } finally {
       setLoading(false);
     }
   }
 
-  return { loading, erro, iniciarPagamento };
+  function cancelarPagamento() {
+    setClientSecret(null);
+    setErro(null);
+  }
+
+  return {
+    loading,
+    erro,
+    clientSecret,
+    iniciarPagamento,
+    cancelarPagamento,
+  };
 }

@@ -9,6 +9,8 @@ export type DadosSessaoUsuario = {
   professorId?: string;
   alunoId?: string;
   planoId?: string;
+  /** ISO string da data de vencimento do plano. */
+  planoVenceEm?: string;
 };
 
 function isRole(value: string): value is "professor" | "aluno" {
@@ -44,23 +46,32 @@ export async function carregarDadosSessaoPorEmail(
   let professorId: string | undefined;
   let alunoId: string | undefined;
   let planoId: string | undefined;
+  let planoVenceEm: string | undefined;
 
   if (role === "aluno") {
     const aluno = await prisma.aluno.findFirst({
       where: {
         OR: [{ usuarioId: usuario.id }, { id: usuario.id }],
       },
-      select: { id: true, professorId: true, planoId: true, status: true },
+      select: {
+        id: true,
+        professorId: true,
+        planoId: true,
+        planoVenceEm: true,
+        status: true,
+      },
     });
 
     if (aluno) {
       alunoId = aluno.id;
       professorId = aluno.professorId;
       planoId = aluno.planoId || undefined;
+      planoVenceEm = aluno.planoVenceEm?.toISOString();
     }
   } else if (role === "professor") {
     professorId = usuario.id;
     planoId = usuario.planoId ?? undefined;
+    planoVenceEm = usuario.planoVenceEm?.toISOString();
   }
 
   return {
@@ -72,6 +83,7 @@ export async function carregarDadosSessaoPorEmail(
     professorId,
     alunoId,
     planoId,
+    planoVenceEm,
   };
 }
 

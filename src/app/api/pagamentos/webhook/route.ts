@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
-import { confirmarPagamentoCheckoutSession } from "@/lib/pagamento-stripe";
+import {
+  confirmarPagamentoCheckoutSession,
+  confirmarPagamentoPaymentIntent,
+} from "@/lib/pagamento-stripe";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -15,7 +18,7 @@ export async function POST(req: NextRequest) {
 
   if (!webhookSecret.startsWith("whsec_")) {
     console.error(
-      "[stripe/webhook] STRIPE_WEBHOOK_SECRET inválido: use o signing secret (whsec_...) do webhook ou do `stripe listen`, não a secret key (sk_) nem restricted key (rk_)."
+      "[pagamentos/webhook] STRIPE_WEBHOOK_SECRET inválido: use o signing secret (whsec_...)."
     );
     return NextResponse.json({ error: "Webhook mal configurado" }, { status: 500 });
   }
@@ -32,9 +35,14 @@ export async function POST(req: NextRequest) {
       await confirmarPagamentoCheckoutSession(session);
     }
 
+    if (event.type === "payment_intent.succeeded") {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      await confirmarPagamentoPaymentIntent(paymentIntent);
+    }
+
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("[stripe/webhook]", error);
+    console.error("[pagamentos/webhook]", error);
     return NextResponse.json({ error: "Webhook error" }, { status: 400 });
   }
 }

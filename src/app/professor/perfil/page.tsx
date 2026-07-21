@@ -35,10 +35,12 @@ export default function Page() {
 
       <Link href="/professor/planos" className="card" style={{ display: "block", textDecoration: "none" }}>
         <p className="perfil-campo-valor" style={{ margin: 0 }}>
-          {semPlanoContratado(planoId) ? "Contratar plano" : "Ver / renovar planos"}
+          {semPlanoContratado(planoId) ? "Contratar plano" : "Alterar / renovar plano"}
         </p>
         <p className="text-muted" style={{ margin: "4px 0 0", fontSize: "0.85rem" }}>
-          Assinatura da plataforma Fraber
+          {session?.user?.planoVenceEm
+            ? `Válido até ${new Date(session.user.planoVenceEm).toLocaleDateString("pt-BR")}`
+            : "Assinatura da plataforma Fraber"}
         </p>
       </Link>
 

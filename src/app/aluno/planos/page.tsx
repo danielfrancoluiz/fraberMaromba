@@ -22,7 +22,7 @@ export default function Page() {
           alunoId={alunoId || undefined}
           planoAtualId={session?.user?.planoId}
           titulo="Planos para alunos"
-          subtitulo="Escolha o plano que faz sentido para você. Após o pagamento, saia e entre de novo para atualizar o acesso."
+          subtitulo="Escolha o plano e informe os dados do cartão. O acesso é liberado assim que o pagamento for confirmado."
         />
       </div>
     </main>

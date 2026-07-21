@@ -3,6 +3,7 @@
 import { CreditCard, Check } from "lucide-react";
 import { usePlanos } from "@/hooks/usePlanos";
 import { usePagamento } from "@/hooks/usePagamento";
+import { PagamentoElements } from "@/components/pagamento/PagamentoElements";
 import type { PlanoOpcao } from "@/lib/planos-pagamento";
 
 interface PlanoCardProps {
@@ -12,7 +13,13 @@ interface PlanoCardProps {
 }
 
 function PlanoCard({ plano, alunoId, planoAtualId }: PlanoCardProps) {
-  const { loading, erro, iniciarPagamento } = usePagamento({
+  const {
+    loading,
+    erro,
+    clientSecret,
+    iniciarPagamento,
+    cancelarPagamento,
+  } = usePagamento({
     planoId: plano.id,
     alunoId,
   });
@@ -42,20 +49,27 @@ function PlanoCard({ plano, alunoId, planoAtualId }: PlanoCardProps) {
         </li>
         <li>
           <Check size={16} aria-hidden />
-          Pagamento seguro via Stripe
+          Pagamento seguro com cartão
         </li>
       </ul>
 
       {erro ? <p className="field-error">{erro}</p> : null}
 
-      <button
-        type="button"
-        className="btn-primary"
-        disabled={loading}
-        onClick={() => void iniciarPagamento()}
-      >
-        {loading ? "Redirecionando..." : atual ? "Renovar plano" : "Contratar"}
-      </button>
+      {clientSecret ? (
+        <PagamentoElements
+          clientSecret={clientSecret}
+          onCancelar={cancelarPagamento}
+        />
+      ) : (
+        <button
+          type="button"
+          className="btn-primary"
+          disabled={loading}
+          onClick={() => void iniciarPagamento()}
+        >
+          {loading ? "Preparando..." : atual ? "Renovar plano" : "Contratar"}
+        </button>
+      )}
     </article>
   );
 }
@@ -72,7 +86,7 @@ export function PlanosContratar({
   alunoId,
   planoAtualId,
   titulo = "Escolha seu plano",
-  subtitulo = "Selecione um plano para continuar. O valor é cobrado no Stripe.",
+  subtitulo = "Selecione um plano e informe os dados do cartão para concluir.",
 }: PlanosContratarProps) {
   const { planos, loading, erro } = usePlanos({ checkout: true });
 

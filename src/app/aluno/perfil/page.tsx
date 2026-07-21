@@ -41,10 +41,12 @@ export default function Page() {
         <p className="perfil-campo-valor" style={{ margin: 0 }}>
           {semPlanoContratado(planoId) || status === "inativo"
             ? "Contratar plano"
-            : "Ver / renovar planos"}
+            : "Alterar / renovar plano"}
         </p>
         <p className="text-muted" style={{ margin: "4px 0 0", fontSize: "0.85rem" }}>
-          Veja valores e contrate pelo Stripe
+          {session?.user?.planoVenceEm
+            ? `Válido até ${new Date(session.user.planoVenceEm).toLocaleDateString("pt-BR")}`
+            : "Escolha um plano e pague com cartão"}
         </p>
       </Link>
 

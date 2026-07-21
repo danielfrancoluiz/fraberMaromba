@@ -3169,6 +3169,48 @@ body {
   font-size: 1.05rem;
 }
 
+.aviso-vencimento-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  border-color: color-mix(in srgb, var(--fraber-accent, #c45c26) 45%, var(--fraber-border));
+  background: color-mix(in srgb, var(--fraber-accent, #c45c26) 8%, transparent);
+}
+
+.aviso-vencimento-banner-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--fraber-radius-sm);
+  background: var(--fraber-bg-soft);
+  border: 1px solid var(--fraber-border);
+  display: grid;
+  place-items: center;
+  color: var(--fraber-accent, var(--fraber-text));
+  flex-shrink: 0;
+}
+
+.pagamento-cartao-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--fraber-border);
+}
+
+.pagamento-cartao-titulo {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.pagamento-cartao-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .planos-grid {
   display: grid;
   gap: 16px;

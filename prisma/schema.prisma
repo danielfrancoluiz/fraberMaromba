@@ -15,6 +15,8 @@ model Usuario {
   status     String   @default("ativo_plataforma")
   /// Plano contratado pelo professor (assinatura da plataforma). Aluno usa Aluno.planoId.
   planoId    String?
+  /// Data em que o plano do professor deixa de valer.
+  planoVenceEm DateTime?
   criadoEm   DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
@@ -55,6 +57,8 @@ model Aluno {
   altura       Float
   objetivo     String
   planoId      String
+  /// Data em que o plano do aluno deixa de valer.
+  planoVenceEm DateTime?
   status       String   @default("ativo_professor")
   dataCadastro DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -204,6 +208,7 @@ model Pagamento {
   planoId         String
   metodoPagamento String?
   stripeSessionId String?  @unique
+  stripePaymentIntentId String? @unique
   dataVencimento  DateTime
   dataPagamento   DateTime?
   criadoEm        DateTime @default(now())
@@ -211,7 +216,7 @@ model Pagamento {
   aluno           Aluno?   @relation(fields: [alunoId], references: [id])
 }
 
-/// Catálogo de planos/preços. O Stripe Checkout lê `valorCentavos` daqui.
+/// Catálogo de planos/preços. O checkout lê `valorCentavos` daqui.
 model Plano {
   id               String   @id
   nome             String
@@ -222,6 +227,14 @@ model Plano {
   ordem            Int      @default(0)
   criadoEm         DateTime @default(now())
   atualizadoEm     DateTime @updatedAt
+}
+
+/// Configurações globais da plataforma (singleton id = "default").
+model ConfigApp {
+  id                  String   @id @default("default")
+  /// Quantos dias antes do vencimento mostrar aviso no dashboard.
+  diasAvisoVencimento Int      @default(5)
+  atualizadoEm        DateTime @updatedAt
 }
 
 model Checkin {

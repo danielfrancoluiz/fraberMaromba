@@ -7,7 +7,7 @@ import { CONVITE_COOKIE } from "@/lib/convite-cookie-name";
 import { GOOGLE_ROLE_COOKIE } from "@/lib/google-role-cookie-name";
 import { applyNextAuthEnv, getNextAuthSecret } from "@/lib/nextauth-config";
 import { prisma } from "@/lib/prisma";
-import { carregarDadosSessaoPorEmail } from "@/lib/sessao-usuario";
+import { carregarDadosSessaoPorEmail, carregarDadosSessaoPorId } from "@/lib/sessao-usuario";
 import { cookies } from "next/headers";
 
 applyNextAuthEnv();
@@ -47,6 +47,7 @@ export const authOptions: NextAuthOptions = {
             professorId: usuario.professorId,
             alunoId: usuario.alunoId,
             planoId: usuario.planoId,
+            planoVenceEm: usuario.planoVenceEm,
           };
         } catch (error) {
           console.error("[auth] falha ao consultar banco:", error);
@@ -113,6 +114,8 @@ export const authOptions: NextAuthOptions = {
             token.professorId = dados.professorId;
             token.alunoId = dados.alunoId;
             token.planoId = dados.planoId;
+            token.planoVenceEm = dados.planoVenceEm;
+            token.lastDbSync = Date.now();
           } catch (error) {
             console.error("[auth] falha no cadastro/login Google:", error);
           }
@@ -123,8 +126,32 @@ export const authOptions: NextAuthOptions = {
           token.professorId = user.professorId;
           token.alunoId = user.alunoId;
           token.planoId = user.planoId;
+          token.planoVenceEm = user.planoVenceEm;
+          token.lastDbSync = Date.now();
+        }
+        return token;
+      }
+
+      // Atualiza plano/status do banco periodicamente (após pagamento sem novo login).
+      const lastSync =
+        typeof token.lastDbSync === "number" ? token.lastDbSync : 0;
+      if (token.id && Date.now() - lastSync > 30_000) {
+        try {
+          const dados = await carregarDadosSessaoPorId(token.id as string);
+          if (dados) {
+            token.role = dados.role;
+            token.status = dados.status;
+            token.professorId = dados.professorId;
+            token.alunoId = dados.alunoId;
+            token.planoId = dados.planoId;
+            token.planoVenceEm = dados.planoVenceEm;
+          }
+          token.lastDbSync = Date.now();
+        } catch (error) {
+          console.error("[auth] falha ao sincronizar sessão:", error);
         }
       }
+
       return token;
     },
     async session({ session, token }) {
@@ -138,6 +165,7 @@ export const authOptions: NextAuthOptions = {
         session.user.professorId = token.professorId as string | undefined;
         session.user.alunoId = token.alunoId as string | undefined;
         session.user.planoId = token.planoId as string | undefined;
+        session.user.planoVenceEm = token.planoVenceEm as string | undefined;
       }
       return session;
     },

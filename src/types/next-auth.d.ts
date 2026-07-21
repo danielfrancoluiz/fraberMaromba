@@ -9,6 +9,7 @@ declare module "next-auth" {
     professorId?: string;
     alunoId?: string;
     planoId?: string;
+    planoVenceEm?: string;
   }
   interface Session {
     user: {
@@ -21,6 +22,7 @@ declare module "next-auth" {
       professorId?: string;
       alunoId?: string;
       planoId?: string;
+      planoVenceEm?: string;
     };
   }
 }
@@ -33,5 +35,7 @@ declare module "next-auth/jwt" {
     professorId?: string;
     alunoId?: string;
     planoId?: string;
+    planoVenceEm?: string;
+    lastDbSync?: number;
   }
 }

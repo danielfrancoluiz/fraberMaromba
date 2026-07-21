@@ -23,6 +23,17 @@ function isCheckoutBody(value: unknown): value is CheckoutBody {
   );
 }
 
+async function calcularVencimentoComRenovacao(
+  diasValidade: number,
+  planoVenceEmAtual: Date | null | undefined
+): Promise<Date> {
+  const base =
+    planoVenceEmAtual && planoVenceEmAtual.getTime() > Date.now()
+      ? planoVenceEmAtual
+      : new Date();
+  return calcularDataVencimentoPorDias(diasValidade, base);
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getApiSession(req);
@@ -46,7 +57,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "Este plano não pode ser cobrado pelo Stripe (ex.: Gympass / valor zero).",
+            "Este plano não pode ser cobrado online (ex.: Gympass / valor zero).",
         },
         { status: 400 }
       );
@@ -55,15 +66,11 @@ export async function POST(req: NextRequest) {
     if (!isStripeConfigurado()) {
       return NextResponse.json(
         {
-          error:
-            "Pagamento não configurado. Defina STRIPE_SECRET_KEY na Vercel (e STRIPE_WEBHOOK_SECRET).",
+          error: "Pagamento não configurado. Contate o suporte da Fraber.",
         },
         { status: 503 }
       );
     }
-
-    const origin =
-      process.env.NEXTAUTH_URL?.replace(/\/$/, "") ?? req.nextUrl.origin;
 
     const valorReais = plano.valorCentavos / 100;
 
@@ -72,12 +79,23 @@ export async function POST(req: NextRequest) {
       const professorId = session.user.id;
       const professor = await prisma.usuario.findUnique({
         where: { id: professorId },
-        select: { id: true, nome: true, email: true, role: true },
+        select: {
+          id: true,
+          nome: true,
+          email: true,
+          role: true,
+          planoVenceEm: true,
+        },
       });
 
       if (!professor || professor.role !== "professor") {
         return NextResponse.json({ error: "Professor não encontrado" }, { status: 404 });
       }
+
+      const dataVencimento = await calcularVencimentoComRenovacao(
+        plano.diasValidade,
+        professor.planoVenceEm
+      );
 
       const pagamento = await prisma.pagamento.create({
         data: {
@@ -86,55 +104,41 @@ export async function POST(req: NextRequest) {
           valor: valorReais,
           status: "pendente",
           planoId: plano.id,
-          metodoPagamento: "stripe",
-          dataVencimento: calcularDataVencimentoPorDias(plano.diasValidade),
+          metodoPagamento: "cartao",
+          dataVencimento,
         },
       });
 
-      const checkoutSession = await stripe.checkout.sessions.create({
-        mode: "payment",
-        payment_method_types: ["card"],
-        line_items: [
-          {
-            price_data: {
-              currency: "brl",
-              unit_amount: plano.valorCentavos,
-              product_data: {
-                name: `Fraber — ${plano.nome}`,
-                description: `Assinatura ${plano.nome} (professor)`,
-              },
-            },
-            quantity: 1,
-          },
-        ],
-        success_url: `${origin}/pagamento/sucesso?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/pagamento/cancelado`,
-        client_reference_id: pagamento.id,
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: plano.valorCentavos,
+        currency: "brl",
+        automatic_payment_methods: { enabled: true },
+        description: `Fraber — ${plano.nome} (professor)`,
+        receipt_email: professor.email || undefined,
         metadata: {
           pagamentoId: pagamento.id,
           professorId,
           planoId: plano.id,
           tipo: "professor",
         },
-        customer_email: professor.email || undefined,
       });
 
       await prisma.pagamento.update({
         where: { id: pagamento.id },
-        data: { stripeSessionId: checkoutSession.id },
+        data: { stripePaymentIntentId: paymentIntent.id },
       });
 
-      if (!checkoutSession.url) {
+      if (!paymentIntent.client_secret) {
         return NextResponse.json(
-          { error: "Stripe não retornou URL de checkout" },
+          { error: "Não foi possível iniciar o pagamento" },
           { status: 500 }
         );
       }
 
       return NextResponse.json({
         pagamentoId: pagamento.id,
-        url: checkoutSession.url,
-        modo: "checkout_session",
+        clientSecret: paymentIntent.client_secret,
+        modo: "payment_intent",
       });
     }
 
@@ -159,12 +163,23 @@ export async function POST(req: NextRequest) {
 
     const aluno = await prisma.aluno.findUnique({
       where: { id: alunoIdBody },
-      select: { id: true, professorId: true, nomeCompleto: true, email: true },
+      select: {
+        id: true,
+        professorId: true,
+        nomeCompleto: true,
+        email: true,
+        planoVenceEm: true,
+      },
     });
 
     if (!aluno) {
       return NextResponse.json({ error: "Aluno não encontrado" }, { status: 404 });
     }
+
+    const dataVencimento = await calcularVencimentoComRenovacao(
+      plano.diasValidade,
+      aluno.planoVenceEm
+    );
 
     const pagamento = await prisma.pagamento.create({
       data: {
@@ -173,30 +188,17 @@ export async function POST(req: NextRequest) {
         valor: valorReais,
         status: "pendente",
         planoId: plano.id,
-        metodoPagamento: "stripe",
-        dataVencimento: calcularDataVencimentoPorDias(plano.diasValidade),
+        metodoPagamento: "cartao",
+        dataVencimento,
       },
     });
 
-    const checkoutSession = await stripe.checkout.sessions.create({
-      mode: "payment",
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "brl",
-            unit_amount: plano.valorCentavos,
-            product_data: {
-              name: `Fraber — ${plano.nome}`,
-              description: `${plano.nome} para ${aluno.nomeCompleto}`,
-            },
-          },
-          quantity: 1,
-        },
-      ],
-      success_url: `${origin}/pagamento/sucesso?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/pagamento/cancelado`,
-      client_reference_id: pagamento.id,
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: plano.valorCentavos,
+      currency: "brl",
+      automatic_payment_methods: { enabled: true },
+      description: `Fraber — ${plano.nome} para ${aluno.nomeCompleto}`,
+      receipt_email: aluno.email || undefined,
       metadata: {
         pagamentoId: pagamento.id,
         alunoId: aluno.id,
@@ -204,25 +206,24 @@ export async function POST(req: NextRequest) {
         professorId: aluno.professorId,
         tipo: "aluno",
       },
-      customer_email: aluno.email || undefined,
     });
 
     await prisma.pagamento.update({
       where: { id: pagamento.id },
-      data: { stripeSessionId: checkoutSession.id },
+      data: { stripePaymentIntentId: paymentIntent.id },
     });
 
-    if (!checkoutSession.url) {
+    if (!paymentIntent.client_secret) {
       return NextResponse.json(
-        { error: "Stripe não retornou URL de checkout" },
+        { error: "Não foi possível iniciar o pagamento" },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
       pagamentoId: pagamento.id,
-      url: checkoutSession.url,
-      modo: "checkout_session",
+      clientSecret: paymentIntent.client_secret,
+      modo: "payment_intent",
     });
   } catch (error) {
     console.error("[pagamentos/checkout]", error);

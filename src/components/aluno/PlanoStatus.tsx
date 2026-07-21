@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CreditCard } from "lucide-react";
+import { PagamentoElements } from "@/components/pagamento/PagamentoElements";
 import { usePagamento } from "@/hooks/usePagamento";
 import { labelPlano } from "@/lib/planos-pagamento";
 import { usePlanos } from "@/hooks/usePlanos";
@@ -39,7 +40,13 @@ export function PlanoStatus({
 }: PlanoStatusProps) {
   const { planos, loading: loadingPlanos } = usePlanos({ checkout: true });
   const [planoSelecionado, setPlanoSelecionado] = useState(planoId);
-  const { loading, erro, iniciarPagamento } = usePagamento({
+  const {
+    loading,
+    erro,
+    clientSecret,
+    iniciarPagamento,
+    cancelarPagamento,
+  } = usePagamento({
     alunoId,
     planoId: planoSelecionado,
   });
@@ -77,33 +84,47 @@ export function PlanoStatus({
             </p>
           ) : null}
 
-          <label className="label-campo" htmlFor="plano-select">
-            Escolher plano
-          </label>
-          <select
-            id="plano-select"
-            className="input-field"
-            value={planoSelecionado}
-            onChange={(e) => setPlanoSelecionado(e.target.value)}
-            disabled={loading || loadingPlanos || planos.length === 0}
-          >
-            {planos.map((plano) => (
-              <option key={plano.id} value={plano.id}>
-                {plano.nome} — {plano.preco}
-              </option>
-            ))}
-          </select>
+          {!clientSecret ? (
+            <>
+              <label className="label-campo" htmlFor="plano-select">
+                Escolher plano
+              </label>
+              <select
+                id="plano-select"
+                className="input-field"
+                value={planoSelecionado}
+                onChange={(e) => setPlanoSelecionado(e.target.value)}
+                disabled={loading || loadingPlanos || planos.length === 0}
+              >
+                {planos.map((plano) => (
+                  <option key={plano.id} value={plano.id}>
+                    {plano.nome} — {plano.preco}
+                  </option>
+                ))}
+              </select>
 
-          {erro ? <p className="erro-campo">{erro}</p> : null}
+              {erro ? <p className="erro-campo">{erro}</p> : null}
 
-          <button
-            type="button"
-            className="btn-primary plano-status-cta"
-            disabled={loading || loadingPlanos || !alunoId || planos.length === 0}
-            onClick={() => void iniciarPagamento()}
-          >
-            {loading ? "Redirecionando..." : "Pagar / renovar plano"}
-          </button>
+              <button
+                type="button"
+                className="btn-primary plano-status-cta"
+                disabled={
+                  loading || loadingPlanos || !alunoId || planos.length === 0
+                }
+                onClick={() => void iniciarPagamento()}
+              >
+                {loading ? "Preparando..." : "Pagar / renovar plano"}
+              </button>
+            </>
+          ) : (
+            <>
+              {erro ? <p className="erro-campo">{erro}</p> : null}
+              <PagamentoElements
+                clientSecret={clientSecret}
+                onCancelar={cancelarPagamento}
+              />
+            </>
+          )}
         </>
       ) : null}
     </article>

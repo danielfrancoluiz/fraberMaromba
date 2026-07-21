@@ -20,7 +20,7 @@ export default function Page() {
         <PlanosContratar
           planoAtualId={session?.user?.planoId}
           titulo="Planos para professores"
-          subtitulo="Contrate o plano da plataforma. Os preços são definidos pela Fraber. Após pagar, saia e entre de novo para atualizar a sessão."
+          subtitulo="Contrate o plano da plataforma e pague com cartão nesta tela. O acesso é liberado na hora."
         />
       </div>
     </main>

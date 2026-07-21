@@ -12,12 +12,9 @@ import { FABActions } from "@/components/professor/FABActions";
 import { GerarConviteButton } from "@/components/professor/GerarConviteButton";
 import { buscarEstatisticasSessaoProfessor } from "@/services/sessaoService";
 import { EstatisticasSessaoProfessor } from "@/types";
+import { PlanoDashboardBanners } from "@/components/pagamento/PlanoDashboardBanners";
 import { Section } from "@/components/ui/Section";
 import { EmptyState } from "@/components/ui/EmptyState";
-import {
-  ContratarPlanoBanner,
-  semPlanoContratado,
-} from "@/components/pagamento/ContratarPlanoBanner";
 
 function intervaloHoje(): { dataInicio: string; dataFim: string } {
   const inicio = new Date();
@@ -112,13 +109,10 @@ export default function Page() {
           ]}
         />
 
-        {semPlanoContratado(session?.user?.planoId) ? (
-          <ContratarPlanoBanner
-            href="/professor/planos"
-            titulo="Contrate seu plano Fraber"
-            descricao="Você ainda não tem um plano da plataforma. Veja os planos e contrate para continuar."
-          />
-        ) : null}
+        <PlanoDashboardBanners
+          hrefPlanos="/professor/planos"
+          hrefPerfil="/professor/perfil"
+        />
 
         <GerarConviteButton professorId={session?.user?.id ?? ""} />
 
