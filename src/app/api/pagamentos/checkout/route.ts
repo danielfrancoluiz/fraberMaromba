@@ -138,7 +138,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         pagamentoId: pagamento.id,
         clientSecret: paymentIntent.client_secret,
-        modo: "payment_intent",
       });
     }
 
@@ -223,7 +222,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       pagamentoId: pagamento.id,
       clientSecret: paymentIntent.client_secret,
-      modo: "payment_intent",
     });
   } catch (error) {
     console.error("[pagamentos/checkout]", error);

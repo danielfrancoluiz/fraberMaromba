@@ -18,14 +18,6 @@ export type PlanoOpcao = {
   ativo?: boolean;
 };
 
-export function formatarPrecoCentavos(centavos: number): string {
-  if (centavos <= 0) return "Grátis";
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(centavos / 100);
-}
-
 export function labelPlano(planoId: string, nome?: string | null): string {
   return nome?.trim() || PLANOS_LABEL[planoId] || planoId;
 }

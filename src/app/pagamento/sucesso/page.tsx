@@ -9,7 +9,6 @@ import { CheckCircle, Loader2 } from "lucide-react";
 function PagamentoSucessoConteudo() {
   const searchParams = useSearchParams();
   const { data: session, update } = useSession();
-  const sessionId = searchParams.get("session_id");
   const paymentIntentId = searchParams.get("payment_intent");
   const ok = searchParams.get("ok") === "1";
   const roleParam = searchParams.get("role");
@@ -20,9 +19,7 @@ function PagamentoSucessoConteudo() {
         ? "professor"
         : "aluno";
 
-  const [confirmando, setConfirmando] = useState(
-    Boolean(sessionId || paymentIntentId) && !ok
-  );
+  const [confirmando, setConfirmando] = useState(Boolean(paymentIntentId) && !ok);
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,23 +28,17 @@ function PagamentoSucessoConteudo() {
       return;
     }
 
-    const idCheckout = sessionId;
-    const idIntent = paymentIntentId;
-    if (!idCheckout && !idIntent) return;
+    if (!paymentIntentId) return;
 
     let ativo = true;
 
     async function confirmar() {
       try {
-        const payload = idIntent
-          ? { paymentIntentId: idIntent }
-          : { sessionId: idCheckout };
-
         const res = await fetch("/api/pagamentos/confirmar", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify(payload),
+          body: JSON.stringify({ paymentIntentId }),
         });
 
         if (!ativo) return;
@@ -81,7 +72,7 @@ function PagamentoSucessoConteudo() {
     return () => {
       ativo = false;
     };
-  }, [sessionId, paymentIntentId, ok, update]);
+  }, [paymentIntentId, ok, update]);
 
   const dashHref =
     role === "professor" ? "/professor/dashboard" : "/aluno/dashboard";

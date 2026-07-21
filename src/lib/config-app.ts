@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 const CONFIG_ID = "default";
 const DIAS_AVISO_PADRAO = 5;
 
-export async function ensureConfigApp(): Promise<void> {
+/** Lê no banco quantos dias antes do vencimento mostrar o aviso no dashboard. */
+export async function getDiasAvisoVencimento(): Promise<number> {
   await prisma.configApp.upsert({
     where: { id: CONFIG_ID },
     create: {
@@ -12,14 +13,11 @@ export async function ensureConfigApp(): Promise<void> {
     },
     update: {},
   });
-}
 
-export async function getDiasAvisoVencimento(): Promise<number> {
-  await ensureConfigApp();
   const config = await prisma.configApp.findUnique({
     where: { id: CONFIG_ID },
     select: { diasAvisoVencimento: true },
   });
-  const dias = config?.diasAvisoVencimento ?? DIAS_AVISO_PADRAO;
-  return Math.max(1, dias);
+
+  return Math.max(1, config?.diasAvisoVencimento ?? DIAS_AVISO_PADRAO);
 }

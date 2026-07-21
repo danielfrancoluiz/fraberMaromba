@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiSession } from "@/lib/get-api-session";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
-import {
-  confirmarPagamentoCheckoutSession,
-  confirmarPagamentoPaymentIntent,
-} from "@/lib/pagamento-stripe";
+import { confirmarPagamentoPaymentIntent } from "@/lib/pagamento-stripe";
 import { resolveAlunoId } from "@/lib/sessao-treino-server";
 
 async function autorizarPagamento(
@@ -45,13 +42,6 @@ export async function POST(req: NextRequest) {
     }
 
     const body: unknown = await req.json();
-    const sessionId =
-      typeof body === "object" &&
-      body !== null &&
-      "sessionId" in body &&
-      typeof (body as { sessionId: string }).sessionId === "string"
-        ? (body as { sessionId: string }).sessionId.trim()
-        : "";
     const paymentIntentId =
       typeof body === "object" &&
       body !== null &&
@@ -60,45 +50,26 @@ export async function POST(req: NextRequest) {
         ? (body as { paymentIntentId: string }).paymentIntentId.trim()
         : "";
 
-    if (paymentIntentId.startsWith("pi_")) {
-      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-      const autorizado = await autorizarPagamento(session, {
-        alunoId: paymentIntent.metadata?.alunoId,
-        professorId: paymentIntent.metadata?.professorId,
-        tipo: paymentIntent.metadata?.tipo,
-      });
-
-      if (!autorizado) {
-        return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
-      }
-
-      const confirmado = await confirmarPagamentoPaymentIntent(paymentIntent);
-      return NextResponse.json({
-        confirmado,
-        paymentStatus: paymentIntent.status,
-      });
+    if (!paymentIntentId.startsWith("pi_")) {
+      return NextResponse.json({ error: "Identificador inválido" }, { status: 400 });
     }
 
-    if (sessionId.startsWith("cs_")) {
-      const checkoutSession = await stripe.checkout.sessions.retrieve(sessionId);
-      const autorizado = await autorizarPagamento(session, {
-        alunoId: checkoutSession.metadata?.alunoId,
-        professorId: checkoutSession.metadata?.professorId,
-        tipo: checkoutSession.metadata?.tipo,
-      });
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    const autorizado = await autorizarPagamento(session, {
+      alunoId: paymentIntent.metadata?.alunoId,
+      professorId: paymentIntent.metadata?.professorId,
+      tipo: paymentIntent.metadata?.tipo,
+    });
 
-      if (!autorizado) {
-        return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
-      }
-
-      const confirmado = await confirmarPagamentoCheckoutSession(checkoutSession);
-      return NextResponse.json({
-        confirmado,
-        paymentStatus: checkoutSession.payment_status,
-      });
+    if (!autorizado) {
+      return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
-    return NextResponse.json({ error: "Identificador inválido" }, { status: 400 });
+    const confirmado = await confirmarPagamentoPaymentIntent(paymentIntent);
+    return NextResponse.json({
+      confirmado,
+      paymentStatus: paymentIntent.status,
+    });
   } catch (error) {
     console.error("[pagamentos/confirmar]", error);
     const mensagem =
