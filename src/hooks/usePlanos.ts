@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { PlanoOpcao } from "@/lib/planos-pagamento";
 
-export function usePlanos(opcoes?: { checkout?: boolean; todos?: boolean }) {
+export function usePlanos(opcoes?: { checkout?: boolean }) {
   const [planos, setPlanos] = useState<PlanoOpcao[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -17,7 +17,6 @@ export function usePlanos(opcoes?: { checkout?: boolean; todos?: boolean }) {
       try {
         const params = new URLSearchParams();
         if (opcoes?.checkout) params.set("checkout", "1");
-        if (opcoes?.todos) params.set("todos", "1");
         const qs = params.toString();
         const res = await fetch(`/api/planos${qs ? `?${qs}` : ""}`, {
           credentials: "include",
@@ -50,7 +49,7 @@ export function usePlanos(opcoes?: { checkout?: boolean; todos?: boolean }) {
     return () => {
       cancelado = true;
     };
-  }, [opcoes?.checkout, opcoes?.todos]);
+  }, [opcoes?.checkout]);
 
   return { planos, loading, erro, setPlanos };
 }

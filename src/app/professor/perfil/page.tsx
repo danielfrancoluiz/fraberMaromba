@@ -4,11 +4,14 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { PerfilPageLayout } from "@/components/perfil/PerfilPageLayout";
 import { RedefinirSenhaCard } from "@/components/auth/RedefinirSenhaCard";
+import { labelPlano } from "@/lib/planos-pagamento";
+import { semPlanoContratado } from "@/components/pagamento/ContratarPlanoBanner";
 
 export default function Page() {
   const { data: session } = useSession();
   const nome = session?.user?.name ?? "Professor";
   const email = session?.user?.email ?? "";
+  const planoId = session?.user?.planoId;
 
   return (
     <PerfilPageLayout
@@ -23,17 +26,19 @@ export default function Page() {
           <p className="perfil-campo-valor">{email}</p>
         </div>
         <div>
-          <p className="text-muted perfil-campo-label">Função</p>
-          <p className="perfil-campo-valor">Professor</p>
+          <p className="text-muted perfil-campo-label">Plano</p>
+          <p className="perfil-campo-valor">
+            {semPlanoContratado(planoId) ? "Nenhum" : labelPlano(planoId!)}
+          </p>
         </div>
       </div>
 
       <Link href="/professor/planos" className="card" style={{ display: "block", textDecoration: "none" }}>
         <p className="perfil-campo-valor" style={{ margin: 0 }}>
-          Planos e preços
+          {semPlanoContratado(planoId) ? "Contratar plano" : "Ver / renovar planos"}
         </p>
         <p className="text-muted" style={{ margin: "4px 0 0", fontSize: "0.85rem" }}>
-          Atualize os valores cobrados no Stripe
+          Assinatura da plataforma Fraber
         </p>
       </Link>
 

@@ -18,8 +18,12 @@ export default function Page() {
         </p>
 
         <div className="inativo-page-acoes">
-          <Link href="/aluno/perfil" className="btn-primary">
-            Pagar ou renovar plano
+          <Link href="/aluno/planos" className="btn-primary">
+            Ver planos e contratar
+          </Link>
+
+          <Link href="/aluno/perfil" className="btn-secondary">
+            Ir para o perfil
           </Link>
 
           <a href="mailto:contato@fraber.com" className="btn-secondary">

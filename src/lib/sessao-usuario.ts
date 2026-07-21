@@ -56,9 +56,11 @@ export async function carregarDadosSessaoPorEmail(
     if (aluno) {
       alunoId = aluno.id;
       professorId = aluno.professorId;
-      planoId = aluno.planoId;
-      // Status de acesso: prioriza Usuario; se inativo no Usuario mas ativo no Aluno, mantém Usuario
+      planoId = aluno.planoId || undefined;
     }
+  } else if (role === "professor") {
+    professorId = usuario.id;
+    planoId = usuario.planoId ?? undefined;
   }
 
   return {

@@ -13,6 +13,8 @@ model Usuario {
   senha      String
   role       String   // "professor" ou "aluno"
   status     String   @default("ativo_plataforma")
+  /// Plano contratado pelo professor (assinatura da plataforma). Aluno usa Aluno.planoId.
+  planoId    String?
   criadoEm   DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
@@ -194,7 +196,8 @@ model Convite {
 
 model Pagamento {
   id              String   @id @default(uuid())
-  alunoId         String
+  /// Null quando o professor paga a própria assinatura da plataforma.
+  alunoId         String?
   professorId     String
   valor           Float
   status          String   @default("pendente")
@@ -205,7 +208,7 @@ model Pagamento {
   dataPagamento   DateTime?
   criadoEm        DateTime @default(now())
 
-  aluno           Aluno    @relation(fields: [alunoId], references: [id])
+  aluno           Aluno?   @relation(fields: [alunoId], references: [id])
 }
 
 /// Catálogo de planos/preços. O Stripe Checkout lê `valorCentavos` daqui.

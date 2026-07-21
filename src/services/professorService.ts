@@ -257,36 +257,14 @@ export async function listarAlunos(_professorId: string): Promise<Aluno[]> {
 
 export async function buscarPlanos(opcoes?: {
   checkout?: boolean;
-  todos?: boolean;
 }): Promise<Plano[]> {
   const params = new URLSearchParams();
   if (opcoes?.checkout) params.set("checkout", "1");
-  if (opcoes?.todos) params.set("todos", "1");
   const qs = params.toString();
   const res = await fetch(`/api/planos${qs ? `?${qs}` : ""}`, {
     credentials: "include",
   });
   return handleResponse<Plano[]>(res);
-}
-
-export async function atualizarPlano(
-  id: string,
-  dados: {
-    nome?: string;
-    valorCentavos?: number;
-    diasValidade?: number;
-    permiteCheckout?: boolean;
-    ativo?: boolean;
-    ordem?: number;
-  }
-): Promise<Plano> {
-  const res = await fetch(`/api/planos/${encodeURIComponent(id)}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(dados),
-  });
-  return handleResponse<Plano>(res);
 }
 
 export async function criarTreino(

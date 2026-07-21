@@ -27,6 +27,19 @@ export async function ativarAlunoAposPagamento(
   });
 }
 
+export async function ativarProfessorAposPagamento(
+  professorId: string,
+  planoId: string | undefined
+): Promise<void> {
+  await prisma.usuario.updateMany({
+    where: { id: professorId, role: "professor" },
+    data: {
+      status: "ativo_plataforma",
+      ...(planoId?.trim() ? { planoId: planoId.trim() } : {}),
+    },
+  });
+}
+
 export async function confirmarPagamentoCheckoutSession(
   session: Stripe.Checkout.Session
 ): Promise<boolean> {
@@ -36,8 +49,10 @@ export async function confirmarPagamentoCheckoutSession(
 
   const pagamentoId =
     session.metadata?.pagamentoId ?? session.client_reference_id ?? null;
-  const alunoId = session.metadata?.alunoId;
-  const planoId = session.metadata?.planoId;
+  const alunoId = session.metadata?.alunoId || undefined;
+  const professorId = session.metadata?.professorId || undefined;
+  const planoId = session.metadata?.planoId || undefined;
+  const tipo = session.metadata?.tipo;
 
   if (session.id) {
     await prisma.pagamento.updateMany({
@@ -56,10 +71,17 @@ export async function confirmarPagamentoCheckoutSession(
       },
     });
 
-    await ativarAlunoAposPagamento(
-      pagamento.alunoId,
-      planoId ?? pagamento.planoId
-    );
+    if (pagamento.alunoId) {
+      await ativarAlunoAposPagamento(
+        pagamento.alunoId,
+        planoId ?? pagamento.planoId
+      );
+    } else if (tipo === "professor" || !pagamento.alunoId) {
+      await ativarProfessorAposPagamento(
+        pagamento.professorId,
+        planoId ?? pagamento.planoId
+      );
+    }
     return true;
   }
 
@@ -73,6 +95,20 @@ export async function confirmarPagamentoCheckoutSession(
       data: { status: "pago", dataPagamento: new Date() },
     });
     await ativarAlunoAposPagamento(alunoId, planoId);
+    return true;
+  }
+
+  if (professorId && tipo === "professor") {
+    await prisma.pagamento.updateMany({
+      where: {
+        professorId,
+        alunoId: null,
+        status: "pendente",
+        stripeSessionId: session.id,
+      },
+      data: { status: "pago", dataPagamento: new Date() },
+    });
+    await ativarProfessorAposPagamento(professorId, planoId);
     return true;
   }
 

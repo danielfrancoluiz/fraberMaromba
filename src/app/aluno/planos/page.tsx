@@ -8,19 +8,21 @@ import { PlanosContratar } from "@/components/pagamento/PlanosContratar";
 export default function Page() {
   const router = useRouter();
   const { data: session } = useSession();
+  const alunoId = session?.user?.alunoId ?? "";
 
   return (
     <main className="page-main">
       <div className="page-container page-stack">
         <PageTopBar
           title="Planos"
-          subtitle="Assinatura da plataforma Fraber"
-          onBack={() => router.push("/professor/dashboard")}
+          subtitle="Contrate ou renove sua assinatura"
+          onBack={() => router.push("/aluno/dashboard")}
         />
         <PlanosContratar
+          alunoId={alunoId || undefined}
           planoAtualId={session?.user?.planoId}
-          titulo="Planos para professores"
-          subtitulo="Contrate o plano da plataforma. Os preços são definidos pela Fraber. Após pagar, saia e entre de novo para atualizar a sessão."
+          titulo="Planos para alunos"
+          subtitulo="Escolha o plano que faz sentido para você. Após o pagamento, saia e entre de novo para atualizar o acesso."
         />
       </div>
     </main>

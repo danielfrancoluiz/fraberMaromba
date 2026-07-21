@@ -102,7 +102,7 @@ Com isso, **Entrar com Google** / **Continuar com Google** cria a conta automati
 1. Em [Stripe → Developers → API keys](https://dashboard.stripe.com/test/apikeys), copie:
    - `STRIPE_SECRET_KEY` → `sk_test_...`
    - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` → `pk_test_...` (opcional; o fluxo atual redireciona para o Checkout hospedado)
-2. Os preços ficam na tabela **`Plano`** no banco (edite em **Perfil → Planos e preços**). O Checkout Session usa esses valores dinamicamente — **não** precisa cadastrar produto/preço no Dashboard do Stripe.
+2. Os preços ficam na tabela **`Plano`** no banco (alteração só via admin/banco). O Checkout Session usa esses valores dinamicamente. Professor e aluno contratam em **/professor/planos** e **/aluno/planos**.
 3. Webhook (produção ou local):
    - Local: `stripe listen --forward-to localhost:3000/api/pagamentos/webhook`
    - Copie o **signing secret** (`whsec_...`) para `STRIPE_WEBHOOK_SECRET`

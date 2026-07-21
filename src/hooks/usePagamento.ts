@@ -3,8 +3,9 @@
 import { useState } from "react";
 
 interface UsePagamentoProps {
-  alunoId: string;
   planoId: string;
+  /** Se informado, cobra plano do aluno. Se omitido (professor), cobra a própria assinatura. */
+  alunoId?: string;
 }
 
 export function usePagamento({ alunoId, planoId }: UsePagamentoProps) {
@@ -12,20 +13,18 @@ export function usePagamento({ alunoId, planoId }: UsePagamentoProps) {
   const [erro, setErro] = useState<string | null>(null);
 
   async function iniciarPagamento() {
-    if (!alunoId) {
-      setErro("Aluno não identificado.");
-      return;
-    }
-
     setLoading(true);
     setErro(null);
 
     try {
+      const payload: { planoId: string; alunoId?: string } = { planoId };
+      if (alunoId) payload.alunoId = alunoId;
+
       const res = await fetch("/api/pagamentos/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ alunoId, planoId }),
+        body: JSON.stringify(payload),
       });
 
       const body: unknown = await res.json().catch(() => null);

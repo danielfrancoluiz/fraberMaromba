@@ -108,6 +108,34 @@ export function mascararTelefone(valor: string): string {
   return `(${numeros.slice(0, 2)}) ${numeros.slice(2, 7)}-${numeros.slice(7)}`;
 }
 
+/** Máscara BRL digitando centavos: "9990" → "99,90" / "123456" → "1.234,56" */
+export function mascararDinheiroBRL(valor: string): string {
+  const digitos = apenasNumeros(valor).slice(0, 11);
+  if (!digitos) return "";
+
+  const centavos = Number.parseInt(digitos, 10);
+  if (Number.isNaN(centavos)) return "";
+
+  return (centavos / 100).toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+/** Converte "1.234,56" (ou só dígitos) em centavos. */
+export function dinheiroParaCentavos(valor: string): number | null {
+  const digitos = apenasNumeros(valor);
+  if (!digitos) return 0;
+  const centavos = Number.parseInt(digitos, 10);
+  if (Number.isNaN(centavos) || centavos < 0) return null;
+  return centavos;
+}
+
+/** Exibe centavos já mascarados no input. */
+export function centavosParaMascaraDinheiro(centavos: number): string {
+  return mascararDinheiroBRL(String(Math.max(0, Math.floor(centavos))));
+}
+
 export function validarFormulario(dados: CadastroAlunoForm): FormErrors {
   const erros: FormErrors = {};
 

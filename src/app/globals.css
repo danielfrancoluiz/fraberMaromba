@@ -3140,6 +3140,95 @@ body {
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
 }
 
+.contratar-plano-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.contratar-plano-banner-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--fraber-radius-sm);
+  background: var(--fraber-bg-soft);
+  border: 1px solid var(--fraber-border);
+  display: grid;
+  place-items: center;
+  color: var(--fraber-accent, var(--fraber-text));
+  flex-shrink: 0;
+}
+
+.contratar-plano-banner-texto {
+  flex: 1;
+  min-width: 180px;
+}
+
+.contratar-plano-banner-titulo {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+}
+
+.planos-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.planos-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.planos-card--atual {
+  border-color: var(--fraber-accent, var(--fraber-border));
+}
+
+.planos-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.planos-card-nome {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.planos-card-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--fraber-bg-soft);
+  color: var(--fraber-text-muted);
+}
+
+.planos-card-preco {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.planos-card-lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--fraber-text-muted);
+}
+
+.planos-card-lista li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
 .status-page {
   min-height: 100vh;
   display: grid;

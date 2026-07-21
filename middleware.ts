@@ -18,7 +18,7 @@ export default withAuth(
       if (token?.role !== "aluno") {
         return NextResponse.redirect(new URL("/acesso-negado", req.url));
       }
-      // Aluno inativo: bloqueia acesso a treinos
+      // Aluno inativo: bloqueia treinos; permite planos/perfil/inativo
       if (
         pathname.startsWith("/aluno/treino") ||
         pathname.startsWith("/aluno/dashboard") ||

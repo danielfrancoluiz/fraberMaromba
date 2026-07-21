@@ -1,11 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { PerfilPageLayout } from "@/components/perfil/PerfilPageLayout";
 import { RedefinirSenhaCard } from "@/components/auth/RedefinirSenhaCard";
-import { PlanoStatus } from "@/components/aluno/PlanoStatus";
 import { HistoricoPagamentos } from "@/components/pagamento/HistoricoPagamentos";
 import { labelPlano } from "@/lib/planos-pagamento";
+import { semPlanoContratado } from "@/components/pagamento/ContratarPlanoBanner";
 
 const STATUS_LABELS: Record<string, string> = {
   ativo_professor: "Ativo (professor)",
@@ -17,7 +18,7 @@ export default function Page() {
   const { data: session } = useSession();
   const nome = session?.user?.name ?? "Aluno";
   const email = session?.user?.email ?? "";
-  const planoId = session?.user?.planoId ?? "mensal";
+  const planoId = session?.user?.planoId;
   const status = session?.user?.status ?? "inativo";
   const alunoId = session?.user?.alunoId ?? "";
 
@@ -26,7 +27,9 @@ export default function Page() {
       <div className="card perfil-dados-grid">
         <div>
           <p className="text-muted perfil-campo-label">Plano</p>
-          <p className="perfil-campo-valor">{labelPlano(planoId)}</p>
+          <p className="perfil-campo-valor">
+            {semPlanoContratado(planoId) ? "Nenhum" : labelPlano(planoId!)}
+          </p>
         </div>
         <div>
           <p className="text-muted perfil-campo-label">Status</p>
@@ -34,12 +37,16 @@ export default function Page() {
         </div>
       </div>
 
-      <PlanoStatus
-        alunoId={alunoId}
-        planoId={planoId}
-        status={status}
-        mostrarPagamento={status === "inativo"}
-      />
+      <Link href="/aluno/planos" className="card" style={{ display: "block", textDecoration: "none" }}>
+        <p className="perfil-campo-valor" style={{ margin: 0 }}>
+          {semPlanoContratado(planoId) || status === "inativo"
+            ? "Contratar plano"
+            : "Ver / renovar planos"}
+        </p>
+        <p className="text-muted" style={{ margin: "4px 0 0", fontSize: "0.85rem" }}>
+          Veja valores e contrate pelo Stripe
+        </p>
+      </Link>
 
       {alunoId ? <HistoricoPagamentos alunoId={alunoId} /> : null}
 

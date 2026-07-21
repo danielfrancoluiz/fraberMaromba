@@ -8,8 +8,7 @@ import {
 /**
  * GET /api/planos
  * - ?checkout=1 → só planos cobráveis (Stripe)
- * - ?todos=1 → professor: todos os planos (edição)
- * - padrão → planos ativos (cadastro de aluno)
+ * - padrão → planos ativos (cadastro / listagens)
  */
 export async function GET(req: NextRequest) {
   try {
@@ -19,18 +18,9 @@ export async function GET(req: NextRequest) {
     }
 
     const checkout = req.nextUrl.searchParams.get("checkout") === "1";
-    const todos = req.nextUrl.searchParams.get("todos") === "1";
-
-    if (todos && session.user.role !== "professor") {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
-    }
 
     const planos = await listarPlanos(
-      checkout
-        ? { apenasCheckout: true }
-        : todos
-          ? {}
-          : { apenasAtivos: true }
+      checkout ? { apenasCheckout: true } : { apenasAtivos: true }
     );
 
     return NextResponse.json(planos.map(planoParaOpcaoCheckout));
