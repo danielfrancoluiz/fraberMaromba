@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDiasAvisoVencimento } from "@/lib/plano-vencimento";
+import { getDiasAvisoVencimento } from "@/lib/config-app";
 
 export async function GET() {
   try {
