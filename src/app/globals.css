@@ -3294,17 +3294,29 @@ body {
 }
 
 .modulos-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
   text-align: left;
   cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
+  color: inherit;
   border: 1px solid var(--fraber-border);
   background: var(--fraber-surface);
-  color: inherit;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  z-index: 1;
 }
 
 .modulos-card--ativo {
   border-color: var(--fraber-accent, var(--fraber-border));
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--fraber-accent, #c45c26) 40%, transparent);
+  background: color-mix(in srgb, var(--fraber-accent, #c45c26) 10%, var(--fraber-surface));
 }
 
 .modulos-card-head {
@@ -3318,6 +3330,13 @@ body {
 .modulos-card-nome {
   margin: 0;
   font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--fraber-text);
+}
+
+.modulos-card-desc {
+  margin: 0;
+  font-size: 0.9rem;
 }
 
 .modulos-card-badge {

@@ -122,7 +122,7 @@ export function ModulosContratar({
         ))}
       </div>
 
-      <div className="modulos-grid">
+      <div className="modulos-grid" role="group" aria-label="Módulos disponíveis">
         {MODULOS_ALUNO.map((modulo) => {
           const ativo = selecionados.includes(modulo.id);
           const jaTem = modulosAtuais.includes(modulo.id);
@@ -134,13 +134,13 @@ export function ModulosContratar({
               onClick={() => toggle(modulo.id)}
               aria-pressed={ativo}
             >
-              <div className="modulos-card-head">
-                <h2 className="modulos-card-nome">{modulo.label}</h2>
+              <span className="modulos-card-head">
+                <span className="modulos-card-nome">{modulo.label}</span>
                 {ativo ? <Check size={18} aria-hidden /> : null}
-              </div>
-              <p className="text-muted" style={{ margin: 0, fontSize: "0.9rem" }}>
+              </span>
+              <span className="modulos-card-desc text-muted">
                 {modulo.descricao}
-              </p>
+              </span>
               {jaTem ? (
                 <span className="modulos-card-badge">Ativo no plano atual</span>
               ) : null}

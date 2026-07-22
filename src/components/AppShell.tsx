@@ -19,6 +19,7 @@ function shouldHideAlunoChrome(pathname: string): boolean {
 
 function shouldHideBottomNav(pathname: string, role: ShellRole): boolean {
   if (role === "aluno") {
+    if (pathname.startsWith("/aluno/planos")) return true;
     return shouldHideAlunoChrome(pathname);
   }
 
