@@ -51,9 +51,16 @@ export function PlanoDashboardBanners({
     };
   }, []);
 
+  const role = session?.user?.role;
   const planoId = session?.user?.planoId;
   const planoVenceEm = session?.user?.planoVenceEm;
-  const semPlano = semPlanoContratado(planoId);
+  const modulosAtivos = session?.user?.modulosAtivos;
+
+  const semPlano =
+    role === "aluno"
+      ? semPlanoContratado({ planoVenceEm, modulosAtivos })
+      : semPlanoContratado(planoId);
+
   const vencido = planoVencido(planoVenceEm);
   const dias = diasRestantesPlano(planoVenceEm);
   const mostrarAviso =
@@ -65,11 +72,11 @@ export function PlanoDashboardBanners({
     return (
       <ContratarPlanoBanner
         href={hrefPlanos}
-        titulo={vencido ? "Seu plano venceu" : "Contrate um plano"}
+        titulo={vencido ? "Seu plano venceu" : "Contrate seus módulos"}
         descricao={
           vencido
-            ? "Renove o plano no perfil para continuar usando a plataforma."
-            : "Escolha um plano no perfil para liberar o acesso completo."
+            ? "Renove os módulos desejados para continuar usando a plataforma."
+            : "Escolha Musculação, Corrida e/ou Nutrição para liberar o acesso."
         }
       />
     );

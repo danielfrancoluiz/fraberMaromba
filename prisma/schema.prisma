@@ -56,10 +56,13 @@ model Aluno {
   peso         Float
   altura       Float
   objetivo     String
+  /// Compat: "modulos_1" | "modulos_2" | "modulos_3" | ""
   planoId      String
+  /// Módulos contratados: musculacao | corrida | nutricao
+  modulosAtivos String[] @default([])
   /// Data em que o plano do aluno deixa de valer.
   planoVenceEm DateTime?
-  status       String   @default("ativo_professor")
+  status       String   @default("inativo")
   dataCadastro DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
@@ -206,6 +209,8 @@ model Pagamento {
   valor           Float
   status          String   @default("pendente")
   planoId         String
+  /// Módulos cobrados neste pagamento (aluno).
+  modulos         String[] @default([])
   metodoPagamento String?
   stripeSessionId String?  @unique
   stripePaymentIntentId String? @unique
@@ -235,6 +240,15 @@ model ConfigApp {
   /// Quantos dias antes do vencimento mostrar aviso no dashboard.
   diasAvisoVencimento Int      @default(5)
   atualizadoEm        DateTime @updatedAt
+}
+
+/// Preço mensal conforme quantidade de módulos escolhidos (1, 2 ou 3).
+model PrecoPacoteModulos {
+  quantidade    Int     @id
+  valorCentavos Int
+  diasValidade  Int     @default(30)
+  ativo         Boolean @default(true)
+  atualizadoEm  DateTime @updatedAt
 }
 
 model Checkin {

@@ -3271,6 +3271,74 @@ body {
   gap: 8px;
 }
 
+.modulos-precos-tabela {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.modulos-preco-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--fraber-border);
+  border-radius: var(--fraber-radius-sm);
+  background: var(--fraber-bg-soft);
+  font-size: 0.85rem;
+}
+
+.modulos-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.modulos-card {
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--fraber-border);
+  background: var(--fraber-surface);
+  color: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.modulos-card--ativo {
+  border-color: var(--fraber-accent, var(--fraber-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fraber-accent, #c45c26) 40%, transparent);
+}
+
+.modulos-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.modulos-card-nome {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.modulos-card-badge {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--fraber-text-muted);
+}
+
+.modulos-total {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .modulos-precos-tabela {
+    grid-template-columns: 1fr;
+  }
+}
+
 .status-page {
   min-height: 100vh;
   display: grid;

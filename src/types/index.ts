@@ -11,6 +11,8 @@ export interface Aluno {
   altura: number;
   objetivo: string;
   planoId: string;
+  modulosAtivos?: string[];
+  planoVenceEm?: string | null;
   dataCadastro: string;
 }
 

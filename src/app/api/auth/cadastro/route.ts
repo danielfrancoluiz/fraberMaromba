@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
             email: emailNormalizado,
             senha: senhaHash,
             role: "aluno",
-            status: "ativo_professor",
+            status: "inativo",
           },
         });
 
@@ -94,7 +94,8 @@ export async function POST(req: NextRequest) {
             altura: 0,
             objetivo: "",
             planoId: "",
-            status: "ativo_professor",
+            modulosAtivos: [],
+            status: "inativo",
           },
         });
 

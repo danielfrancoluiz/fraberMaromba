@@ -1,95 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { CreditCard } from "lucide-react";
-import { PagamentoElements } from "@/components/pagamento/PagamentoElements";
-import { usePagamento } from "@/hooks/usePagamento";
+import { ModulosContratar } from "@/components/pagamento/ModulosContratar";
 import { HistoricoPagamentos } from "@/components/pagamento/HistoricoPagamentos";
-import { labelPlano } from "@/lib/planos-pagamento";
-import { usePlanos } from "@/hooks/usePlanos";
 
 interface PagamentoCardProps {
   alunoId: string;
-  planoAtual: string;
+  /** Compat: ignorado — módulos vêm do pagamento. */
+  planoAtual?: string;
+  modulosAtuais?: string[];
 }
 
-export function PagamentoCard({ alunoId, planoAtual }: PagamentoCardProps) {
-  const { planos, loading: loadingPlanos, erro: erroPlanos } = usePlanos({
-    checkout: true,
-  });
-  const [planoSelecionado, setPlanoSelecionado] = useState(planoAtual);
-  const {
-    loading,
-    erro,
-    clientSecret,
-    iniciarPagamento,
-    cancelarPagamento,
-  } = usePagamento({
-    alunoId,
-    planoId: planoSelecionado,
-  });
-
-  useEffect(() => {
-    if (planos.length === 0) return;
-    const existe = planos.some((p) => p.id === planoSelecionado);
-    if (!existe) setPlanoSelecionado(planos[0].id);
-  }, [planos, planoSelecionado]);
-
-  const nomePlanoAtual =
-    planos.find((p) => p.id === planoAtual)?.nome ?? labelPlano(planoAtual);
-
+export function PagamentoCard({
+  alunoId,
+  modulosAtuais = [],
+}: PagamentoCardProps) {
   return (
     <div className="pagamento-section">
-      <article className="card pagamento-card">
-        <h2 className="pagamento-card-titulo">
-          <CreditCard size={22} />
-          Plano atual
-        </h2>
-
-        <p className="pagamento-card-plano">{nomePlanoAtual}</p>
-
-        {!clientSecret ? (
-          <>
-            <label className="label-campo" htmlFor="plano-prof-select">
-              Escolher plano
-            </label>
-            <select
-              id="plano-prof-select"
-              className="input-field"
-              value={planoSelecionado}
-              onChange={(e) => setPlanoSelecionado(e.target.value)}
-              disabled={loading || loadingPlanos || planos.length === 0}
-            >
-              {planos.map((plano) => (
-                <option key={plano.id} value={plano.id}>
-                  {plano.nome} — {plano.preco}
-                </option>
-              ))}
-            </select>
-
-            {erroPlanos ? <p className="erro-campo">{erroPlanos}</p> : null}
-            {erro ? <p className="erro-campo">{erro}</p> : null}
-
-            <button
-              type="button"
-              className="btn-primary"
-              disabled={loading || loadingPlanos || planos.length === 0}
-              onClick={() => void iniciarPagamento()}
-            >
-              {loading ? "Preparando..." : "Renovar / alterar plano"}
-            </button>
-          </>
-        ) : (
-          <>
-            {erro ? <p className="erro-campo">{erro}</p> : null}
-            <PagamentoElements
-              clientSecret={clientSecret}
-              onCancelar={cancelarPagamento}
-            />
-          </>
-        )}
-      </article>
-
+      <ModulosContratar alunoId={alunoId} modulosAtuais={modulosAtuais} />
       <HistoricoPagamentos alunoId={alunoId} />
     </div>
   );

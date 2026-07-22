@@ -228,7 +228,11 @@ export default function Page() {
         </Section>
 
         <Section title="Pagamento" className="card">
-          <PagamentoCard alunoId={aluno.id} planoAtual={aluno.planoId} />
+          <PagamentoCard
+            alunoId={aluno.id}
+            planoAtual={aluno.planoId}
+            modulosAtuais={aluno.modulosAtivos ?? []}
+          />
         </Section>
       </div>
 

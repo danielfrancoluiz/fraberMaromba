@@ -26,6 +26,8 @@ interface AlunoApi {
   altura: number;
   objetivo: string;
   planoId: string;
+  modulosAtivos?: string[];
+  planoVenceEm?: string | null;
   dataCadastro: string;
 }
 
@@ -185,6 +187,8 @@ function mapAluno(aluno: AlunoApi): Aluno {
     altura: aluno.altura,
     objetivo: aluno.objetivo,
     planoId: aluno.planoId,
+    modulosAtivos: aluno.modulosAtivos ?? [],
+    planoVenceEm: aluno.planoVenceEm ?? null,
     dataCadastro: aluno.dataCadastro,
   };
 }

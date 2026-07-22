@@ -81,7 +81,7 @@ async function criarAlunoGoogle(
         email,
         senha,
         role: "aluno",
-        status: "ativo_professor",
+        status: "inativo",
       },
     });
 
@@ -99,7 +99,8 @@ async function criarAlunoGoogle(
         altura: 0,
         objetivo: "",
         planoId: "",
-        status: "ativo_professor",
+        modulosAtivos: [],
+        status: "inativo",
       },
     });
 

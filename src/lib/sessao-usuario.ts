@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { alunoPlanoAtivo } from "@/lib/aluno-acesso";
+import { normalizarModulos, type ModuloAlunoId } from "@/lib/modulos-aluno";
 
 export type DadosSessaoUsuario = {
   id: string;
@@ -11,7 +13,11 @@ export type DadosSessaoUsuario = {
   planoId?: string;
   /** ISO string da data de vencimento do plano. */
   planoVenceEm?: string;
+  /** Módulos ativos do aluno. */
+  modulosAtivos?: ModuloAlunoId[];
 };
+
+export { alunoPlanoAtivo } from "@/lib/aluno-acesso";
 
 function isRole(value: string): value is "professor" | "aluno" {
   return value === "professor" || value === "aluno";
@@ -39,14 +45,15 @@ export async function carregarDadosSessaoPorEmail(
   if (!usuario) return null;
 
   const role = usuario.role.trim().toLowerCase();
-  const status = usuario.status.trim().toLowerCase();
+  let statusRaw = usuario.status.trim().toLowerCase();
 
-  if (!isRole(role) || !isStatus(status)) return null;
+  if (!isRole(role) || !isStatus(statusRaw)) return null;
 
   let professorId: string | undefined;
   let alunoId: string | undefined;
   let planoId: string | undefined;
   let planoVenceEm: string | undefined;
+  let modulosAtivos: ModuloAlunoId[] | undefined;
 
   if (role === "aluno") {
     const aluno = await prisma.aluno.findFirst({
@@ -58,6 +65,7 @@ export async function carregarDadosSessaoPorEmail(
         professorId: true,
         planoId: true,
         planoVenceEm: true,
+        modulosAtivos: true,
         status: true,
       },
     });
@@ -67,6 +75,13 @@ export async function carregarDadosSessaoPorEmail(
       professorId = aluno.professorId;
       planoId = aluno.planoId || undefined;
       planoVenceEm = aluno.planoVenceEm?.toISOString();
+      modulosAtivos = normalizarModulos(aluno.modulosAtivos);
+
+      if (!alunoPlanoAtivo({ planoVenceEm, modulosAtivos })) {
+        statusRaw = "inativo";
+      } else if (statusRaw === "inativo") {
+        statusRaw = "ativo_plataforma";
+      }
     }
   } else if (role === "professor") {
     professorId = usuario.id;
@@ -74,16 +89,19 @@ export async function carregarDadosSessaoPorEmail(
     planoVenceEm = usuario.planoVenceEm?.toISOString();
   }
 
+  if (!isStatus(statusRaw)) return null;
+
   return {
     id: usuario.id,
     nome: usuario.nome,
     email: usuario.email,
     role,
-    status,
+    status: statusRaw,
     professorId,
     alunoId,
     planoId,
     planoVenceEm,
+    modulosAtivos,
   };
 }
 

@@ -6,27 +6,37 @@ import {
   buscarPlanoPorId,
   calcularDataVencimentoPorDias,
 } from "@/lib/planos-server";
+import { buscarPrecoPorQuantidade } from "@/lib/precos-modulos-server";
+import {
+  labelsModulos,
+  normalizarModulos,
+  planoIdPorQuantidade,
+} from "@/lib/modulos-aluno";
 import { assertAlunoDoProfessor, resolveAlunoId } from "@/lib/sessao-treino-server";
 
 interface CheckoutBody {
-  planoId: string;
-  /** Pagamento do aluno (próprio ou pelo professor). Omitido = professor paga a si. */
+  /** Professor: id do plano da plataforma. Aluno: opcional se enviar modulos. */
+  planoId?: string;
   alunoId?: string;
+  /** Módulos escolhidos pelo aluno. */
+  modulos?: string[];
 }
 
 function isCheckoutBody(value: unknown): value is CheckoutBody {
   if (typeof value !== "object" || value === null) return false;
   const d = value as Record<string, unknown>;
   return (
-    typeof d.planoId === "string" &&
-    (d.alunoId === undefined || typeof d.alunoId === "string")
+    (d.planoId === undefined || typeof d.planoId === "string") &&
+    (d.alunoId === undefined || typeof d.alunoId === "string") &&
+    (d.modulos === undefined ||
+      (Array.isArray(d.modulos) && d.modulos.every((m) => typeof m === "string")))
   );
 }
 
-async function calcularVencimentoComRenovacao(
+function calcularVencimentoComRenovacao(
   diasValidade: number,
   planoVenceEmAtual: Date | null | undefined
-): Promise<Date> {
+): Date {
   const base =
     planoVenceEmAtual && planoVenceEmAtual.getTime() > Date.now()
       ? planoVenceEmAtual
@@ -41,41 +51,39 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    const body: unknown = await req.json();
-    if (!isCheckoutBody(body) || !body.planoId.trim()) {
-      return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
-    }
-
-    const planoId = body.planoId.trim();
-    const alunoIdBody = body.alunoId?.trim();
-
-    const plano = await buscarPlanoPorId(planoId);
-    if (!plano || !plano.ativo) {
-      return NextResponse.json({ error: "Plano não encontrado" }, { status: 404 });
-    }
-    if (!plano.permiteCheckout || plano.valorCentavos <= 0) {
-      return NextResponse.json(
-        {
-          error:
-            "Este plano não pode ser cobrado online (ex.: Gympass / valor zero).",
-        },
-        { status: 400 }
-      );
-    }
-
     if (!isStripeConfigurado()) {
       return NextResponse.json(
-        {
-          error: "Pagamento não configurado. Contate o suporte da Fraber.",
-        },
+        { error: "Pagamento não configurado. Contate o suporte da Fraber." },
         { status: 503 }
       );
     }
 
-    const valorReais = plano.valorCentavos / 100;
+    const body: unknown = await req.json();
+    if (!isCheckoutBody(body)) {
+      return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
+    }
+
+    const alunoIdBody = body.alunoId?.trim();
+    const modulosEscolhidos = normalizarModulos(body.modulos ?? []);
 
     // --- Professor contratando o próprio plano ---
-    if (session.user.role === "professor" && !alunoIdBody) {
+    if (session.user.role === "professor" && !alunoIdBody && modulosEscolhidos.length === 0) {
+      const planoId = body.planoId?.trim();
+      if (!planoId) {
+        return NextResponse.json({ error: "Plano não informado" }, { status: 400 });
+      }
+
+      const plano = await buscarPlanoPorId(planoId);
+      if (!plano || !plano.ativo) {
+        return NextResponse.json({ error: "Plano não encontrado" }, { status: 404 });
+      }
+      if (!plano.permiteCheckout || plano.valorCentavos <= 0) {
+        return NextResponse.json(
+          { error: "Este plano não pode ser cobrado online." },
+          { status: 400 }
+        );
+      }
+
       const professorId = session.user.id;
       const professor = await prisma.usuario.findUnique({
         where: { id: professorId },
@@ -92,10 +100,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Professor não encontrado" }, { status: 404 });
       }
 
-      const dataVencimento = await calcularVencimentoComRenovacao(
+      const dataVencimento = calcularVencimentoComRenovacao(
         plano.diasValidade,
         professor.planoVenceEm
       );
+      const valorReais = plano.valorCentavos / 100;
 
       const pagamento = await prisma.pagamento.create({
         data: {
@@ -141,7 +150,14 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // --- Pagamento vinculado a aluno ---
+    // --- Aluno: módulos mensais ---
+    if (modulosEscolhidos.length === 0) {
+      return NextResponse.json(
+        { error: "Selecione ao menos um módulo (Musculação, Corrida ou Nutrição)." },
+        { status: 400 }
+      );
+    }
+
     if (!alunoIdBody) {
       return NextResponse.json({ error: "Aluno não informado" }, { status: 400 });
     }
@@ -160,6 +176,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
+    const preco = await buscarPrecoPorQuantidade(modulosEscolhidos.length);
+    if (!preco || !preco.ativo || preco.valorCentavos <= 0) {
+      return NextResponse.json(
+        { error: "Preço do pacote não configurado." },
+        { status: 400 }
+      );
+    }
+
     const aluno = await prisma.aluno.findUnique({
       where: { id: alunoIdBody },
       select: {
@@ -175,10 +199,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Aluno não encontrado" }, { status: 404 });
     }
 
-    const dataVencimento = await calcularVencimentoComRenovacao(
-      plano.diasValidade,
+    const dataVencimento = calcularVencimentoComRenovacao(
+      preco.diasValidade,
       aluno.planoVenceEm
     );
+    const planoId = planoIdPorQuantidade(modulosEscolhidos.length);
+    const valorReais = preco.valorCentavos / 100;
+    const nomes = labelsModulos(modulosEscolhidos);
 
     const pagamento = await prisma.pagamento.create({
       data: {
@@ -186,24 +213,26 @@ export async function POST(req: NextRequest) {
         professorId: aluno.professorId,
         valor: valorReais,
         status: "pendente",
-        planoId: plano.id,
+        planoId,
+        modulos: modulosEscolhidos,
         metodoPagamento: "cartao",
         dataVencimento,
       },
     });
 
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: plano.valorCentavos,
+      amount: preco.valorCentavos,
       currency: "brl",
       automatic_payment_methods: { enabled: true },
-      description: `Fraber — ${plano.nome} para ${aluno.nomeCompleto}`,
+      description: `Fraber — ${nomes} (mensal)`,
       receipt_email: aluno.email || undefined,
       metadata: {
         pagamentoId: pagamento.id,
         alunoId: aluno.id,
-        planoId: plano.id,
+        planoId,
         professorId: aluno.professorId,
         tipo: "aluno",
+        modulos: modulosEscolhidos.join(","),
       },
     });
 

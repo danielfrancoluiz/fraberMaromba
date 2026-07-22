@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { PageTopBar } from "@/components/ui/PageTopBar";
-import { PlanosContratar } from "@/components/pagamento/PlanosContratar";
+import { ModulosContratar } from "@/components/pagamento/ModulosContratar";
 
 export default function Page() {
   const router = useRouter();
@@ -15,15 +15,20 @@ export default function Page() {
       <div className="page-container page-stack">
         <PageTopBar
           title="Planos"
-          subtitle="Contrate ou renove sua assinatura"
-          onBack={() => router.push("/aluno/dashboard")}
+          subtitle="Contrate ou renove seus módulos mensais"
+          onBack={() => router.push("/aluno/perfil")}
         />
-        <PlanosContratar
-          alunoId={alunoId || undefined}
-          planoAtualId={session?.user?.planoId}
-          titulo="Planos para alunos"
-          subtitulo="Escolha o plano e informe os dados do cartão. O acesso é liberado assim que o pagamento for confirmado."
-        />
+        {alunoId ? (
+          <ModulosContratar
+            alunoId={alunoId}
+            modulosAtuais={session?.user?.modulosAtivos ?? []}
+          />
+        ) : (
+          <p className="text-muted">
+            Não foi possível identificar sua conta de aluno. Saia e entre
+            novamente.
+          </p>
+        )}
       </div>
     </main>
   );

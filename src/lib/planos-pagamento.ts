@@ -6,6 +6,9 @@ export const PLANOS_LABEL: Record<string, string> = {
   anual: "Anual",
   avulso: "Avulso",
   gympass: "Gympass",
+  modulos_1: "1 módulo",
+  modulos_2: "2 módulos",
+  modulos_3: "3 módulos",
 };
 
 export type PlanoOpcao = {

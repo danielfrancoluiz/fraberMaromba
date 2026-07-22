@@ -75,6 +75,8 @@ export async function POST(req: NextRequest) {
         ...body,
         email: normalizarEmail(body.email),
         professorId: session.user.id,
+        modulosAtivos: [],
+        status: "inativo",
       },
     });
 

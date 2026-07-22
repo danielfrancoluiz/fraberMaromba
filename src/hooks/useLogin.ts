@@ -16,10 +16,11 @@ function redirectBySession(session: Session, router: ReturnType<typeof useRouter
   }
 
   if (role === "aluno") {
-    if (status === "ativo_professor" || status === "ativo_plataforma") {
-      router.push("/aluno/dashboard");
+    // Sem módulos pagos / vencido → tela de contratação
+    if (status === "inativo") {
+      router.push("/aluno/planos");
     } else {
-      router.push("/aluno/inativo");
+      router.push("/aluno/dashboard");
     }
   }
 }

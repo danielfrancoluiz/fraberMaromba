@@ -48,6 +48,7 @@ export const authOptions: NextAuthOptions = {
             alunoId: usuario.alunoId,
             planoId: usuario.planoId,
             planoVenceEm: usuario.planoVenceEm,
+            modulosAtivos: usuario.modulosAtivos,
           };
         } catch (error) {
           console.error("[auth] falha ao consultar banco:", error);
@@ -115,6 +116,7 @@ export const authOptions: NextAuthOptions = {
             token.alunoId = dados.alunoId;
             token.planoId = dados.planoId;
             token.planoVenceEm = dados.planoVenceEm;
+            token.modulosAtivos = dados.modulosAtivos;
             token.lastDbSync = Date.now();
           } catch (error) {
             console.error("[auth] falha no cadastro/login Google:", error);
@@ -127,6 +129,7 @@ export const authOptions: NextAuthOptions = {
           token.alunoId = user.alunoId;
           token.planoId = user.planoId;
           token.planoVenceEm = user.planoVenceEm;
+          token.modulosAtivos = user.modulosAtivos;
           token.lastDbSync = Date.now();
         }
         return token;
@@ -145,6 +148,7 @@ export const authOptions: NextAuthOptions = {
             token.alunoId = dados.alunoId;
             token.planoId = dados.planoId;
             token.planoVenceEm = dados.planoVenceEm;
+            token.modulosAtivos = dados.modulosAtivos;
           }
           token.lastDbSync = Date.now();
         } catch (error) {
@@ -166,6 +170,9 @@ export const authOptions: NextAuthOptions = {
         session.user.alunoId = token.alunoId as string | undefined;
         session.user.planoId = token.planoId as string | undefined;
         session.user.planoVenceEm = token.planoVenceEm as string | undefined;
+        session.user.modulosAtivos = token.modulosAtivos as
+          | import("@/lib/modulos-aluno").ModuloAlunoId[]
+          | undefined;
       }
       return session;
     },

@@ -10,25 +10,21 @@ export default function Page() {
       <div className="inativo-page-inner card">
         <LockKeyhole size={64} className="text-accent" aria-hidden />
 
-        <h1>Conta inativa</h1>
+        <h1>Acesso bloqueado</h1>
 
         <p className="text-muted">
-          Sua conta está inativa. Para acessar seus treinos, assine um plano da
-          plataforma ou fale com seu professor.
+          Para usar Musculação, Corrida e Nutrição, contrate os módulos
+          mensais. Sem pagamento ativo, essas áreas ficam bloqueadas.
         </p>
 
         <div className="inativo-page-acoes">
           <Link href="/aluno/planos" className="btn-primary">
-            Ver planos e contratar
+            Contratar módulos
           </Link>
 
           <Link href="/aluno/perfil" className="btn-secondary">
             Ir para o perfil
           </Link>
-
-          <a href="mailto:contato@fraber.com" className="btn-secondary">
-            Falar com suporte
-          </a>
 
           <button
             type="button"

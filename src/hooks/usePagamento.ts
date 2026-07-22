@@ -4,12 +4,13 @@ import { useState } from "react";
 import { isStripePublishableConfigured } from "@/lib/stripe-browser";
 
 interface UsePagamentoProps {
-  planoId: string;
-  /** Se informado, cobra plano do aluno. Se omitido (professor), cobra a própria assinatura. */
+  /** Professor: id do plano. Aluno: omitir e usar modulos. */
+  planoId?: string;
   alunoId?: string;
+  modulos?: string[];
 }
 
-export function usePagamento({ alunoId, planoId }: UsePagamentoProps) {
+export function usePagamento({ alunoId, planoId, modulos }: UsePagamentoProps) {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -25,8 +26,14 @@ export function usePagamento({ alunoId, planoId }: UsePagamentoProps) {
     }
 
     try {
-      const payload: { planoId: string; alunoId?: string } = { planoId };
+      const payload: {
+        planoId?: string;
+        alunoId?: string;
+        modulos?: string[];
+      } = {};
+      if (planoId) payload.planoId = planoId;
       if (alunoId) payload.alunoId = alunoId;
+      if (modulos?.length) payload.modulos = modulos;
 
       const res = await fetch("/api/pagamentos/checkout", {
         method: "POST",

@@ -1,5 +1,6 @@
 import "next-auth";
 import "next-auth/jwt";
+import type { ModuloAlunoId } from "@/lib/modulos-aluno";
 
 declare module "next-auth" {
   interface User {
@@ -10,6 +11,7 @@ declare module "next-auth" {
     alunoId?: string;
     planoId?: string;
     planoVenceEm?: string;
+    modulosAtivos?: ModuloAlunoId[];
   }
   interface Session {
     user: {
@@ -23,6 +25,7 @@ declare module "next-auth" {
       alunoId?: string;
       planoId?: string;
       planoVenceEm?: string;
+      modulosAtivos?: ModuloAlunoId[];
     };
   }
 }
@@ -36,6 +39,7 @@ declare module "next-auth/jwt" {
     alunoId?: string;
     planoId?: string;
     planoVenceEm?: string;
+    modulosAtivos?: ModuloAlunoId[];
     lastDbSync?: number;
   }
 }

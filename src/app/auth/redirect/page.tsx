@@ -29,10 +29,10 @@ export default function Page() {
     }
 
     if (role === "aluno") {
-      if (userStatus === "ativo_professor" || userStatus === "ativo_plataforma") {
-        router.replace("/aluno/dashboard");
+      if (userStatus === "inativo") {
+        router.replace("/aluno/planos");
       } else {
-        router.replace("/aluno/inativo");
+        router.replace("/aluno/dashboard");
       }
     }
   }, [session, status, router]);
