@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { UserCheck } from "lucide-react";
@@ -8,12 +8,12 @@ import { useCadastro } from "@/hooks/useCadastro";
 import { useLogin } from "@/hooks/useLogin";
 import { Logo } from "@/components/Logo";
 import { GoogleIcon } from "@/components/GoogleIcon";
-import { GoogleRolePicker } from "@/components/GoogleRolePicker";
 
 function CadastroContent() {
   const searchParams = useSearchParams();
   const tokenConvite = searchParams.get("convite") ?? undefined;
   const erroUrl = searchParams.get("erro");
+  const temConvite = Boolean(tokenConvite);
 
   const {
     form,
@@ -26,20 +26,13 @@ function CadastroContent() {
     handleSubmit,
   } = useCadastro(tokenConvite);
 
-  const temConvite = Boolean(tokenConvite);
   const {
     loadingGoogle,
-    googleRole,
-    setGoogleRole,
     handleGoogle,
     erro: erroGoogle,
   } = useLogin(temConvite ? "aluno" : "professor");
 
   const [googleErro, setGoogleErro] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (temConvite) setGoogleRole("aluno");
-  }, [temConvite, setGoogleRole]);
 
   const formularioDesabilitado =
     loadingConvite ||
@@ -47,13 +40,10 @@ function CadastroContent() {
     (!!tokenConvite && !convite && !loadingConvite);
 
   const emailReadonly = !!convite?.email;
-  const googleAlunoSemConvite = googleRole === "aluno" && !tokenConvite;
-  const googleDesabilitado =
-    formularioDesabilitado || loadingGoogle || googleAlunoSemConvite;
 
   const mensagemErroUrl =
     erroUrl === "convite"
-      ? "Para criar conta de aluno com Google, use o link de convite do professor."
+      ? "Para criar conta de aluno, use o link de convite do seu professor."
       : erroUrl === "convite-invalido"
         ? "Convite inválido ou já utilizado."
         : null;
@@ -64,9 +54,20 @@ function CadastroContent() {
         <div className="auth-logo-wrap">
           <Logo size={88} />
         </div>
-        <h1 className="page-header-title" style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-          Criar conta
+        <h1
+          className="page-header-title"
+          style={{ textAlign: "center", marginBottom: "0.5rem" }}
+        >
+          {temConvite ? "Criar conta de aluno" : "Criar conta de professor"}
         </h1>
+        <p
+          className="text-muted"
+          style={{ textAlign: "center", margin: "0 0 1.5rem", fontSize: "0.9rem" }}
+        >
+          {temConvite
+            ? "Você foi convidado. Complete o cadastro para acessar a plataforma."
+            : "Cadastro aberto só para professores. Alunos entram pelo link de convite."}
+        </p>
 
         {loadingConvite ? (
           <p className="text-muted" style={{ textAlign: "center", marginBottom: "1.25rem" }}>
@@ -78,7 +79,7 @@ function CadastroContent() {
           <div className="auth-invite-banner">
             <UserCheck size={20} />
             <p>
-              Você foi convidado por um professor. Sua conta será vinculada
+              Convite válido. Sua conta de aluno será vinculada ao professor
               automaticamente.
             </p>
           </div>
@@ -96,17 +97,10 @@ function CadastroContent() {
           </div>
         ) : null}
 
-        <GoogleRolePicker
-          value={googleRole}
-          onChange={setGoogleRole}
-          alunoFixo={temConvite}
-        />
-
         <button
           type="button"
           className="btn-google"
-          disabled={googleDesabilitado}
-          style={{ marginTop: 12 }}
+          disabled={formularioDesabilitado || loadingGoogle}
           onClick={() => {
             setGoogleErro(null);
             void handleGoogle(tokenConvite).catch(() => {
@@ -118,7 +112,7 @@ function CadastroContent() {
           {loadingGoogle ? "Aguardando Google..." : "Continuar com Google"}
         </button>
 
-        {(erroGoogle || googleErro) ? (
+        {erroGoogle || googleErro ? (
           <p className="field-error" style={{ marginTop: "0.75rem" }}>
             {erroGoogle ?? googleErro}
           </p>
@@ -208,13 +202,25 @@ function CadastroContent() {
             className="btn-primary"
             disabled={formularioDesabilitado || loadingSubmit}
           >
-            {loadingSubmit ? "Criando conta..." : "Criar conta"}
+            {loadingSubmit
+              ? "Criando conta..."
+              : temConvite
+                ? "Criar conta de aluno"
+                : "Criar conta de professor"}
           </button>
         </form>
 
         <p className="auth-footer">
           <Link href="/login">Já tem conta? Faça login</Link>
         </p>
+        {!temConvite ? (
+          <p
+            className="text-muted"
+            style={{ textAlign: "center", margin: "8px 0 0", fontSize: "0.85rem" }}
+          >
+            É aluno? Peça o link de convite ao seu professor.
+          </p>
+        ) : null}
       </div>
     </main>
   );

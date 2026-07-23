@@ -124,14 +124,19 @@ function LoginContent() {
 
         {googleRole === "aluno" ? (
           <p className="text-muted" style={{ margin: "8px 0 0", fontSize: "0.85rem", textAlign: "center" }}>
-            Conta nova de aluno: use o{" "}
-            <Link href="/cadastro">link de convite</Link> do professor.
-            Quem já tem conta pode entrar normalmente.
+            Conta nova de aluno: use o link de convite do professor (não o
+            cadastro aberto). Quem já tem conta pode entrar normalmente.
           </p>
         ) : null}
 
         <p className="auth-footer">
-          <Link href="/cadastro">Não tem conta? Cadastre-se</Link>
+          <Link href="/cadastro">Sou professor? Criar conta</Link>
+        </p>
+        <p
+          className="text-muted"
+          style={{ textAlign: "center", margin: "4px 0 0", fontSize: "0.85rem" }}
+        >
+          Aluno: cadastro só pelo link de convite.
         </p>
 
         <div className="chart-empty auth-demo-hint">
