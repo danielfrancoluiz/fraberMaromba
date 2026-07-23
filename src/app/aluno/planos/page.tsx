@@ -22,6 +22,7 @@ export default function Page() {
           <ModulosContratar
             alunoId={alunoId}
             modulosAtuais={session?.user?.modulosAtivos ?? []}
+            modulosVencimentos={session?.user?.modulosVencimentos ?? {}}
           />
         ) : (
           <p className="text-muted">

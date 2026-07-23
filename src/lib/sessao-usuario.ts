@@ -1,6 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { alunoPlanoAtivo } from "@/lib/aluno-acesso";
-import { normalizarModulos, type ModuloAlunoId } from "@/lib/modulos-aluno";
+import {
+  menorVencimentoVigente,
+  modulosVigentes,
+  normalizarModulos,
+  parseModulosVencimentos,
+  type ModuloAlunoId,
+} from "@/lib/modulos-aluno";
 
 export type DadosSessaoUsuario = {
   id: string;
@@ -15,6 +21,8 @@ export type DadosSessaoUsuario = {
   planoVenceEm?: string;
   /** Módulos ativos do aluno. */
   modulosAtivos?: ModuloAlunoId[];
+  /** Vencimento por módulo (ISO). */
+  modulosVencimentos?: Partial<Record<ModuloAlunoId, string>>;
 };
 
 export { alunoPlanoAtivo } from "@/lib/aluno-acesso";
@@ -54,6 +62,7 @@ export async function carregarDadosSessaoPorEmail(
   let planoId: string | undefined;
   let planoVenceEm: string | undefined;
   let modulosAtivos: ModuloAlunoId[] | undefined;
+  let modulosVencimentos: Partial<Record<ModuloAlunoId, string>> | undefined;
 
   if (role === "aluno") {
     const aluno = await prisma.aluno.findFirst({
@@ -66,6 +75,7 @@ export async function carregarDadosSessaoPorEmail(
         planoId: true,
         planoVenceEm: true,
         modulosAtivos: true,
+        modulosVencimentos: true,
         status: true,
       },
     });
@@ -74,10 +84,26 @@ export async function carregarDadosSessaoPorEmail(
       alunoId = aluno.id;
       professorId = aluno.professorId;
       planoId = aluno.planoId || undefined;
-      planoVenceEm = aluno.planoVenceEm?.toISOString();
-      modulosAtivos = normalizarModulos(aluno.modulosAtivos);
 
-      if (!alunoPlanoAtivo({ planoVenceEm, modulosAtivos })) {
+      let venc = parseModulosVencimentos(aluno.modulosVencimentos);
+      if (Object.keys(venc).length === 0 && aluno.planoVenceEm) {
+        for (const id of normalizarModulos(aluno.modulosAtivos)) {
+          venc[id] = aluno.planoVenceEm.toISOString();
+        }
+      }
+
+      modulosVencimentos = venc;
+      modulosAtivos = modulosVigentes(venc);
+      planoVenceEm =
+        menorVencimentoVigente(venc) ?? aluno.planoVenceEm?.toISOString();
+
+      if (
+        !alunoPlanoAtivo({
+          planoVenceEm,
+          modulosAtivos,
+          modulosVencimentos: venc,
+        })
+      ) {
         statusRaw = "inativo";
       } else if (statusRaw === "inativo") {
         statusRaw = "ativo_plataforma";
@@ -102,6 +128,7 @@ export async function carregarDadosSessaoPorEmail(
     planoId,
     planoVenceEm,
     modulosAtivos,
+    modulosVencimentos,
   };
 }
 

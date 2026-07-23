@@ -9,7 +9,9 @@ import {
 import { buscarPrecoPorQuantidade } from "@/lib/precos-modulos-server";
 import {
   labelsModulos,
+  modulosVigentes,
   normalizarModulos,
+  parseModulosVencimentos,
   planoIdPorQuantidade,
 } from "@/lib/modulos-aluno";
 import { assertAlunoDoProfessor, resolveAlunoId } from "@/lib/sessao-treino-server";
@@ -176,14 +178,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    const preco = await buscarPrecoPorQuantidade(modulosEscolhidos.length);
-    if (!preco || !preco.ativo || preco.valorCentavos <= 0) {
-      return NextResponse.json(
-        { error: "Preço do pacote não configurado." },
-        { status: 400 }
-      );
-    }
-
     const aluno = await prisma.aluno.findUnique({
       where: { id: alunoIdBody },
       select: {
@@ -192,6 +186,8 @@ export async function POST(req: NextRequest) {
         nomeCompleto: true,
         email: true,
         planoVenceEm: true,
+        modulosAtivos: true,
+        modulosVencimentos: true,
       },
     });
 
@@ -199,13 +195,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Aluno não encontrado" }, { status: 404 });
     }
 
-    const dataVencimento = calcularVencimentoComRenovacao(
-      preco.diasValidade,
-      aluno.planoVenceEm
-    );
-    const planoId = planoIdPorQuantidade(modulosEscolhidos.length);
+    let venc = parseModulosVencimentos(aluno.modulosVencimentos);
+    if (Object.keys(venc).length === 0 && aluno.planoVenceEm) {
+      for (const id of normalizarModulos(aluno.modulosAtivos)) {
+        venc[id] = aluno.planoVenceEm.toISOString();
+      }
+    }
+    const jaVigentes = new Set(modulosVigentes(venc));
+    const modulosNovos = modulosEscolhidos.filter((m) => !jaVigentes.has(m));
+
+    if (modulosNovos.length === 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Selecione ao menos um módulo novo. Os já ativos não podem ser cobrados de novo nesta compra.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const preco = await buscarPrecoPorQuantidade(modulosNovos.length);
+    if (!preco || !preco.ativo || preco.valorCentavos <= 0) {
+      return NextResponse.json(
+        { error: "Preço do pacote não configurado." },
+        { status: 400 }
+      );
+    }
+
+    // Nova compra = novo período (não estende o vencimento dos módulos antigos).
+    const dataVencimento = calcularDataVencimentoPorDias(preco.diasValidade);
+    const planoId = planoIdPorQuantidade(modulosNovos.length);
     const valorReais = preco.valorCentavos / 100;
-    const nomes = labelsModulos(modulosEscolhidos);
+    const nomes = labelsModulos(modulosNovos);
 
     const pagamento = await prisma.pagamento.create({
       data: {
@@ -214,7 +235,7 @@ export async function POST(req: NextRequest) {
         valor: valorReais,
         status: "pendente",
         planoId,
-        modulos: modulosEscolhidos,
+        modulos: modulosNovos,
         metodoPagamento: "cartao",
         dataVencimento,
       },
@@ -232,7 +253,7 @@ export async function POST(req: NextRequest) {
         planoId,
         professorId: aluno.professorId,
         tipo: "aluno",
-        modulos: modulosEscolhidos.join(","),
+        modulos: modulosNovos.join(","),
       },
     });
 

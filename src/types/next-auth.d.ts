@@ -12,6 +12,7 @@ declare module "next-auth" {
     planoId?: string;
     planoVenceEm?: string;
     modulosAtivos?: ModuloAlunoId[];
+    modulosVencimentos?: Partial<Record<ModuloAlunoId, string>>;
   }
   interface Session {
     user: {
@@ -26,6 +27,7 @@ declare module "next-auth" {
       planoId?: string;
       planoVenceEm?: string;
       modulosAtivos?: ModuloAlunoId[];
+      modulosVencimentos?: Partial<Record<ModuloAlunoId, string>>;
     };
   }
 }
@@ -40,6 +42,7 @@ declare module "next-auth/jwt" {
     planoId?: string;
     planoVenceEm?: string;
     modulosAtivos?: ModuloAlunoId[];
+    modulosVencimentos?: Partial<Record<ModuloAlunoId, string>>;
     lastDbSync?: number;
   }
 }

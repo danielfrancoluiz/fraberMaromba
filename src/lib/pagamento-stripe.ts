@@ -1,6 +1,12 @@
 import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
-import { normalizarModulos } from "@/lib/modulos-aluno";
+import {
+  mesclarVencimentosModulos,
+  menorVencimentoVigente,
+  modulosVigentes,
+  normalizarModulos,
+  parseModulosVencimentos,
+} from "@/lib/modulos-aluno";
 
 async function resolverDataVencimento(
   pagamentoId: string,
@@ -41,19 +47,39 @@ export async function ativarAlunoAposPagamento(
 ): Promise<void> {
   const aluno = await prisma.aluno.findUnique({
     where: { id: alunoId },
-    select: { usuarioId: true, id: true },
+    select: {
+      usuarioId: true,
+      id: true,
+      modulosAtivos: true,
+      planoVenceEm: true,
+      modulosVencimentos: true,
+    },
   });
 
   if (!aluno) return;
 
-  const modulosAtivos = normalizarModulos(modulos);
+  const novos = normalizarModulos(modulos);
+  if (novos.length === 0) return;
+
+  let atuais = parseModulosVencimentos(aluno.modulosVencimentos);
+  // Legado: se só tinha array + planoVenceEm, materializa
+  if (Object.keys(atuais).length === 0 && aluno.planoVenceEm) {
+    for (const id of normalizarModulos(aluno.modulosAtivos)) {
+      atuais[id] = aluno.planoVenceEm.toISOString();
+    }
+  }
+
+  atuais = mesclarVencimentosModulos(atuais, novos, planoVenceEm);
+  const vigentes = modulosVigentes(atuais);
+  const venceGeral = menorVencimentoVigente(atuais);
 
   await prisma.aluno.update({
     where: { id: alunoId },
     data: {
       status: "ativo_plataforma",
-      planoVenceEm,
-      modulosAtivos,
+      planoVenceEm: venceGeral ? new Date(venceGeral) : planoVenceEm,
+      modulosAtivos: vigentes,
+      modulosVencimentos: atuais,
       ...(planoId?.trim() ? { planoId: planoId.trim() } : {}),
     },
   });

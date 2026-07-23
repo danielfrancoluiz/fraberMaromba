@@ -60,7 +60,9 @@ model Aluno {
   planoId      String
   /// Módulos contratados: musculacao | corrida | nutricao
   modulosAtivos String[] @default([])
-  /// Data em que o plano do aluno deixa de valer.
+  /// Vencimento por módulo: { "musculacao": "2026-08-22T...", ... }
+  modulosVencimentos Json?
+  /// Data em que o plano do aluno deixa de valer (menor vencimento vigente / legado).
   planoVenceEm DateTime?
   status       String   @default("inativo")
   dataCadastro DateTime @default(now())
