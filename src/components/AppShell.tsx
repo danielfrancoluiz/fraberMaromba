@@ -17,24 +17,6 @@ function shouldHideAlunoChrome(pathname: string): boolean {
   return false;
 }
 
-function shouldHideBottomNav(pathname: string, role: ShellRole): boolean {
-  if (role === "aluno") {
-    if (pathname.startsWith("/aluno/planos")) return true;
-    return shouldHideAlunoChrome(pathname);
-  }
-
-  if (pathname === "/professor/alunos/novo") return true;
-  if (pathname === "/professor/treinos/novo") return true;
-  if (pathname === "/professor/exercicios/novo") return true;
-  if (pathname === "/professor/corrida/novo") return true;
-  if (/^\/professor\/corrida\/[^/]+$/.test(pathname) && pathname !== "/professor/corrida")
-    return true;
-  if (/^\/professor\/exercicios\/[^/]+\/editar$/.test(pathname)) return true;
-  if (/^\/professor\/alunos\/[^/]+$/.test(pathname)) return true;
-
-  return false;
-}
-
 function isWideLayout(pathname: string, role: ShellRole): boolean {
   if (role === "professor" && /^\/professor\/alunos\/[^/]+$/.test(pathname)) {
     return true;
@@ -44,7 +26,6 @@ function isWideLayout(pathname: string, role: ShellRole): boolean {
 
 export function AppShell({ role, children }: AppShellProps) {
   const pathname = usePathname();
-  const showNav = !shouldHideBottomNav(pathname, role);
   const showAlunoHeader = role === "aluno" && !shouldHideAlunoChrome(pathname);
   const wide = isWideLayout(pathname, role);
   const isAluno = role === "aluno";
@@ -53,7 +34,7 @@ export function AppShell({ role, children }: AppShellProps) {
     <div
       className={[
         "app-shell",
-        showNav ? "app-shell--with-nav" : "",
+        "app-shell--with-nav",
         showAlunoHeader ? "app-shell--with-header" : "",
         isAluno ? "aluno-shell" : "",
       ]
@@ -64,7 +45,7 @@ export function AppShell({ role, children }: AppShellProps) {
       <div className={`app-shell-inner${wide ? " app-shell-inner--wide" : ""}`}>
         {children}
       </div>
-      {showNav ? <BottomNav role={role} /> : null}
+      <BottomNav role={role} />
     </div>
   );
 }
