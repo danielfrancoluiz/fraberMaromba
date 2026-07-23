@@ -1,29 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { labelPlano } from "@/lib/planos-pagamento";
 
-export interface PagamentoHistoricoItem {
+export interface ModuloResumoItem {
   id: string;
-  valor: number;
-  status: string;
-  planoId: string;
-  dataVencimento: string;
-  dataPagamento: string | null;
-  criadoEm: string;
+  label: string;
+  mesesContratados: number;
+  venceEm: string | null;
+  ativo: boolean;
 }
 
 interface HistoricoPagamentosProps {
   alunoId: string;
   titulo?: string;
 }
-
-const STATUS_LABEL: Record<string, string> = {
-  pendente: "Pendente",
-  pago: "Pago",
-  cancelado: "Cancelado",
-  erro_config: "Erro config.",
-};
 
 function formatarData(iso: string): string {
   try {
@@ -37,15 +27,17 @@ function formatarData(iso: string): string {
   }
 }
 
-function formatarValor(valor: number): string {
-  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+function labelMeses(qtd: number): string {
+  if (qtd <= 0) return "Nenhum mês pago ainda";
+  if (qtd === 1) return "1 mês contratado";
+  return `${qtd} meses contratados`;
 }
 
 export function HistoricoPagamentos({
   alunoId,
-  titulo = "Histórico de pagamentos",
+  titulo = "Seus módulos",
 }: HistoricoPagamentosProps) {
-  const [itens, setItens] = useState<PagamentoHistoricoItem[]>([]);
+  const [itens, setItens] = useState<ModuloResumoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -66,11 +58,11 @@ export function HistoricoPagamentos({
           "error" in body &&
           typeof (body as { error: string }).error === "string"
             ? (body as { error: string }).error
-            : "Erro ao carregar histórico";
+            : "Erro ao carregar módulos";
         throw new Error(msg);
       }
-      const dados = (await res.json()) as PagamentoHistoricoItem[];
-      setItens(dados);
+      const dados = (await res.json()) as { modulos?: ModuloResumoItem[] };
+      setItens(Array.isArray(dados.modulos) ? dados.modulos : []);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro ao carregar");
       setItens([]);
@@ -97,25 +89,25 @@ export function HistoricoPagamentos({
         </p>
       ) : itens.length === 0 ? (
         <p className="text-muted" style={{ margin: 0 }}>
-          Nenhum pagamento registrado.
+          Nenhum módulo contratado ainda.
         </p>
       ) : (
         <ul className="historico-pagamentos-lista">
           {itens.map((item) => (
             <li key={item.id} className="historico-pagamentos-item">
               <div className="historico-pagamentos-item-top">
-                <strong>{labelPlano(item.planoId)}</strong>
+                <strong>{item.label}</strong>
                 <span
-                  className={`historico-pagamentos-status historico-pagamentos-status--${item.status}`}
+                  className={`historico-pagamentos-status historico-pagamentos-status--${item.ativo ? "pago" : "cancelado"}`}
                 >
-                  {STATUS_LABEL[item.status] ?? item.status}
+                  {item.ativo ? "Ativo" : "Encerrado"}
                 </span>
               </div>
               <p className="text-muted historico-pagamentos-meta">
-                {formatarValor(item.valor)} ·{" "}
-                {item.dataPagamento
-                  ? `Pago em ${formatarData(item.dataPagamento)}`
-                  : `Criado em ${formatarData(item.criadoEm)}`}
+                {labelMeses(item.mesesContratados)}
+                {item.venceEm
+                  ? ` · ${item.ativo ? "Termina em" : "Terminou em"} ${formatarData(item.venceEm)}`
+                  : null}
               </p>
             </li>
           ))}

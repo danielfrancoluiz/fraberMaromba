@@ -17,7 +17,7 @@ export function PagamentoCard({
   return (
     <div className="pagamento-section">
       <ModulosContratar alunoId={alunoId} modulosAtuais={modulosAtuais} />
-      <HistoricoPagamentos alunoId={alunoId} />
+      <HistoricoPagamentos alunoId={alunoId} titulo="Módulos do aluno" />
     </div>
   );
 }
