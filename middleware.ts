@@ -1,20 +1,30 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 import { planoVencido } from "@/lib/plano-vencimento";
-import type { ModuloAlunoId } from "@/lib/modulos-aluno";
+import { moduloVigente, type ModuloAlunoId } from "@/lib/modulos-aluno";
 
-function tokenTemPlanoPago(token: {
+type TokenModulos = {
   planoVenceEm?: string;
   modulosAtivos?: ModuloAlunoId[] | string[];
-}): boolean {
+  modulosVencimentos?: Partial<Record<ModuloAlunoId, string>>;
+};
+
+function tokenTemPlanoPago(token: TokenModulos): boolean {
+  const venc = token.modulosVencimentos;
+  if (venc && Object.keys(venc).length > 0) {
+    return (Object.keys(venc) as ModuloAlunoId[]).some((id) =>
+      moduloVigente(venc[id])
+    );
+  }
   if (planoVencido(token.planoVenceEm)) return false;
   return (token.modulosAtivos?.length ?? 0) > 0;
 }
 
-function tokenTemModulo(
-  token: { planoVenceEm?: string; modulosAtivos?: ModuloAlunoId[] | string[] },
-  modulo: ModuloAlunoId
-): boolean {
+function tokenTemModulo(token: TokenModulos, modulo: ModuloAlunoId): boolean {
+  const venceEm = token.modulosVencimentos?.[modulo];
+  if (venceEm) {
+    return moduloVigente(venceEm);
+  }
   if (!tokenTemPlanoPago(token)) return false;
   return (token.modulosAtivos ?? []).includes(modulo);
 }

@@ -50,8 +50,9 @@ export function FormularioCartao({ onCancelar }: FormularioCartaoProps) {
           body: JSON.stringify({ paymentIntentId: paymentIntent.id }),
         });
 
-        await update();
-        const role = session?.user?.role;
+        // Força o JWT a reler módulos do banco (musculação + corrida etc.).
+        const sessaoAtualizada = await update();
+        const role = sessaoAtualizada?.user?.role ?? session?.user?.role;
         router.push(
           role === "professor"
             ? "/pagamento/sucesso?ok=1&role=professor"

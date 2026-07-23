@@ -102,7 +102,7 @@ export const authOptions: NextAuthOptions = {
 
       return true;
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger }) {
       if (user) {
         if (account?.provider === "google" && user.email) {
           try {
@@ -138,10 +138,11 @@ export const authOptions: NextAuthOptions = {
         return token;
       }
 
-      // Atualiza plano/status do banco periodicamente (após pagamento sem novo login).
+      // Após pagamento `update()` deve reler o banco na hora (não esperar 30s).
+      const forcarSync = trigger === "update";
       const lastSync =
         typeof token.lastDbSync === "number" ? token.lastDbSync : 0;
-      if (token.id && Date.now() - lastSync > 30_000) {
+      if (token.id && (forcarSync || Date.now() - lastSync > 5_000)) {
         try {
           const dados = await carregarDadosSessaoPorId(token.id as string);
           if (dados) {

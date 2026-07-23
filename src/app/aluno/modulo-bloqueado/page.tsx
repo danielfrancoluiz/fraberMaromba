@@ -1,15 +1,76 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { LockKeyhole } from "lucide-react";
-import { labelModulo, isModuloAlunoId } from "@/lib/modulos-aluno";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { LockKeyhole, Loader2 } from "lucide-react";
+import {
+  isModuloAlunoId,
+  labelModulo,
+  moduloVigente,
+  type ModuloAlunoId,
+} from "@/lib/modulos-aluno";
 
 function Conteudo() {
   const params = useSearchParams();
+  const router = useRouter();
+  const { data: session, update, status } = useSession();
+  const [sincronizando, setSincronizando] = useState(true);
+
   const m = params.get("m") ?? "";
-  const nome = isModuloAlunoId(m) ? labelModulo(m) : "este módulo";
+  const modulo: ModuloAlunoId | null = isModuloAlunoId(m) ? m : null;
+  const nome = modulo ? labelModulo(modulo) : "este módulo";
+
+  useEffect(() => {
+    if (status === "loading") return;
+
+    let ativo = true;
+
+    async function sincronizar() {
+      try {
+        const sessao = await update();
+        if (!ativo || !modulo) return;
+
+        const venc = sessao?.user?.modulosVencimentos?.[modulo];
+        const ativos = sessao?.user?.modulosAtivos ?? [];
+        const liberado =
+          (typeof venc === "string" && moduloVigente(venc)) ||
+          ativos.includes(modulo);
+
+        if (liberado) {
+          const destino =
+            modulo === "musculacao"
+              ? "/aluno/treinos"
+              : modulo === "corrida"
+                ? "/aluno/corrida"
+                : "/aluno/nutricao";
+          router.replace(destino);
+          return;
+        }
+      } finally {
+        if (ativo) setSincronizando(false);
+      }
+    }
+
+    void sincronizar();
+
+    return () => {
+      ativo = false;
+    };
+  }, [status, update, modulo, router]);
+
+  if (sincronizando) {
+    return (
+      <main className="page-main inativo-page">
+        <div className="inativo-page-inner card">
+          <Loader2 size={48} className="text-accent" aria-hidden />
+          <h1>Verificando acesso...</h1>
+          <p className="text-muted">Atualizando seus módulos contratados.</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="page-main inativo-page">
