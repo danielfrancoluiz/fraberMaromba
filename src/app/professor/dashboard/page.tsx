@@ -150,7 +150,7 @@ export default function Page() {
           ) : previewAlunos.length > 0 ? (
             <div className="page-stack">
               {previewAlunos.map((aluno) => (
-                <AlunoCard key={aluno.id} aluno={aluno} nomePlano={aluno.planoId} />
+                <AlunoCard key={aluno.id} aluno={aluno} />
               ))}
             </div>
           ) : (

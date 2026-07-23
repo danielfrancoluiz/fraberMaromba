@@ -83,10 +83,16 @@ export function useProfessorDashboard(): UseProfessorDashboardReturn {
 
   const alunosFiltrados = useMemo(() => {
     const termo = termoBusca.trim().toLowerCase();
-    if (!termo) return alunos;
+    const base = termo
+      ? alunos.filter((aluno) =>
+          aluno.nomeCompleto.toLowerCase().includes(termo)
+        )
+      : alunos;
 
-    return alunos.filter((aluno) =>
-      aluno.nomeCompleto.toLowerCase().includes(termo)
+    return [...base].sort((a, b) =>
+      a.nomeCompleto.localeCompare(b.nomeCompleto, "pt-BR", {
+        sensitivity: "base",
+      })
     );
   }, [alunos, termoBusca]);
 

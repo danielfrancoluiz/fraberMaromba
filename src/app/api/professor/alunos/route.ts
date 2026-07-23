@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
     const alunos = await prisma.aluno.findMany({
       where: { professorId: session.user.id },
-      orderBy: { dataCadastro: "desc" },
+      orderBy: { nomeCompleto: "asc" },
     });
 
     return NextResponse.json(alunos);

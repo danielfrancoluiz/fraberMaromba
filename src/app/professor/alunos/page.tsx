@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Users } from "lucide-react";
 import { useProfessorDashboard } from "@/hooks/useProfessorDashboard";
@@ -12,6 +13,29 @@ export default function Page() {
   const router = useRouter();
   const { alunosFiltrados, termoBusca, setTermoBusca, loading, erro } =
     useProfessorDashboard();
+  const [diasAviso, setDiasAviso] = useState(5);
+
+  useEffect(() => {
+    let ativo = true;
+    void fetch("/api/config")
+      .then((r) => r.json())
+      .then((body: unknown) => {
+        if (!ativo || !body || typeof body !== "object") return;
+        if (
+          "diasAvisoVencimento" in body &&
+          typeof (body as { diasAvisoVencimento: number }).diasAvisoVencimento ===
+            "number"
+        ) {
+          setDiasAviso(
+            (body as { diasAvisoVencimento: number }).diasAvisoVencimento
+          );
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   return (
     <main className="page-main">
@@ -21,7 +45,7 @@ export default function Page() {
           subtitle={
             loading
               ? "Carregando..."
-              : `${alunosFiltrados.length} cadastrado(s)`
+              : `${alunosFiltrados.length} cadastrado(s) · ordem A–Z`
           }
           action={
             <button
@@ -42,9 +66,13 @@ export default function Page() {
         ) : erro ? (
           <p className="error-center text-accent">{erro}</p>
         ) : alunosFiltrados.length > 0 ? (
-          <div className="alunos-grid">
+          <div className="alunos-lista">
             {alunosFiltrados.map((aluno) => (
-              <AlunoCard key={aluno.id} aluno={aluno} nomePlano={aluno.planoId} />
+              <AlunoCard
+                key={aluno.id}
+                aluno={aluno}
+                diasAviso={diasAviso}
+              />
             ))}
           </div>
         ) : (
