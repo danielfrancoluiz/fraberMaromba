@@ -26,6 +26,9 @@ function shouldHideBottomNav(pathname: string, role: ShellRole): boolean {
   if (pathname === "/professor/alunos/novo") return true;
   if (pathname === "/professor/treinos/novo") return true;
   if (pathname === "/professor/exercicios/novo") return true;
+  if (pathname === "/professor/corrida/novo") return true;
+  if (/^\/professor\/corrida\/[^/]+$/.test(pathname) && pathname !== "/professor/corrida")
+    return true;
   if (/^\/professor\/exercicios\/[^/]+\/editar$/.test(pathname)) return true;
   if (/^\/professor\/alunos\/[^/]+$/.test(pathname)) return true;
 

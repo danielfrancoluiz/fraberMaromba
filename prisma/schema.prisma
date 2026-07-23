@@ -27,6 +27,7 @@ model Usuario {
   treinos          Treino[]  @relation("ProfessorTreinos")
   templates        TreinoTemplate[] @relation("ProfessorTemplates")
   exerciciosCatalogo ExercicioCatalogo[] @relation("ProfessorExerciciosCatalogo")
+  treinosCorrida   TreinoCorrida[] @relation("ProfessorTreinosCorrida")
   tokensRedefinirSenha TokenRedefinirSenha[]
 }
 
@@ -72,6 +73,7 @@ model Aluno {
   usuario      Usuario? @relation("UsuarioAluno", fields: [usuarioId], references: [id])
   treinos      Treino[] @relation("AlunoTreinos")
   sessoes      TreinoSessao[] @relation("AlunoSessoes")
+  treinosCorrida TreinoCorrida[] @relation("AlunoTreinosCorrida")
   pagamentos   Pagamento[]
   checkins     Checkin[]
   medicoes     MedicaoFisica[]
@@ -91,6 +93,29 @@ model Treino {
   professor   Usuario  @relation("ProfessorTreinos", fields: [professorId], references: [id])
   exercicios  Exercicio[]
   sessoes     TreinoSessao[] @relation("TreinoSessoes")
+}
+
+/// Treino de corrida prescrito para um dia (estrutura em JSON: passos + blocos repetir).
+model TreinoCorrida {
+  id           String   @id @default(uuid())
+  alunoId      String
+  professorId  String
+  titulo       String
+  /// Dia do treino (calendário).
+  data         DateTime @db.Date
+  observacao   String?
+  /// planejado | concluido | cancelado
+  status       String   @default("planejado")
+  /// Árvore: passos e blocos { tipo: "repetir", vezes, passos[] }
+  estrutura    Json
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  aluno     Aluno   @relation("AlunoTreinosCorrida", fields: [alunoId], references: [id], onDelete: Cascade)
+  professor Usuario @relation("ProfessorTreinosCorrida", fields: [professorId], references: [id])
+
+  @@index([alunoId, data])
+  @@index([professorId, data])
 }
 
 model ExercicioCatalogo {

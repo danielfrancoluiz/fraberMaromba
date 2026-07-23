@@ -1,6 +1,6 @@
 "use client";
 
-import { ClipboardList, Dumbbell, Plus } from "lucide-react";
+import { ClipboardList, Dumbbell, Plus, Wind } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useAlunoDetalhes } from "@/hooks/useAlunoDetalhes";
@@ -181,6 +181,18 @@ export default function Page() {
               >
                 <Plus size={16} />
                 Montar treino
+              </button>
+              <button
+                type="button"
+                className="btn-secondary btn-compact"
+                onClick={() =>
+                  router.push(
+                    `/professor/corrida/novo?alunoId=${encodeURIComponent(aluno.id)}`
+                  )
+                }
+              >
+                <Wind size={16} />
+                Treino de corrida
               </button>
             </div>
           </div>

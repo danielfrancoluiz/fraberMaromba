@@ -60,6 +60,13 @@ const professorNav: NavItem[] = [
     match: (path) => path.startsWith("/professor/treinos"),
   },
   {
+    id: "corrida",
+    label: "Corrida",
+    href: "/professor/corrida",
+    icon: Wind,
+    match: (path) => path.startsWith("/professor/corrida"),
+  },
+  {
     id: "exercicios",
     label: "Exercícios",
     href: "/professor/exercicios",
