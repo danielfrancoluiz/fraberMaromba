@@ -8,6 +8,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { atualizarSessaoComTimeout } from "@/lib/atualizar-sessao";
 
 interface FormularioCartaoProps {
   onCancelar?: () => void;
@@ -43,17 +44,24 @@ export function FormularioCartao({ onCancelar }: FormularioCartaoProps) {
       }
 
       if (paymentIntent?.status === "succeeded") {
-        await fetch("/api/pagamentos/confirmar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ paymentIntentId: paymentIntent.id }),
-        });
+        try {
+          await fetch("/api/pagamentos/confirmar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ paymentIntentId: paymentIntent.id }),
+          });
+        } catch {
+          /* webhook ainda pode confirmar */
+        }
 
-        // Força o JWT a reler módulos do banco (musculação + corrida etc.).
-        const sessaoAtualizada = await update();
+        // Não bloqueia a navegação se o sync da sessão travar.
+        const sessaoAtualizada = (await atualizarSessaoComTimeout(() =>
+          update()
+        )) as { user?: { role?: string } } | null;
         const role = sessaoAtualizada?.user?.role ?? session?.user?.role;
-        router.push(
+
+        router.replace(
           role === "professor"
             ? "/pagamento/sucesso?ok=1&role=professor"
             : "/pagamento/sucesso?ok=1&role=aluno"

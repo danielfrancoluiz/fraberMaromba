@@ -2,40 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiSession } from "@/lib/get-api-session";
 import { prisma } from "@/lib/prisma";
 import {
-  dataISOFromDb,
   isStatusTreinoCorrida,
+  mapTreinoCorridaRow,
   parseEstruturaCorrida,
   validarEstrutura,
-  type TreinoCorridaDTO,
 } from "@/lib/treino-corrida";
-
-function toDTO(row: {
-  id: string;
-  alunoId: string;
-  professorId: string;
-  titulo: string;
-  data: Date;
-  observacao: string | null;
-  status: string;
-  estrutura: unknown;
-  criadoEm: Date;
-  atualizadoEm: Date;
-  aluno?: { nomeCompleto: string } | null;
-}): TreinoCorridaDTO {
-  return {
-    id: row.id,
-    alunoId: row.alunoId,
-    professorId: row.professorId,
-    titulo: row.titulo,
-    data: dataISOFromDb(row.data),
-    observacao: row.observacao,
-    status: isStatusTreinoCorrida(row.status) ? row.status : "planejado",
-    estrutura: parseEstruturaCorrida(row.estrutura),
-    criadoEm: row.criadoEm.toISOString(),
-    atualizadoEm: row.atualizadoEm.toISOString(),
-    alunoNome: row.aluno?.nomeCompleto,
-  };
-}
 
 export async function GET(
   req: NextRequest,
@@ -57,7 +28,7 @@ export async function GET(
       return NextResponse.json({ error: "Treino não encontrado" }, { status: 404 });
     }
 
-    return NextResponse.json(toDTO(row));
+    return NextResponse.json(mapTreinoCorridaRow(row));
   } catch (error) {
     const mensagem =
       error instanceof Error ? error.message : "Erro ao buscar treino";
@@ -126,7 +97,7 @@ export async function PATCH(
       include: { aluno: { select: { nomeCompleto: true } } },
     });
 
-    return NextResponse.json(toDTO(row));
+    return NextResponse.json(mapTreinoCorridaRow(row));
   } catch (error) {
     const mensagem =
       error instanceof Error ? error.message : "Erro ao atualizar treino";

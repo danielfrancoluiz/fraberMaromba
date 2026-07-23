@@ -1,10 +1,11 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { CheckCircle, Loader2 } from "lucide-react";
+import { atualizarSessaoComTimeout } from "@/lib/atualizar-sessao";
 
 function PagamentoSucessoConteudo() {
   const searchParams = useSearchParams();
@@ -21,18 +22,22 @@ function PagamentoSucessoConteudo() {
 
   const [confirmando, setConfirmando] = useState(Boolean(paymentIntentId) && !ok);
   const [erro, setErro] = useState<string | null>(null);
+  const jaRodou = useRef(false);
 
   useEffect(() => {
-    if (ok) {
-      void update();
-      return;
-    }
-
-    if (!paymentIntentId) return;
+    if (jaRodou.current) return;
+    jaRodou.current = true;
 
     let ativo = true;
 
-    async function confirmar() {
+    async function rodar() {
+      if (ok) {
+        await atualizarSessaoComTimeout(() => update());
+        return;
+      }
+
+      if (!paymentIntentId) return;
+
       try {
         const res = await fetch("/api/pagamentos/confirmar", {
           method: "POST",
@@ -54,7 +59,7 @@ function PagamentoSucessoConteudo() {
               : "Não foi possível confirmar o pagamento automaticamente.";
           setErro(msg);
         } else {
-          await update();
+          await atualizarSessaoComTimeout(() => update());
         }
       } catch {
         if (ativo) {
@@ -67,12 +72,13 @@ function PagamentoSucessoConteudo() {
       }
     }
 
-    void confirmar();
+    void rodar();
 
     return () => {
       ativo = false;
     };
-  }, [paymentIntentId, ok, update]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- roda uma vez só
+  }, []);
 
   const dashHref =
     role === "professor" ? "/professor/dashboard" : "/aluno/dashboard";

@@ -28,6 +28,7 @@ model Usuario {
   templates        TreinoTemplate[] @relation("ProfessorTemplates")
   exerciciosCatalogo ExercicioCatalogo[] @relation("ProfessorExerciciosCatalogo")
   treinosCorrida   TreinoCorrida[] @relation("ProfessorTreinosCorrida")
+  templatesCorrida TreinoCorridaTemplate[] @relation("ProfessorTemplatesCorrida")
   tokensRedefinirSenha TokenRedefinirSenha[]
 }
 
@@ -97,25 +98,44 @@ model Treino {
 
 /// Treino de corrida prescrito para um dia (estrutura em JSON: passos + blocos repetir).
 model TreinoCorrida {
-  id           String   @id @default(uuid())
-  alunoId      String
-  professorId  String
-  titulo       String
+  id             String    @id @default(uuid())
+  alunoId        String
+  professorId    String
+  titulo         String
   /// Dia do treino (calendário).
-  data         DateTime @db.Date
-  observacao   String?
+  data           DateTime  @db.Date
+  observacao     String?
   /// planejado | concluido | cancelado
-  status       String   @default("planejado")
+  status         String    @default("planejado")
   /// Árvore: passos e blocos { tipo: "repetir", vezes, passos[] }
-  estrutura    Json
-  criadoEm     DateTime @default(now())
-  atualizadoEm DateTime @updatedAt
+  estrutura      Json
+  feedbackTexto  String?
+  /// 1 a 5
+  feedbackNota   Int?
+  concluidoEm    DateTime?
+  criadoEm       DateTime  @default(now())
+  atualizadoEm   DateTime  @updatedAt
 
   aluno     Aluno   @relation("AlunoTreinosCorrida", fields: [alunoId], references: [id], onDelete: Cascade)
   professor Usuario @relation("ProfessorTreinosCorrida", fields: [professorId], references: [id])
 
   @@index([alunoId, data])
   @@index([professorId, data])
+}
+
+/// Modelo reutilizável de corrida do professor (sem aluno/data).
+model TreinoCorridaTemplate {
+  id           String   @id @default(uuid())
+  professorId  String
+  nome         String
+  descricao    String?
+  estrutura    Json
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  professor Usuario @relation("ProfessorTemplatesCorrida", fields: [professorId], references: [id], onDelete: Cascade)
+
+  @@index([professorId])
 }
 
 model ExercicioCatalogo {

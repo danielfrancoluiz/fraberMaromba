@@ -2,38 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiSession } from "@/lib/get-api-session";
 import { prisma } from "@/lib/prisma";
 import { resolveAlunoId } from "@/lib/sessao-treino-server";
-import {
-  dataISOFromDb,
-  isStatusTreinoCorrida,
-  parseEstruturaCorrida,
-  type TreinoCorridaDTO,
-} from "@/lib/treino-corrida";
-
-function toDTO(row: {
-  id: string;
-  alunoId: string;
-  professorId: string;
-  titulo: string;
-  data: Date;
-  observacao: string | null;
-  status: string;
-  estrutura: unknown;
-  criadoEm: Date;
-  atualizadoEm: Date;
-}): TreinoCorridaDTO {
-  return {
-    id: row.id,
-    alunoId: row.alunoId,
-    professorId: row.professorId,
-    titulo: row.titulo,
-    data: dataISOFromDb(row.data),
-    observacao: row.observacao,
-    status: isStatusTreinoCorrida(row.status) ? row.status : "planejado",
-    estrutura: parseEstruturaCorrida(row.estrutura),
-    criadoEm: row.criadoEm.toISOString(),
-    atualizadoEm: row.atualizadoEm.toISOString(),
-  };
-}
+import { mapTreinoCorridaRow } from "@/lib/treino-corrida";
 
 export async function GET(req: NextRequest) {
   try {
@@ -74,7 +43,7 @@ export async function GET(req: NextRequest) {
       take: 40,
     });
 
-    return NextResponse.json(rows.map(toDTO));
+    return NextResponse.json(rows.map(mapTreinoCorridaRow));
   } catch (error) {
     const mensagem =
       error instanceof Error ? error.message : "Erro ao listar treinos de corrida";

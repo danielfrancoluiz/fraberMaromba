@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Wind } from "lucide-react";
 import { CorridaEstruturaView } from "@/components/corrida/CorridaEstruturaView";
+import { CorridaFeedbackAluno } from "@/components/corrida/CorridaFeedbackAluno";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
   dataISOLocal,
@@ -22,7 +23,10 @@ function labelPill(iso: string): { dia: string; num: string } {
     .toLocaleDateString("pt-BR", { weekday: "short" })
     .replace(".", "")
     .toUpperCase();
-  const num = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  const num = d.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+  });
   return { dia, num };
 }
 
@@ -70,6 +74,12 @@ export default function Page() {
     [treinos]
   );
 
+  function atualizarTreino(atualizado: TreinoCorridaDTO) {
+    setTreinos((prev) =>
+      prev.map((t) => (t.id === atualizado.id ? atualizado : t))
+    );
+  }
+
   return (
     <main className="page-main">
       <div className="page-container page-stack corrida-aluno">
@@ -80,7 +90,10 @@ export default function Page() {
               <h1 className="page-header-title" style={{ margin: 0 }}>
                 Corrida
               </h1>
-              <p className="text-muted" style={{ margin: "2px 0 0", fontSize: "0.85rem" }}>
+              <p
+                className="text-muted"
+                style={{ margin: "2px 0 0", fontSize: "0.85rem" }}
+              >
                 Seu plano do dia, passo a passo
               </p>
             </div>
@@ -138,6 +151,11 @@ export default function Page() {
               ) : null}
 
               <CorridaEstruturaView estrutura={treino.estrutura} />
+
+              <CorridaFeedbackAluno
+                treino={treino}
+                onAtualizado={atualizarTreino}
+              />
             </article>
           ))
         )}

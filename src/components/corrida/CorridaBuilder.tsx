@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Plus, Repeat, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Plus, Repeat, Save, Trash2 } from "lucide-react";
 import {
   ACOES_CORRIDA,
   METRICAS_CORRIDA,
@@ -14,6 +14,7 @@ import {
   type EstruturaCorrida,
   type MetricaCorridaId,
   type PassoCorrida,
+  type TreinoCorridaTemplateDTO,
 } from "@/lib/treino-corrida";
 import { CorridaEstruturaView } from "@/components/corrida/CorridaEstruturaView";
 
@@ -214,6 +215,23 @@ export function CorridaBuilder({
   alunoNome,
 }: CorridaBuilderProps) {
   const [mostrarPreview, setMostrarPreview] = useState(true);
+  const [templates, setTemplates] = useState<TreinoCorridaTemplateDTO[]>([]);
+  const [salvandoTemplate, setSalvandoTemplate] = useState(false);
+  const [msgTemplate, setMsgTemplate] = useState<string | null>(null);
+
+  useEffect(() => {
+    let ativo = true;
+    void fetch("/api/professor/corrida/templates", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((body: unknown) => {
+        if (!ativo) return;
+        setTemplates(Array.isArray(body) ? (body as TreinoCorridaTemplateDTO[]) : []);
+      })
+      .catch(() => undefined);
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   const resumo = useMemo(() => {
     const passos = estrutura.reduce((acc, item) => {
@@ -303,6 +321,48 @@ export function CorridaBuilder({
           ))}
         </div>
       </div>
+
+      {templates.length > 0 ? (
+        <div>
+          <p className="field-label" style={{ marginBottom: 8 }}>
+            Seus templates salvos
+          </p>
+          <div className="corrida-modelos">
+            {templates.map((t) => (
+              <div key={t.id} className="corrida-template-row">
+                <button
+                  type="button"
+                  className="corrida-modelo-btn"
+                  onClick={() => {
+                    onEstrutura(t.estrutura);
+                    onTitulo(t.nome);
+                  }}
+                >
+                  <strong>{t.nome}</strong>
+                  <span>{t.descricao || "Template reutilizável"}</span>
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost corrida-icon-btn"
+                  aria-label="Excluir template"
+                  onClick={() => {
+                    void fetch(
+                      `/api/professor/corrida/templates/${encodeURIComponent(t.id)}`,
+                      { method: "DELETE", credentials: "include" }
+                    ).then((r) => {
+                      if (r.ok) {
+                        setTemplates((prev) => prev.filter((x) => x.id !== t.id));
+                      }
+                    });
+                  }}
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <div className="corrida-builder-actions">
         <button type="button" className="btn-secondary btn-compact" onClick={() => addPasso("aquecer")}>
@@ -410,10 +470,51 @@ export function CorridaBuilder({
       ) : null}
 
       {erro ? <p className="field-error">{erro}</p> : null}
+      {msgTemplate ? (
+        <p className="text-muted" style={{ margin: 0, fontSize: "0.85rem" }}>
+          {msgTemplate}
+        </p>
+      ) : null}
 
       <div className="corrida-builder-footer">
         <button type="button" className="btn-secondary" onClick={onCancelar}>
           Cancelar
+        </button>
+        <button
+          type="button"
+          className="btn-secondary"
+          disabled={salvandoTemplate || estrutura.length === 0}
+          onClick={() => {
+            void (async () => {
+              setSalvandoTemplate(true);
+              setMsgTemplate(null);
+              try {
+                const res = await fetch("/api/professor/corrida/templates", {
+                  method: "POST",
+                  credentials: "include",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    nome: titulo.trim() || "Template de corrida",
+                    descricao: observacao.trim() || null,
+                    estrutura,
+                  }),
+                });
+                const body: unknown = await res.json().catch(() => null);
+                if (!res.ok) {
+                  setMsgTemplate("Não foi possível salvar o template.");
+                  return;
+                }
+                const criado = body as TreinoCorridaTemplateDTO;
+                setTemplates((prev) => [criado, ...prev]);
+                setMsgTemplate("Template salvo! Você pode reutilizar depois.");
+              } finally {
+                setSalvandoTemplate(false);
+              }
+            })();
+          }}
+        >
+          <Save size={16} />
+          {salvandoTemplate ? "Salvando..." : "Salvar template"}
         </button>
         <button
           type="button"

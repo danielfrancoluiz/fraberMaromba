@@ -3,42 +3,10 @@ import { getApiSession } from "@/lib/get-api-session";
 import { prisma } from "@/lib/prisma";
 import { assertAlunoDoProfessor } from "@/lib/sessao-treino-server";
 import {
-  dataISOFromDb,
-  isStatusTreinoCorrida,
+  mapTreinoCorridaRow,
   parseEstruturaCorrida,
   validarEstrutura,
-  type TreinoCorridaDTO,
 } from "@/lib/treino-corrida";
-
-function toDTO(
-  row: {
-    id: string;
-    alunoId: string;
-    professorId: string;
-    titulo: string;
-    data: Date;
-    observacao: string | null;
-    status: string;
-    estrutura: unknown;
-    criadoEm: Date;
-    atualizadoEm: Date;
-    aluno?: { nomeCompleto: string } | null;
-  }
-): TreinoCorridaDTO {
-  return {
-    id: row.id,
-    alunoId: row.alunoId,
-    professorId: row.professorId,
-    titulo: row.titulo,
-    data: dataISOFromDb(row.data),
-    observacao: row.observacao,
-    status: isStatusTreinoCorrida(row.status) ? row.status : "planejado",
-    estrutura: parseEstruturaCorrida(row.estrutura),
-    criadoEm: row.criadoEm.toISOString(),
-    atualizadoEm: row.atualizadoEm.toISOString(),
-    alunoNome: row.aluno?.nomeCompleto,
-  };
-}
 
 export async function GET(req: NextRequest) {
   try {
@@ -78,7 +46,7 @@ export async function GET(req: NextRequest) {
       take: 60,
     });
 
-    return NextResponse.json(rows.map(toDTO));
+    return NextResponse.json(rows.map(mapTreinoCorridaRow));
   } catch (error) {
     const mensagem =
       error instanceof Error ? error.message : "Erro ao listar treinos de corrida";
@@ -136,7 +104,7 @@ export async function POST(req: NextRequest) {
       include: { aluno: { select: { nomeCompleto: true } } },
     });
 
-    return NextResponse.json(toDTO(row), { status: 201 });
+    return NextResponse.json(mapTreinoCorridaRow(row), { status: 201 });
   } catch (error) {
     const mensagem =
       error instanceof Error ? error.message : "Erro ao criar treino de corrida";

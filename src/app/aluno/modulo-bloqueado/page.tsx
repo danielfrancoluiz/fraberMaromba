@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { LockKeyhole, Loader2 } from "lucide-react";
@@ -11,12 +11,14 @@ import {
   moduloVigente,
   type ModuloAlunoId,
 } from "@/lib/modulos-aluno";
+import { atualizarSessaoComTimeout } from "@/lib/atualizar-sessao";
 
 function Conteudo() {
   const params = useSearchParams();
   const router = useRouter();
-  const { data: session, update, status } = useSession();
+  const { update, status } = useSession();
   const [sincronizando, setSincronizando] = useState(true);
+  const jaRodou = useRef(false);
 
   const m = params.get("m") ?? "";
   const modulo: ModuloAlunoId | null = isModuloAlunoId(m) ? m : null;
@@ -24,12 +26,19 @@ function Conteudo() {
 
   useEffect(() => {
     if (status === "loading") return;
+    if (jaRodou.current) return;
+    jaRodou.current = true;
 
     let ativo = true;
 
     async function sincronizar() {
       try {
-        const sessao = await update();
+        const sessao = (await atualizarSessaoComTimeout(() => update())) as {
+          user?: {
+            modulosAtivos?: string[];
+            modulosVencimentos?: Partial<Record<string, string>>;
+          };
+        } | null;
         if (!ativo || !modulo) return;
 
         const venc = sessao?.user?.modulosVencimentos?.[modulo];

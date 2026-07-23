@@ -80,6 +80,26 @@ export default function Page() {
                   <span className="corrida-status-pill">{t.status}</span>
                 </div>
                 <CorridaEstruturaView estrutura={t.estrutura} compact />
+                {t.status === "concluido" || t.feedbackTexto || t.feedbackNota ? (
+                  <div className="corrida-feedback-prof">
+                    {t.status === "concluido" ? (
+                      <p className="corrida-feedback-ok" style={{ marginBottom: 4 }}>
+                        Concluído pelo aluno
+                        {t.concluidoEm
+                          ? ` em ${new Date(t.concluidoEm).toLocaleDateString("pt-BR")}`
+                          : ""}
+                      </p>
+                    ) : null}
+                    {t.feedbackNota ? (
+                      <p className="text-muted" style={{ margin: "0 0 4px", fontSize: "0.85rem" }}>
+                        Nota: {t.feedbackNota}/5
+                      </p>
+                    ) : null}
+                    {t.feedbackTexto ? (
+                      <p style={{ margin: 0, fontSize: "0.9rem" }}>&ldquo;{t.feedbackTexto}&rdquo;</p>
+                    ) : null}
+                  </div>
+                ) : null}
                 <div className="action-row" style={{ marginTop: 10 }}>
                   <button
                     type="button"

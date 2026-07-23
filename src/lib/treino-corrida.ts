@@ -57,10 +57,57 @@ export type TreinoCorridaDTO = {
   observacao: string | null;
   status: StatusTreinoCorrida;
   estrutura: EstruturaCorrida;
+  feedbackTexto?: string | null;
+  feedbackNota?: number | null;
+  concluidoEm?: string | null;
   criadoEm: string;
   atualizadoEm: string;
   alunoNome?: string;
 };
+
+export type TreinoCorridaTemplateDTO = {
+  id: string;
+  professorId: string;
+  nome: string;
+  descricao: string | null;
+  estrutura: EstruturaCorrida;
+  criadoEm: string;
+  atualizadoEm: string;
+};
+
+export function mapTreinoCorridaRow(row: {
+  id: string;
+  alunoId: string;
+  professorId: string;
+  titulo: string;
+  data: Date;
+  observacao: string | null;
+  status: string;
+  estrutura: unknown;
+  feedbackTexto?: string | null;
+  feedbackNota?: number | null;
+  concluidoEm?: Date | null;
+  criadoEm: Date;
+  atualizadoEm: Date;
+  aluno?: { nomeCompleto: string } | null;
+}): TreinoCorridaDTO {
+  return {
+    id: row.id,
+    alunoId: row.alunoId,
+    professorId: row.professorId,
+    titulo: row.titulo,
+    data: dataISOFromDb(row.data),
+    observacao: row.observacao,
+    status: isStatusTreinoCorrida(row.status) ? row.status : "planejado",
+    estrutura: parseEstruturaCorrida(row.estrutura),
+    feedbackTexto: row.feedbackTexto ?? null,
+    feedbackNota: row.feedbackNota ?? null,
+    concluidoEm: row.concluidoEm?.toISOString() ?? null,
+    criadoEm: row.criadoEm.toISOString(),
+    atualizadoEm: row.atualizadoEm.toISOString(),
+    alunoNome: row.aluno?.nomeCompleto,
+  };
+}
 
 export function novoId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
