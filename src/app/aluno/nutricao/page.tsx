@@ -120,7 +120,6 @@ export default function Page() {
             alunoId={alunoId}
             grupo="nutricao"
             titulo="Contratar nutrição"
-            subtitulo="Individualizada R$ 150 · Emagrecimento/Hipertrofia R$ 39 · Detox 7 dias R$ 19,30"
             modulosAtuais={session?.user?.modulosAtivos ?? []}
           />
         ) : (

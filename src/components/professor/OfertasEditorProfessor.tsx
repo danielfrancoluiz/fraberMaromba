@@ -116,7 +116,7 @@ export function OfertasEditorProfessor() {
       {msg ? <p className="text-muted" style={{ margin: 0 }}>{msg}</p> : null}
 
       {[
-        { titulo: "Treino (promo)", lista: treino },
+        { titulo: "Treino", lista: treino },
         { titulo: "Nutrição", lista: nutricao },
       ].map((bloco) => (
         <div key={bloco.titulo}>

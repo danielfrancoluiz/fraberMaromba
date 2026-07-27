@@ -4,6 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Check, CreditCard } from "lucide-react";
 import { PagamentoElements } from "@/components/pagamento/PagamentoElements";
 import { usePagamento } from "@/hooks/usePagamento";
+import {
+  formatarPrecoCentavos,
+  labelValidadeOferta,
+  resumoOfertas,
+} from "@/lib/ofertas-planos";
 
 type Oferta = {
   id: string;
@@ -16,17 +21,11 @@ type Oferta = {
   badge: string | null;
 };
 
-function formatarPreco(centavos: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(centavos / 100);
-}
-
 interface OfertasContratarProps {
   alunoId: string;
   grupo: "treino" | "nutricao";
   titulo?: string;
+  /** Se omitido, monta automaticamente a partir dos preços do banco. */
   subtitulo?: string;
   modulosAtuais?: string[];
 }
@@ -91,8 +90,16 @@ export function OfertasContratar({
 
   const ofertaSel = ofertasVisiveis.find((o) => o.id === escolhida) ?? null;
   const badgeGeral =
+    ofertas.find((o) => o.badge)?.badge ??
     ofertasVisiveis.find((o) => o.badge)?.badge ??
-    (grupo === "treino" ? "Mês promocional / inauguração" : null);
+    null;
+  const subtituloAuto =
+    subtitulo ??
+    (ofertas.length > 0
+      ? resumoOfertas(ofertas)
+      : grupo === "treino"
+        ? "Escolha a oferta de treino desejada."
+        : "Escolha o plano nutricional. Após a compra, preencha a anamnese.");
 
   return (
     <div className="page-stack ofertas-contratar">
@@ -106,10 +113,7 @@ export function OfertasContratar({
         </h1>
         {badgeGeral ? <p className="ofertas-badge">{badgeGeral}</p> : null}
         <p className="text-muted" style={{ margin: "8px 0 0" }}>
-          {subtitulo ??
-            (grupo === "treino"
-              ? "Escolha Musculação, Corrida ou o combo com desconto."
-              : "Escolha o plano nutricional. Após a compra, preencha a anamnese.")}
+          {subtituloAuto}
         </p>
       </div>
 
@@ -145,9 +149,9 @@ export function OfertasContratar({
                   <span className="oferta-card-desc text-muted">{o.descricao}</span>
                 ) : null}
                 <span className="oferta-card-preco">
-                  {formatarPreco(o.valorCentavos)}
+                  {formatarPrecoCentavos(o.valorCentavos)}
                   <span className="text-muted">
-                    {o.diasValidade === 7 ? " / 7 dias" : " / mês"}
+                    {labelValidadeOferta(o.diasValidade)}
                   </span>
                 </span>
               </button>
@@ -162,7 +166,7 @@ export function OfertasContratar({
             <strong>Selecionado:</strong> {ofertaSel.nome}
           </p>
           <p className="modulos-total" style={{ margin: "0 0 16px" }}>
-            {formatarPreco(ofertaSel.valorCentavos)}
+            {formatarPrecoCentavos(ofertaSel.valorCentavos)}
           </p>
 
           {erro ? <p className="field-error">{erro}</p> : null}

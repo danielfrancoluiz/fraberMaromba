@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { PerfilPageLayout } from "@/components/perfil/PerfilPageLayout";
@@ -9,12 +10,15 @@ import {
   resumoModulosAtivos,
   semPlanoContratado,
 } from "@/components/pagamento/ContratarPlanoBanner";
+import { resumoOfertas } from "@/lib/ofertas-planos";
 
 const STATUS_LABELS: Record<string, string> = {
   ativo_professor: "Ativo (professor)",
   ativo_plataforma: "Ativo (plataforma)",
   inativo: "Inativo",
 };
+
+type OfertaResumo = { nome: string; valorCentavos: number };
 
 export default function Page() {
   const { data: session } = useSession();
@@ -27,6 +31,21 @@ export default function Page() {
     planoVenceEm: session?.user?.planoVenceEm,
     modulosAtivos: modulos,
   });
+  const [resumoTreino, setResumoTreino] = useState<string | null>(null);
+
+  useEffect(() => {
+    let ativo = true;
+    void fetch("/api/ofertas?grupo=treino", { credentials: "include" })
+      .then((r) => r.json())
+      .then((body: unknown) => {
+        if (!ativo || !Array.isArray(body) || body.length === 0) return;
+        setResumoTreino(resumoOfertas(body as OfertaResumo[]));
+      })
+      .catch(() => undefined);
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   return (
     <PerfilPageLayout nome={nome} email={email} badge="Aluno" badgeVariant="aluno">
@@ -52,7 +71,7 @@ export default function Page() {
         <p className="text-muted" style={{ margin: "4px 0 0", fontSize: "0.85rem" }}>
           {session?.user?.planoVenceEm
             ? `Válido até ${new Date(session.user.planoVenceEm).toLocaleDateString("pt-BR")}`
-            : "Promo: Musculação R$ 49 · Corrida R$ 29 · Combo R$ 69"}
+            : (resumoTreino ?? "Veja as ofertas atuais em Planos")}
         </p>
       </Link>
 

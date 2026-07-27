@@ -11,3 +11,17 @@ export function formatarPrecoCentavos(centavos: number): string {
     currency: "BRL",
   }).format(centavos / 100);
 }
+
+export function labelValidadeOferta(dias: number): string {
+  if (dias === 30) return " / mês";
+  return ` / ${dias} dias`;
+}
+
+/** Resumo "Nome R$ X · Nome R$ Y" a partir das ofertas do banco. */
+export function resumoOfertas(
+  ofertas: { nome: string; valorCentavos: number }[]
+): string {
+  return ofertas
+    .map((o) => `${o.nome} ${formatarPrecoCentavos(o.valorCentavos)}`)
+    .join(" · ");
+}

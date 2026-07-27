@@ -22,8 +22,7 @@ export default function Page() {
           <OfertasContratar
             alunoId={alunoId}
             grupo="treino"
-            titulo="Treino — mês promocional"
-            subtitulo="Musculação R$ 49 · Corrida R$ 29 · Combo R$ 69"
+            titulo="Contratar treino"
             modulosAtuais={session?.user?.modulosAtivos ?? []}
           />
         ) : (
