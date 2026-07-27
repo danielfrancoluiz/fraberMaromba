@@ -258,6 +258,8 @@ model Pagamento {
   planoId         String
   /// Módulos cobrados neste pagamento (aluno).
   modulos         String[] @default([])
+  /// Oferta comercial escolhida (aluno): ex. treino_musculacao, nutricao_detox_7d
+  ofertaId        String?
   metodoPagamento String?
   stripeSessionId String?  @unique
   stripePaymentIntentId String? @unique
@@ -289,12 +291,30 @@ model ConfigApp {
   atualizadoEm        DateTime @updatedAt
 }
 
-/// Preço mensal conforme quantidade de módulos escolhidos (1, 2 ou 3).
+/// Preço mensal conforme quantidade de módulos (legado — preferir OfertaPlano).
 model PrecoPacoteModulos {
   quantidade    Int     @id
   valorCentavos Int
   diasValidade  Int     @default(30)
   ativo         Boolean @default(true)
+  atualizadoEm  DateTime @updatedAt
+}
+
+/// Ofertas comerciais do aluno (treino / nutrição). Editáveis no app do professor.
+model OfertaPlano {
+  id            String   @id
+  /// treino | nutricao
+  grupo         String
+  nome          String
+  descricao     String?
+  valorCentavos Int
+  diasValidade  Int      @default(30)
+  /// Módulos liberados: musculacao | corrida | nutricao
+  modulos       String[] @default([])
+  ordem         Int      @default(0)
+  ativo         Boolean  @default(true)
+  /// Ex.: "Mês promocional / inauguração"
+  badge         String?
   atualizadoEm  DateTime @updatedAt
 }
 

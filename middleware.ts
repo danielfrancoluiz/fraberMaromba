@@ -48,6 +48,7 @@ export default withAuth(
       const livres = [
         "/aluno/planos",
         "/aluno/perfil",
+        "/aluno/nutricao",
         "/aluno/inativo",
         "/aluno/modulo-bloqueado",
         "/aluno/login",
@@ -80,13 +81,7 @@ export default withAuth(
           }
         }
 
-        if (pathname.startsWith("/aluno/nutricao")) {
-          if (!tokenTemModulo(token ?? {}, "nutricao")) {
-            return NextResponse.redirect(
-              new URL("/aluno/modulo-bloqueado?m=nutricao", req.url)
-            );
-          }
-        }
+        // Nutrição fica liberada para ver ofertas / anamnese (compra na própria aba).
       }
     }
 

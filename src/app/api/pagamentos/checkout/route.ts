@@ -6,21 +6,21 @@ import {
   buscarPlanoPorId,
   calcularDataVencimentoPorDias,
 } from "@/lib/planos-server";
-import { buscarPrecoPorQuantidade } from "@/lib/precos-modulos-server";
+import { buscarOfertaPorId } from "@/lib/ofertas-planos-server";
 import {
-  labelsModulos,
   modulosVigentes,
   normalizarModulos,
   parseModulosVencimentos,
-  planoIdPorQuantidade,
 } from "@/lib/modulos-aluno";
 import { assertAlunoDoProfessor, resolveAlunoId } from "@/lib/sessao-treino-server";
 
 interface CheckoutBody {
-  /** Professor: id do plano da plataforma. Aluno: opcional se enviar modulos. */
+  /** Professor: id do plano da plataforma. */
   planoId?: string;
   alunoId?: string;
-  /** Módulos escolhidos pelo aluno. */
+  /** Oferta comercial do aluno (treino/nutrição). */
+  ofertaId?: string;
+  /** Legado. */
   modulos?: string[];
 }
 
@@ -30,6 +30,7 @@ function isCheckoutBody(value: unknown): value is CheckoutBody {
   return (
     (d.planoId === undefined || typeof d.planoId === "string") &&
     (d.alunoId === undefined || typeof d.alunoId === "string") &&
+    (d.ofertaId === undefined || typeof d.ofertaId === "string") &&
     (d.modulos === undefined ||
       (Array.isArray(d.modulos) && d.modulos.every((m) => typeof m === "string")))
   );
@@ -66,10 +67,16 @@ export async function POST(req: NextRequest) {
     }
 
     const alunoIdBody = body.alunoId?.trim();
+    const ofertaId = body.ofertaId?.trim();
     const modulosEscolhidos = normalizarModulos(body.modulos ?? []);
 
     // --- Professor contratando o próprio plano ---
-    if (session.user.role === "professor" && !alunoIdBody && modulosEscolhidos.length === 0) {
+    if (
+      session.user.role === "professor" &&
+      !alunoIdBody &&
+      !ofertaId &&
+      modulosEscolhidos.length === 0
+    ) {
       const planoId = body.planoId?.trim();
       if (!planoId) {
         return NextResponse.json({ error: "Plano não informado" }, { status: 400 });
@@ -106,13 +113,11 @@ export async function POST(req: NextRequest) {
         plano.diasValidade,
         professor.planoVenceEm
       );
-      const valorReais = plano.valorCentavos / 100;
 
       const pagamento = await prisma.pagamento.create({
         data: {
-          alunoId: null,
           professorId,
-          valor: valorReais,
+          valor: plano.valorCentavos / 100,
           status: "pendente",
           planoId: plano.id,
           metodoPagamento: "cartao",
@@ -124,7 +129,7 @@ export async function POST(req: NextRequest) {
         amount: plano.valorCentavos,
         currency: "brl",
         automatic_payment_methods: { enabled: true },
-        description: `Fraber — ${plano.nome} (professor)`,
+        description: `Fraber — ${plano.nome}`,
         receipt_email: professor.email || undefined,
         metadata: {
           pagamentoId: pagamento.id,
@@ -152,10 +157,10 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // --- Aluno: módulos mensais ---
-    if (modulosEscolhidos.length === 0) {
+    // --- Aluno: oferta comercial ---
+    if (!ofertaId) {
       return NextResponse.json(
-        { error: "Selecione ao menos um módulo (Musculação, Corrida ou Nutrição)." },
+        { error: "Selecione uma oferta para contratar." },
         { status: 400 }
       );
     }
@@ -176,6 +181,11 @@ export async function POST(req: NextRequest) {
       }
     } else {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    }
+
+    const oferta = await buscarOfertaPorId(ofertaId);
+    if (!oferta || oferta.valorCentavos <= 0) {
+      return NextResponse.json({ error: "Oferta não disponível." }, { status: 400 });
     }
 
     const aluno = await prisma.aluno.findUnique({
@@ -202,31 +212,24 @@ export async function POST(req: NextRequest) {
       }
     }
     const jaVigentes = new Set(modulosVigentes(venc));
-    const modulosNovos = modulosEscolhidos.filter((m) => !jaVigentes.has(m));
+    const modulosOferta = normalizarModulos(oferta.modulos);
+    const modulosNovos = modulosOferta.filter((m) => !jaVigentes.has(m));
 
-    if (modulosNovos.length === 0) {
+    if (modulosNovos.length === 0 && oferta.grupo === "treino") {
       return NextResponse.json(
         {
           error:
-            "Selecione ao menos um módulo novo. Os já ativos não podem ser cobrados de novo nesta compra.",
+            "Você já possui os módulos desta oferta ativos neste período.",
         },
         { status: 400 }
       );
     }
 
-    const preco = await buscarPrecoPorQuantidade(modulosNovos.length);
-    if (!preco || !preco.ativo || preco.valorCentavos <= 0) {
-      return NextResponse.json(
-        { error: "Preço do pacote não configurado." },
-        { status: 400 }
-      );
-    }
+    const modulosCobrados =
+      oferta.grupo === "nutricao" ? modulosOferta : modulosNovos;
 
-    // Nova compra = novo período (não estende o vencimento dos módulos antigos).
-    const dataVencimento = calcularDataVencimentoPorDias(preco.diasValidade);
-    const planoId = planoIdPorQuantidade(modulosNovos.length);
-    const valorReais = preco.valorCentavos / 100;
-    const nomes = labelsModulos(modulosNovos);
+    const dataVencimento = calcularDataVencimentoPorDias(oferta.diasValidade);
+    const valorReais = oferta.valorCentavos / 100;
 
     const pagamento = await prisma.pagamento.create({
       data: {
@@ -234,26 +237,28 @@ export async function POST(req: NextRequest) {
         professorId: aluno.professorId,
         valor: valorReais,
         status: "pendente",
-        planoId,
-        modulos: modulosNovos,
+        planoId: oferta.id,
+        ofertaId: oferta.id,
+        modulos: modulosCobrados,
         metodoPagamento: "cartao",
         dataVencimento,
       },
     });
 
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: preco.valorCentavos,
+      amount: oferta.valorCentavos,
       currency: "brl",
       automatic_payment_methods: { enabled: true },
-      description: `Fraber — ${nomes} (mensal)`,
+      description: `Fraber — ${oferta.nome}`,
       receipt_email: aluno.email || undefined,
       metadata: {
         pagamentoId: pagamento.id,
         alunoId: aluno.id,
-        planoId,
+        planoId: oferta.id,
+        ofertaId: oferta.id,
         professorId: aluno.professorId,
         tipo: "aluno",
-        modulos: modulosNovos.join(","),
+        modulos: modulosCobrados.join(","),
       },
     });
 

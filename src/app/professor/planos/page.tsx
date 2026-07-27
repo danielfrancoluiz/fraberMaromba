@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { PageTopBar } from "@/components/ui/PageTopBar";
 import { PlanosContratar } from "@/components/pagamento/PlanosContratar";
+import { OfertasEditorProfessor } from "@/components/professor/OfertasEditorProfessor";
 
 export default function Page() {
   const router = useRouter();
@@ -14,9 +15,10 @@ export default function Page() {
       <div className="page-container page-stack">
         <PageTopBar
           title="Planos"
-          subtitle="Assinatura da plataforma Fraber"
+          subtitle="Assinatura da plataforma e ofertas dos alunos"
           onBack={() => router.push("/professor/dashboard")}
         />
+        <OfertasEditorProfessor />
         <PlanosContratar
           planoAtualId={session?.user?.planoId}
           titulo="Planos para professores"

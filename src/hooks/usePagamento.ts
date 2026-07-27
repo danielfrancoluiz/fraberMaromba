@@ -4,13 +4,14 @@ import { useState } from "react";
 import { isStripePublishableConfigured } from "@/lib/stripe-browser";
 
 interface UsePagamentoProps {
-  /** Professor: id do plano. Aluno: omitir e usar modulos. */
+  /** Professor: id do plano. */
   planoId?: string;
   alunoId?: string;
-  modulos?: string[];
+  /** Oferta comercial (aluno). */
+  ofertaId?: string;
 }
 
-export function usePagamento({ alunoId, planoId, modulos }: UsePagamentoProps) {
+export function usePagamento({ alunoId, planoId, ofertaId }: UsePagamentoProps) {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -29,11 +30,11 @@ export function usePagamento({ alunoId, planoId, modulos }: UsePagamentoProps) {
       const payload: {
         planoId?: string;
         alunoId?: string;
-        modulos?: string[];
+        ofertaId?: string;
       } = {};
       if (planoId) payload.planoId = planoId;
       if (alunoId) payload.alunoId = alunoId;
-      if (modulos?.length) payload.modulos = modulos;
+      if (ofertaId) payload.ofertaId = ofertaId;
 
       const res = await fetch("/api/pagamentos/checkout", {
         method: "POST",

@@ -52,7 +52,7 @@ export default function Page() {
         <p className="text-muted" style={{ margin: "4px 0 0", fontSize: "0.85rem" }}>
           {session?.user?.planoVenceEm
             ? `Válido até ${new Date(session.user.planoVenceEm).toLocaleDateString("pt-BR")}`
-            : "1 módulo R$ 19,90 · 2 R$ 29,90 · 3 R$ 39,90 / mês"}
+            : "Promo: Musculação R$ 49 · Corrida R$ 29 · Combo R$ 69"}
         </p>
       </Link>
 

@@ -1,11 +1,10 @@
 "use client";
 
-import { ModulosContratar } from "@/components/pagamento/ModulosContratar";
+import { OfertasContratar } from "@/components/pagamento/OfertasContratar";
 import { HistoricoPagamentos } from "@/components/pagamento/HistoricoPagamentos";
 
 interface PagamentoCardProps {
   alunoId: string;
-  /** Compat: ignorado — módulos vêm do pagamento. */
   planoAtual?: string;
   modulosAtuais?: string[];
 }
@@ -16,8 +15,19 @@ export function PagamentoCard({
 }: PagamentoCardProps) {
   return (
     <div className="pagamento-section">
-      <ModulosContratar alunoId={alunoId} modulosAtuais={modulosAtuais} />
-      <HistoricoPagamentos alunoId={alunoId} titulo="Módulos do aluno" />
+      <OfertasContratar
+        alunoId={alunoId}
+        grupo="treino"
+        titulo="Treino do aluno"
+        modulosAtuais={modulosAtuais}
+      />
+      <OfertasContratar
+        alunoId={alunoId}
+        grupo="nutricao"
+        titulo="Nutrição do aluno"
+        modulosAtuais={modulosAtuais}
+      />
+      <HistoricoPagamentos alunoId={alunoId} titulo="Contratações do aluno" />
     </div>
   );
 }

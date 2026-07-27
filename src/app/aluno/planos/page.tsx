@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { PageTopBar } from "@/components/ui/PageTopBar";
-import { ModulosContratar } from "@/components/pagamento/ModulosContratar";
+import { OfertasContratar } from "@/components/pagamento/OfertasContratar";
 
 export default function Page() {
   const router = useRouter();
@@ -15,14 +15,16 @@ export default function Page() {
       <div className="page-container page-stack">
         <PageTopBar
           title="Planos"
-          subtitle="Contrate ou renove seus módulos mensais"
+          subtitle="Contrate ou renove seus módulos de treino"
           onBack={() => router.push("/aluno/perfil")}
         />
         {alunoId ? (
-          <ModulosContratar
+          <OfertasContratar
             alunoId={alunoId}
+            grupo="treino"
+            titulo="Treino — mês promocional"
+            subtitulo="Musculação R$ 49 · Corrida R$ 29 · Combo R$ 69"
             modulosAtuais={session?.user?.modulosAtivos ?? []}
-            modulosVencimentos={session?.user?.modulosVencimentos ?? {}}
           />
         ) : (
           <p className="text-muted">

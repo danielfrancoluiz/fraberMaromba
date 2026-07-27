@@ -10,6 +10,7 @@ import {
 } from "@/lib/modulos-aluno";
 import { prisma } from "@/lib/prisma";
 import { assertAlunoDoProfessor, resolveAlunoId } from "@/lib/sessao-treino-server";
+import { listarOfertas } from "@/lib/ofertas-planos-server";
 
 export async function GET(req: NextRequest) {
   try {
@@ -63,15 +64,26 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const pagamentos = await prisma.pagamento.findMany({
-      where: { alunoId, status: "pago" },
-      select: {
-        modulos: true,
-        dataPagamento: true,
-        criadoEm: true,
-      },
-      orderBy: { criadoEm: "asc" },
-    });
+    const [pagamentos, ofertas] = await Promise.all([
+      prisma.pagamento.findMany({
+        where: { alunoId, status: "pago" },
+        select: {
+          id: true,
+          modulos: true,
+          ofertaId: true,
+          planoId: true,
+          valor: true,
+          dataPagamento: true,
+          dataVencimento: true,
+          criadoEm: true,
+        },
+        orderBy: { criadoEm: "desc" },
+        take: 40,
+      }),
+      listarOfertas({ apenasAtivas: false }),
+    ]);
+
+    const ofertaNome = new Map(ofertas.map((o) => [o.id, o.nome]));
 
     const mesesPorModulo: Partial<Record<ModuloAlunoId, number>> = {};
     for (const p of pagamentos) {
@@ -86,13 +98,11 @@ export async function GET(req: NextRequest) {
       ),
     ]);
 
-    // Mantém ordem canônica musculação → corrida → nutrição
     const modulos = MODULOS_ALUNO.filter((m) => idsComHistorico.has(m.id)).map(
       (m) => {
         const venceEm = venc[m.id] ?? null;
         const ativo = moduloVigente(venceEm);
         const pagos = mesesPorModulo[m.id] ?? 0;
-        // Legado: pagamento antigo sem array `modulos` — se há vencimento, conta ao menos 1.
         const mesesContratados = Math.max(pagos, venceEm ? 1 : 0);
         return {
           id: m.id,
@@ -104,7 +114,29 @@ export async function GET(req: NextRequest) {
       }
     );
 
-    return NextResponse.json({ modulos });
+    const contratacoes = pagamentos.map((p) => {
+      const oid = p.ofertaId || p.planoId;
+      const nome =
+        ofertaNome.get(oid) ||
+        (p.modulos.length ? p.modulos.map(labelModulo).join(" + ") : oid);
+      return {
+        id: p.id,
+        ofertaId: p.ofertaId,
+        planoId: p.planoId,
+        nome,
+        valor: p.valor,
+        modulos: p.modulos,
+        dataPagamento: p.dataPagamento?.toISOString() ?? p.criadoEm.toISOString(),
+        dataVencimento: p.dataVencimento.toISOString(),
+        grupo: oid.startsWith("nutricao")
+          ? "nutricao"
+          : oid.startsWith("treino")
+            ? "treino"
+            : "outro",
+      };
+    });
+
+    return NextResponse.json({ modulos, contratacoes });
   } catch (error) {
     const mensagem =
       error instanceof Error ? error.message : "Erro ao listar módulos";

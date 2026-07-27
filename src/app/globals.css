@@ -4939,3 +4939,114 @@ body {
 .corrida-template-row .corrida-modelo-btn {
   flex: 1;
 }
+.ofertas-badge {
+  display: inline-block;
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fraber-accent);
+}
+
+.ofertas-lista {
+  display: grid;
+  gap: 10px;
+}
+
+.oferta-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
+  padding: 14px;
+  border-radius: var(--fraber-radius-sm);
+  border: 1px solid var(--fraber-border);
+  background: var(--fraber-surface);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.oferta-card--ativo {
+  border-color: var(--fraber-accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fraber-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--fraber-accent) 10%, var(--fraber-surface));
+}
+
+.oferta-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.oferta-card-nome {
+  font-weight: 700;
+  font-size: 1.02rem;
+}
+
+.oferta-card-desc {
+  font-size: 0.85rem;
+}
+
+.oferta-card-preco {
+  margin-top: 4px;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.nutricao-form-card {
+  overflow: hidden;
+}
+
+.nutricao-form-frame-wrap {
+  border-radius: var(--fraber-radius-sm);
+  border: 1px solid var(--fraber-border);
+  overflow: hidden;
+  background: #fff;
+  min-height: 480px;
+}
+
+.nutricao-form-frame {
+  display: block;
+  width: 100%;
+  min-height: 520px;
+  border: 0;
+}
+
+.ofertas-editor-lista {
+  display: grid;
+  gap: 12px;
+}
+
+.ofertas-editor-item {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--fraber-radius-sm);
+  border: 1px solid var(--fraber-border);
+  background: var(--fraber-bg-soft);
+}
+
+.ofertas-editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.ofertas-editor-ativo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 640px) {
+  .ofertas-editor-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -10,6 +10,15 @@ export interface ModuloResumoItem {
   ativo: boolean;
 }
 
+export interface ContratacaoItem {
+  id: string;
+  nome: string;
+  valor: number;
+  grupo: string;
+  dataPagamento: string;
+  dataVencimento: string;
+}
+
 interface HistoricoPagamentosProps {
   alunoId: string;
   titulo?: string;
@@ -27,6 +36,10 @@ function formatarData(iso: string): string {
   }
 }
 
+function formatarValor(valor: number): string {
+  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
 function labelMeses(qtd: number): string {
   if (qtd <= 0) return "Nenhum mês pago ainda";
   if (qtd === 1) return "1 mês contratado";
@@ -35,9 +48,10 @@ function labelMeses(qtd: number): string {
 
 export function HistoricoPagamentos({
   alunoId,
-  titulo = "Seus módulos",
+  titulo = "O que você contratou",
 }: HistoricoPagamentosProps) {
   const [itens, setItens] = useState<ModuloResumoItem[]>([]);
+  const [contratacoes, setContratacoes] = useState<ContratacaoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -58,14 +72,21 @@ export function HistoricoPagamentos({
           "error" in body &&
           typeof (body as { error: string }).error === "string"
             ? (body as { error: string }).error
-            : "Erro ao carregar módulos";
+            : "Erro ao carregar";
         throw new Error(msg);
       }
-      const dados = (await res.json()) as { modulos?: ModuloResumoItem[] };
+      const dados = (await res.json()) as {
+        modulos?: ModuloResumoItem[];
+        contratacoes?: ContratacaoItem[];
+      };
       setItens(Array.isArray(dados.modulos) ? dados.modulos : []);
+      setContratacoes(
+        Array.isArray(dados.contratacoes) ? dados.contratacoes : []
+      );
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro ao carregar");
       setItens([]);
+      setContratacoes([]);
     } finally {
       setLoading(false);
     }
@@ -87,31 +108,66 @@ export function HistoricoPagamentos({
         <p className="text-accent" style={{ margin: 0 }}>
           {erro}
         </p>
-      ) : itens.length === 0 ? (
+      ) : itens.length === 0 && contratacoes.length === 0 ? (
         <p className="text-muted" style={{ margin: 0 }}>
-          Nenhum módulo contratado ainda.
+          Nenhuma contratação ainda.
         </p>
       ) : (
-        <ul className="historico-pagamentos-lista">
-          {itens.map((item) => (
-            <li key={item.id} className="historico-pagamentos-item">
-              <div className="historico-pagamentos-item-top">
-                <strong>{item.label}</strong>
-                <span
-                  className={`historico-pagamentos-status historico-pagamentos-status--${item.ativo ? "pago" : "cancelado"}`}
-                >
-                  {item.ativo ? "Ativo" : "Encerrado"}
-                </span>
-              </div>
-              <p className="text-muted historico-pagamentos-meta">
-                {labelMeses(item.mesesContratados)}
-                {item.venceEm
-                  ? ` · ${item.ativo ? "Termina em" : "Terminou em"} ${formatarData(item.venceEm)}`
-                  : null}
+        <div className="page-stack" style={{ gap: 14 }}>
+          {itens.length > 0 ? (
+            <div>
+              <p className="field-label" style={{ marginBottom: 8 }}>
+                Acesso ativo
               </p>
-            </li>
-          ))}
-        </ul>
+              <ul className="historico-pagamentos-lista">
+                {itens.map((item) => (
+                  <li key={item.id} className="historico-pagamentos-item">
+                    <div className="historico-pagamentos-item-top">
+                      <strong>{item.label}</strong>
+                      <span
+                        className={`historico-pagamentos-status historico-pagamentos-status--${item.ativo ? "pago" : "cancelado"}`}
+                      >
+                        {item.ativo ? "Ativo" : "Encerrado"}
+                      </span>
+                    </div>
+                    <p className="text-muted historico-pagamentos-meta">
+                      {labelMeses(item.mesesContratados)}
+                      {item.venceEm
+                        ? ` · ${item.ativo ? "Termina em" : "Terminou em"} ${formatarData(item.venceEm)}`
+                        : null}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {contratacoes.length > 0 ? (
+            <div>
+              <p className="field-label" style={{ marginBottom: 8 }}>
+                Compras realizadas
+              </p>
+              <ul className="historico-pagamentos-lista">
+                {contratacoes.map((c) => (
+                  <li key={c.id} className="historico-pagamentos-item">
+                    <div className="historico-pagamentos-item-top">
+                      <strong>{c.nome}</strong>
+                      <span className="historico-pagamentos-status historico-pagamentos-status--pago">
+                        {formatarValor(c.valor)}
+                      </span>
+                    </div>
+                    <p className="text-muted historico-pagamentos-meta">
+                      Pago em {formatarData(c.dataPagamento)}
+                      {c.dataVencimento
+                        ? ` · válido até ${formatarData(c.dataVencimento)}`
+                        : null}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
       )}
     </section>
   );
