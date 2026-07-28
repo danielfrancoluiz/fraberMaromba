@@ -24,6 +24,7 @@ export default function Page() {
             grupo="treino"
             titulo="Contratar treino"
             modulosAtuais={session?.user?.modulosAtivos ?? []}
+            modulosVencimentos={session?.user?.modulosVencimentos ?? null}
           />
         ) : (
           <p className="text-muted">

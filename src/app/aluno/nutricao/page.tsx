@@ -121,6 +121,7 @@ export default function Page() {
             grupo="nutricao"
             titulo="Contratar nutrição"
             modulosAtuais={session?.user?.modulosAtivos ?? []}
+            modulosVencimentos={session?.user?.modulosVencimentos ?? null}
           />
         ) : (
           <p className="text-muted">Faça login como aluno para contratar.</p>

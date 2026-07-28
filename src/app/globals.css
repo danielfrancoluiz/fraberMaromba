@@ -4971,10 +4971,17 @@ body {
   touch-action: manipulation;
 }
 
-.oferta-card--ativo {
-  border-color: var(--fraber-accent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fraber-accent) 40%, transparent);
-  background: color-mix(in srgb, var(--fraber-accent) 10%, var(--fraber-surface));
+.oferta-card--disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.oferta-card-status {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--fraber-accent);
 }
 
 .oferta-card-top {

@@ -21,9 +21,11 @@ function tokenTemPlanoPago(token: TokenModulos): boolean {
 }
 
 function tokenTemModulo(token: TokenModulos, modulo: ModuloAlunoId): boolean {
-  const venceEm = token.modulosVencimentos?.[modulo];
-  if (venceEm) {
-    return moduloVigente(venceEm);
+  const venc = token.modulosVencimentos;
+  // Com mapa de vencimentos, só o módulo explicitamente vigente libera.
+  // (Antes, ter musculação fazia o fallback liberar corrida via array antigo no JWT.)
+  if (venc && Object.keys(venc).length > 0) {
+    return moduloVigente(venc[modulo]);
   }
   if (!tokenTemPlanoPago(token)) return false;
   return (token.modulosAtivos ?? []).includes(modulo);
