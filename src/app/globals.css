@@ -573,12 +573,26 @@ body {
   font-size: 0.625rem;
   font-weight: 600;
   color: var(--fraber-text-muted);
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  background: transparent;
+  border-radius: 0.75rem;
 }
 
-.aluno-shell .bottom-nav-item--active {
+.aluno-shell .bottom-nav-item:hover,
+.aluno-shell .bottom-nav-item:focus,
+.aluno-shell .bottom-nav-item:active {
+  color: var(--fraber-text-muted);
+  background: transparent;
+  outline: none;
+}
+
+.aluno-shell .bottom-nav-item--active,
+.aluno-shell .bottom-nav-item--active:hover,
+.aluno-shell .bottom-nav-item--active:focus,
+.aluno-shell .bottom-nav-item--active:active {
   color: var(--fraber-accent);
   background: rgba(224, 32, 32, 0.1);
-  border-radius: 0.75rem;
 }
 
 .aluno-shell .bottom-nav-indicator {

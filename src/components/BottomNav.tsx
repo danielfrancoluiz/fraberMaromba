@@ -106,6 +106,10 @@ export function BottomNav({ role }: BottomNavProps) {
               className={`bottom-nav-item ${active ? "bottom-nav-item--active" : ""}`}
               aria-label={item.label}
               aria-current={active ? "page" : undefined}
+              onClick={(e) => {
+                // Evita ícone anterior ficar “preso” vermelho no mobile (:focus).
+                (e.currentTarget as HTMLAnchorElement).blur();
+              }}
             >
               <Icon size={22} strokeWidth={active ? 2.5 : 1.8} />
               <span>{item.label}</span>

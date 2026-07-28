@@ -20,17 +20,6 @@ function tokenTemPlanoPago(token: TokenModulos): boolean {
   return (token.modulosAtivos?.length ?? 0) > 0;
 }
 
-function tokenTemModulo(token: TokenModulos, modulo: ModuloAlunoId): boolean {
-  const venc = token.modulosVencimentos;
-  // Com mapa de vencimentos, só o módulo explicitamente vigente libera.
-  // (Antes, ter musculação fazia o fallback liberar corrida via array antigo no JWT.)
-  if (venc && Object.keys(venc).length > 0) {
-    return moduloVigente(venc[modulo]);
-  }
-  if (!tokenTemPlanoPago(token)) return false;
-  return (token.modulosAtivos ?? []).includes(modulo);
-}
-
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
@@ -53,6 +42,8 @@ export default withAuth(
         "/aluno/perfil",
         "/aluno/nutricao",
         "/aluno/corrida",
+        "/aluno/treinos",
+        "/aluno/treino",
         "/aluno/inativo",
         "/aluno/modulo-bloqueado",
         "/aluno/login",
@@ -66,18 +57,7 @@ export default withAuth(
           return NextResponse.redirect(new URL("/aluno/planos", req.url));
         }
 
-        if (
-          pathname.startsWith("/aluno/treinos") ||
-          pathname.startsWith("/aluno/treino")
-        ) {
-          if (!tokenTemModulo(token ?? {}, "musculacao")) {
-            return NextResponse.redirect(
-              new URL("/aluno/modulo-bloqueado?m=musculacao", req.url)
-            );
-          }
-        }
-
-        // Corrida e nutrição: a própria página mostra contratar ou conteúdo.
+        // Módulos (musculação/corrida/nutrição): a própria página trata o acesso.
       }
     }
 
