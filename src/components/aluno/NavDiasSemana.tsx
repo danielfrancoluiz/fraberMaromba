@@ -38,16 +38,33 @@ export function NavDiasSemana({
   }, [diaSelecionado]);
 
   return (
-    <nav ref={navRef} className="nav-dias-semana" aria-label="Dias da semana">
+    <nav
+      ref={navRef}
+      className="nav-dias-semana"
+      aria-label="Dias da semana"
+      role="tablist"
+    >
       {dias.map((dia) => {
         const selecionado = dia === diaSelecionado;
         return (
           <button
             key={dia}
             type="button"
+            role="tab"
             data-dia={dia}
-            onClick={() => onChange(dia)}
-            className={`nav-dia-btn ${selecionado ? "nav-dia-btn--active" : "nav-dia-btn--inactive"}`}
+            data-selected={selecionado ? "true" : "false"}
+            aria-selected={selecionado}
+            tabIndex={selecionado ? 0 : -1}
+            onClick={(e) => {
+              onChange(dia);
+              // Evita dia anterior ficar com estilo de :focus/:hover no mobile.
+              e.currentTarget.blur();
+            }}
+            className={
+              selecionado
+                ? "nav-dia-btn nav-dia-btn--active"
+                : "nav-dia-btn nav-dia-btn--inactive"
+            }
           >
             {labelDia(dia)}
           </button>
