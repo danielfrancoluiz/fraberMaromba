@@ -24,6 +24,15 @@ function Conteudo() {
   const modulo: ModuloAlunoId | null = isModuloAlunoId(m) ? m : null;
   const nome = modulo ? labelModulo(modulo) : "este módulo";
 
+  // Se a sessão ficar em loading, não trava a tela para sempre.
+  useEffect(() => {
+    if (status !== "loading") return;
+    const t = window.setTimeout(() => {
+      setSincronizando(false);
+    }, 6000);
+    return () => window.clearTimeout(t);
+  }, [status]);
+
   useEffect(() => {
     if (status === "loading") return;
     if (jaRodou.current) return;

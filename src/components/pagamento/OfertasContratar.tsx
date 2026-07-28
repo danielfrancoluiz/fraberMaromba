@@ -41,6 +41,7 @@ export function OfertasContratar({
   const [ofertas, setOfertas] = useState<Oferta[]>([]);
   const [escolhida, setEscolhida] = useState<string | null>(null);
   const [loadingLista, setLoadingLista] = useState(true);
+  const [erroLista, setErroLista] = useState<string | null>(null);
 
   const {
     loading,
@@ -55,16 +56,32 @@ export function OfertasContratar({
 
   useEffect(() => {
     let ativo = true;
+    setErroLista(null);
     void fetch(`/api/ofertas?grupo=${encodeURIComponent(grupo)}`, {
       credentials: "include",
     })
-      .then((r) => r.json())
-      .then((body: unknown) => {
+      .then(async (r) => {
+        const body: unknown = await r.json().catch(() => null);
         if (!ativo) return;
+        if (!r.ok) {
+          const msg =
+            body &&
+            typeof body === "object" &&
+            "error" in body &&
+            typeof (body as { error: string }).error === "string"
+              ? (body as { error: string }).error
+              : "Não foi possível carregar as ofertas.";
+          setErroLista(msg);
+          setOfertas([]);
+          return;
+        }
         setOfertas(Array.isArray(body) ? (body as Oferta[]) : []);
       })
       .catch(() => {
-        if (ativo) setOfertas([]);
+        if (ativo) {
+          setOfertas([]);
+          setErroLista("Não foi possível carregar as ofertas.");
+        }
       })
       .finally(() => {
         if (ativo) setLoadingLista(false);
@@ -119,6 +136,8 @@ export function OfertasContratar({
 
       {loadingLista ? (
         <p className="text-muted">Carregando ofertas...</p>
+      ) : erroLista ? (
+        <p className="field-error">{erroLista}</p>
       ) : ofertasVisiveis.length === 0 ? (
         <p className="text-muted">
           {grupo === "treino"
