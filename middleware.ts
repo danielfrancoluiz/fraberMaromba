@@ -48,6 +48,7 @@ export default withAuth(
       }
 
       const livres = [
+        "/aluno/dashboard",
         "/aluno/planos",
         "/aluno/perfil",
         "/aluno/nutricao",

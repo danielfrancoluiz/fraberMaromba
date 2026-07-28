@@ -169,7 +169,7 @@ export function AlunoHome360() {
           detalhe={temMusc && vencMusc ? `até ${vencMusc}` : null}
         />
         <ModuloQuickLink
-          href={temCorrida ? "/aluno/corrida" : "/aluno/planos"}
+          href="/aluno/corrida"
           icon={Wind}
           titulo={temCorrida ? "Corrida" : "Contratar corrida"}
           detalhe={temCorrida && vencCorrida ? `até ${vencCorrida}` : null}
