@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { ExternalLink, Salad } from "lucide-react";
 import { OfertasContratar } from "@/components/pagamento/OfertasContratar";
+import { alunoTemModulo } from "@/lib/aluno-acesso";
 import {
   FORMULARIO_NUTRICAO_URL,
   FORMULARIO_NUTRICAO_URL_ABRIR,
@@ -19,11 +20,14 @@ type Contratacao = {
 export default function Page() {
   const { data: session } = useSession();
   const alunoId = session?.user?.alunoId ?? "";
-  const temNutricao = (session?.user?.modulosAtivos ?? []).includes("nutricao");
+  const temNutricao = alunoTemModulo(session?.user, "nutricao");
   const [contratacoesNutri, setContratacoesNutri] = useState<Contratacao[]>([]);
 
   useEffect(() => {
-    if (!alunoId) return;
+    if (!alunoId || !temNutricao) {
+      setContratacoesNutri([]);
+      return;
+    }
     let ativo = true;
     void fetch(`/api/pagamentos?alunoId=${encodeURIComponent(alunoId)}`, {
       credentials: "include",
@@ -43,9 +47,7 @@ export default function Page() {
     return () => {
       ativo = false;
     };
-  }, [alunoId]);
-
-  const mostrarForm = temNutricao || contratacoesNutri.length > 0;
+  }, [alunoId, temNutricao]);
 
   return (
     <main className="page-main">
@@ -61,13 +63,15 @@ export default function Page() {
                 className="text-muted"
                 style={{ margin: "2px 0 0", fontSize: "0.85rem" }}
               >
-                Planos alimentares e anamnese
+                {temNutricao
+                  ? "Planos alimentares e anamnese"
+                  : "Contrate o módulo para liberar a anamnese"}
               </p>
             </div>
           </div>
         </header>
 
-        {contratacoesNutri.length > 0 ? (
+        {temNutricao && contratacoesNutri.length > 0 ? (
           <section className="card">
             <p className="field-label" style={{ marginBottom: 8 }}>
               Você contratou
@@ -82,7 +86,7 @@ export default function Page() {
           </section>
         ) : null}
 
-        {mostrarForm ? (
+        {temNutricao ? (
           <section className="card nutricao-form-card">
             <h2 style={{ margin: "0 0 8px", fontSize: "1.05rem" }}>
               Anamnese nutricional
@@ -107,7 +111,12 @@ export default function Page() {
               target="_blank"
               rel="noopener noreferrer"
               className="btn-secondary"
-              style={{ marginTop: 12, display: "inline-flex", gap: 8, alignItems: "center" }}
+              style={{
+                marginTop: 12,
+                display: "inline-flex",
+                gap: 8,
+                alignItems: "center",
+              }}
             >
               <ExternalLink size={16} />
               Abrir em nova aba
@@ -119,7 +128,7 @@ export default function Page() {
           <OfertasContratar
             alunoId={alunoId}
             grupo="nutricao"
-            titulo="Contratar nutrição"
+            titulo={temNutricao ? "Renovar nutrição" : "Contratar nutrição"}
             modulosAtuais={session?.user?.modulosAtivos ?? []}
             modulosVencimentos={session?.user?.modulosVencimentos ?? null}
           />

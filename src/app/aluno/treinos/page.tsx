@@ -7,9 +7,11 @@ import { Dumbbell } from "lucide-react";
 import { useAlunoDashboard } from "@/hooks/useAlunoDashboard";
 import { NavDiasSemana } from "@/components/aluno/NavDiasSemana";
 import { TreinoResumoCard } from "@/components/aluno/TreinoResumoCard";
+import { OfertasContratar } from "@/components/pagamento/OfertasContratar";
 import { contarSeriesConcluidasTreino } from "@/services/sessaoService";
 import { Treino } from "@/types";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { alunoTemModulo } from "@/lib/aluno-acesso";
 
 const DIAS_SEMANA = [
   "segunda",
@@ -23,7 +25,10 @@ const DIAS_SEMANA = [
 
 export default function Page() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const alunoId = session?.user?.alunoId ?? "";
+  const acessoOk = alunoTemModulo(session?.user, "musculacao");
+
   const {
     treinosPorDia,
     loading,
@@ -32,12 +37,18 @@ export default function Page() {
     setDiaSelecionado,
   } = useAlunoDashboard();
 
-  const [seriesPorTreino, setSeriesPorTreino] = useState<Record<string, number>>({});
+  const [seriesPorTreino, setSeriesPorTreino] = useState<Record<string, number>>(
+    {}
+  );
 
   const treinosDoDia: Treino[] = treinosPorDia[diaSelecionado] ?? [];
   const primeiroNome = session?.user?.name?.split(" ")[0];
 
   useEffect(() => {
+    if (!acessoOk) {
+      setSeriesPorTreino({});
+      return;
+    }
     const treinos = treinosPorDia[diaSelecionado] ?? [];
 
     if (treinos.length === 0) {
@@ -50,8 +61,14 @@ export default function Page() {
     const carregarProgressos = async (): Promise<void> => {
       const entradas = await Promise.all(
         treinos.map(async (treino) => {
-          const totalSeries = treino.exercicios.reduce((a, ex) => a + ex.series, 0);
-          const concluidas = await contarSeriesConcluidasTreino(treino.id, totalSeries);
+          const totalSeries = treino.exercicios.reduce(
+            (a, ex) => a + ex.series,
+            0
+          );
+          const concluidas = await contarSeriesConcluidasTreino(
+            treino.id,
+            totalSeries
+          );
           return [treino.id, concluidas] as const;
         })
       );
@@ -65,7 +82,38 @@ export default function Page() {
     return () => {
       ativo = false;
     };
-  }, [diaSelecionado, treinosPorDia]);
+  }, [acessoOk, diaSelecionado, treinosPorDia]);
+
+  if (status === "loading") {
+    return (
+      <main className="page-main student-page-main">
+        <div className="page-container">
+          <p className="text-muted">Carregando...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!acessoOk) {
+    return (
+      <main className="page-main student-page-main">
+        <div className="page-container page-stack">
+          {alunoId ? (
+            <OfertasContratar
+              alunoId={alunoId}
+              grupo="treino"
+              titulo="Contratar musculação"
+              subtitulo="Escolha a oferta de musculação ou o combo com corrida."
+              modulosAtuais={session?.user?.modulosAtivos ?? []}
+              modulosVencimentos={session?.user?.modulosVencimentos ?? null}
+            />
+          ) : (
+            <p className="text-muted">Faça login como aluno para contratar.</p>
+          )}
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="page-main student-page-main">

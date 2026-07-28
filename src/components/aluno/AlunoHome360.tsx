@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ChevronRight,
   Dumbbell,
@@ -15,10 +15,7 @@ import {
 import { listarTreinosDoAlunoPorDia } from "@/services/alunoService";
 import { buscarEstatisticasSessaoAluno } from "@/services/sessaoService";
 import { EstatisticasSessaoAluno, Treino } from "@/types";
-import {
-  moduloVigente,
-  type ModuloAlunoId,
-} from "@/lib/modulos-aluno";
+import { alunoTemModulo, hrefListagemModulo } from "@/lib/aluno-acesso";
 
 function getDiaSemanaAtual(): string {
   const dias: Record<number, string> = {
@@ -92,6 +89,11 @@ export function AlunoHome360() {
   const diaAtual = getDiaSemanaAtual();
   const alunoId = session?.user?.alunoId ?? session?.user?.id;
 
+  const acesso = session?.user;
+  const temMusc = alunoTemModulo(acesso, "musculacao");
+  const temCorrida = alunoTemModulo(acesso, "corrida");
+  const temNutri = alunoTemModulo(acesso, "nutricao");
+
   useEffect(() => {
     let ativo = true;
     void buscarEstatisticasSessaoAluno()
@@ -107,7 +109,10 @@ export function AlunoHome360() {
   }, []);
 
   useEffect(() => {
-    if (!alunoId || status !== "authenticated") return;
+    if (!alunoId || status !== "authenticated" || !temMusc) {
+      setTreinoHoje(null);
+      return;
+    }
     let ativo = true;
     void listarTreinosDoAlunoPorDia(alunoId)
       .then((treinos) => {
@@ -121,20 +126,7 @@ export function AlunoHome360() {
     return () => {
       ativo = false;
     };
-  }, [alunoId, diaAtual, status]);
-
-  const modulosAtivos = useMemo(() => {
-    const venc = session?.user?.modulosVencimentos ?? {};
-    const ids: ModuloAlunoId[] = ["musculacao", "corrida", "nutricao"];
-    if (venc && Object.keys(venc).length > 0) {
-      return ids.filter((id) => moduloVigente(venc[id]));
-    }
-    return (session?.user?.modulosAtivos ?? []) as ModuloAlunoId[];
-  }, [session?.user?.modulosAtivos, session?.user?.modulosVencimentos]);
-
-  const temMusc = modulosAtivos.includes("musculacao");
-  const temCorrida = modulosAtivos.includes("corrida");
-  const temNutri = modulosAtivos.includes("nutricao");
+  }, [alunoId, diaAtual, status, temMusc]);
 
   const vencMusc = formatarVencimento(
     session?.user?.modulosVencimentos?.musculacao ?? session?.user?.planoVenceEm
@@ -163,26 +155,26 @@ export function AlunoHome360() {
 
       <div className="student-quick-links">
         <ModuloQuickLink
-          href={temMusc ? "/aluno/treinos" : "/aluno/planos"}
+          href={hrefListagemModulo("musculacao")}
           icon={Dumbbell}
           titulo={temMusc ? "Musculação" : "Contratar musculação"}
           detalhe={temMusc && vencMusc ? `até ${vencMusc}` : null}
         />
         <ModuloQuickLink
-          href="/aluno/corrida"
+          href={hrefListagemModulo("corrida")}
           icon={Wind}
           titulo={temCorrida ? "Corrida" : "Contratar corrida"}
           detalhe={temCorrida && vencCorrida ? `até ${vencCorrida}` : null}
         />
         <ModuloQuickLink
-          href="/aluno/nutricao"
+          href={hrefListagemModulo("nutricao")}
           icon={Salad}
           titulo={temNutri ? "Nutrição" : "Contratar nutrição"}
           detalhe={temNutri && vencNutri ? `até ${vencNutri}` : null}
         />
       </div>
 
-      {treinoHoje ? (
+      {temMusc && treinoHoje ? (
         <button
           type="button"
           className="student-today-card"
@@ -223,7 +215,7 @@ export function AlunoHome360() {
           <button
             type="button"
             className="student-cta"
-            onClick={() => router.push("/aluno/planos")}
+            onClick={() => router.push(hrefListagemModulo("musculacao"))}
           >
             Contratar musculação
           </button>

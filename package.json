@@ -8,6 +8,8 @@
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "db:seed": "node prisma/seed-runner.cjs",
     "db:seed-catalogo": "node prisma/seed-catalogo.cjs",
     "db:check": "node scripts/db-connection-check.cjs",
@@ -44,6 +46,7 @@
     "prisma": "^7.8.0",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "3.2.4"
   }
 }

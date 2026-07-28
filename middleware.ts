@@ -1,29 +1,34 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
-import { planoVencido } from "@/lib/plano-vencimento";
-import { moduloVigente, type ModuloAlunoId } from "@/lib/modulos-aluno";
+import {
+  alunoTemModulo,
+  destinoBloqueioModulo,
+  moduloExigidoPelaRotaAluno,
+  podeAcessarRotaAluno,
+  type AcessoAluno,
+} from "@/lib/aluno-acesso";
 
-type TokenModulos = {
-  planoVenceEm?: string;
-  modulosAtivos?: ModuloAlunoId[] | string[];
-  modulosVencimentos?: Partial<Record<ModuloAlunoId, string>>;
-};
-
-function tokenTemPlanoPago(token: TokenModulos): boolean {
-  const venc = token.modulosVencimentos;
-  if (venc && Object.keys(venc).length > 0) {
-    return (Object.keys(venc) as ModuloAlunoId[]).some((id) =>
-      moduloVigente(venc[id])
-    );
-  }
-  if (planoVencido(token.planoVenceEm)) return false;
-  return (token.modulosAtivos?.length ?? 0) > 0;
+function tokenComoAcesso(token: Record<string, unknown> | null): AcessoAluno {
+  if (!token) return {};
+  return {
+    planoVenceEm:
+      typeof token.planoVenceEm === "string" ? token.planoVenceEm : undefined,
+    modulosAtivos: Array.isArray(token.modulosAtivos)
+      ? (token.modulosAtivos as string[])
+      : undefined,
+    modulosVencimentos:
+      token.modulosVencimentos &&
+      typeof token.modulosVencimentos === "object"
+        ? (token.modulosVencimentos as AcessoAluno["modulosVencimentos"])
+        : undefined,
+  };
 }
 
 export default withAuth(
   function middleware(req) {
-    const token = req.nextauth.token;
+    const token = req.nextauth.token as Record<string, unknown> | null;
     const pathname = req.nextUrl.pathname;
+    const acesso = tokenComoAcesso(token);
 
     if (pathname.startsWith("/professor")) {
       if (token?.role !== "professor") {
@@ -36,28 +41,14 @@ export default withAuth(
         return NextResponse.redirect(new URL("/acesso-negado", req.url));
       }
 
-      const livres = [
-        "/aluno/dashboard",
-        "/aluno/planos",
-        "/aluno/perfil",
-        "/aluno/nutricao",
-        "/aluno/corrida",
-        "/aluno/treinos",
-        "/aluno/treino",
-        "/aluno/inativo",
-        "/aluno/modulo-bloqueado",
-        "/aluno/login",
-      ];
-      const caminhoLivre = livres.some(
-        (p) => pathname === p || pathname.startsWith(`${p}/`)
-      );
-
-      if (!caminhoLivre) {
-        if (!tokenTemPlanoPago(token ?? {})) {
-          return NextResponse.redirect(new URL("/aluno/planos", req.url));
+      // Listagens ficam livres (UI mostra contratar). /aluno/treino/[id] exige módulo.
+      if (!podeAcessarRotaAluno(pathname, acesso)) {
+        const modulo = moduloExigidoPelaRotaAluno(pathname)!;
+        if (!alunoTemModulo(acesso, modulo)) {
+          return NextResponse.redirect(
+            new URL(destinoBloqueioModulo(modulo), req.url)
+          );
         }
-
-        // Módulos (musculação/corrida/nutrição): a própria página trata o acesso.
       }
     }
 

@@ -7,7 +7,8 @@ import { CorridaEstruturaView } from "@/components/corrida/CorridaEstruturaView"
 import { CorridaFeedbackAluno } from "@/components/corrida/CorridaFeedbackAluno";
 import { OfertasContratar } from "@/components/pagamento/OfertasContratar";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { moduloVigente, type ModuloAlunoId } from "@/lib/modulos-aluno";
+import { alunoTemModulo } from "@/lib/aluno-acesso";
+import type { ModuloAlunoId } from "@/lib/modulos-aluno";
 import {
   dataISOLocal,
   parseDataISO,
@@ -37,24 +38,10 @@ function faixaSemana(centro: string): string[] {
   return [-3, -2, -1, 0, 1, 2, 3].map((n) => addDays(centro, n));
 }
 
-function temCorridaAtiva(user: {
-  modulosAtivos?: string[];
-  modulosVencimentos?: Partial<Record<string, string>>;
-} | null | undefined): boolean {
-  if (!user) return false;
-  const venc = user.modulosVencimentos;
-  if (venc && Object.keys(venc).length > 0) {
-    return moduloVigente(venc.corrida);
-  }
-  return (user.modulosAtivos ?? []).includes("corrida");
-}
-
 export default function Page() {
   const { data: session, update, status } = useSession();
   const alunoId = session?.user?.alunoId ?? "";
-
-  // Decide na hora pela sessão — sem ficar preso em "Carregando..."
-  const acessoOk = temCorridaAtiva(session?.user);
+  const acessoOk = alunoTemModulo(session?.user, "corrida");
 
   const hoje = dataISOLocal();
   const [selecionado, setSelecionado] = useState(hoje);
@@ -81,10 +68,13 @@ export default function Page() {
           status?: string;
         };
         if (
-          !temCorridaAtiva({
-            modulosAtivos: body.modulosAtivos,
-            modulosVencimentos: body.modulosVencimentos,
-          })
+          !alunoTemModulo(
+            {
+              modulosAtivos: body.modulosAtivos,
+              modulosVencimentos: body.modulosVencimentos,
+            },
+            "corrida"
+          )
         ) {
           return;
         }
