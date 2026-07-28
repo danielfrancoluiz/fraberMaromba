@@ -2,13 +2,23 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { CheckCircle, Loader2 } from "lucide-react";
-import { atualizarSessaoComTimeout } from "@/lib/atualizar-sessao";
+
+type ConfirmarBody = {
+  confirmado?: boolean;
+  modulosAtivos?: string[];
+  modulosVencimentos?: Record<string, string>;
+  planoVenceEm?: string;
+  planoId?: string;
+  status?: string;
+  destino?: string;
+};
 
 function PagamentoSucessoConteudo() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { data: session, update } = useSession();
   const paymentIntentId = searchParams.get("payment_intent");
   const ok = searchParams.get("ok") === "1";
@@ -22,6 +32,7 @@ function PagamentoSucessoConteudo() {
 
   const [confirmando, setConfirmando] = useState(Boolean(paymentIntentId) && !ok);
   const [erro, setErro] = useState<string | null>(null);
+  const [destino, setDestino] = useState("/aluno/dashboard");
   const jaRodou = useRef(false);
 
   useEffect(() => {
@@ -32,7 +43,23 @@ function PagamentoSucessoConteudo() {
 
     async function rodar() {
       if (ok) {
-        await atualizarSessaoComTimeout(() => update());
+        try {
+          const res = await fetch("/api/aluno/acesso", { credentials: "include" });
+          if (res.ok) {
+            const body = (await res.json()) as ConfirmarBody;
+            await update({
+              modulosAtivos: body.modulosAtivos,
+              modulosVencimentos: body.modulosVencimentos,
+              planoVenceEm: body.planoVenceEm,
+              planoId: body.planoId,
+              status: body.status,
+            });
+          } else {
+            await update();
+          }
+        } catch {
+          await update();
+        }
         return;
       }
 
@@ -48,18 +75,29 @@ function PagamentoSucessoConteudo() {
 
         if (!ativo) return;
 
+        const body = (await res.json().catch(() => ({}))) as ConfirmarBody & {
+          error?: string;
+        };
+
         if (!res.ok) {
-          const body: unknown = await res.json().catch(() => null);
-          const msg =
-            typeof body === "object" &&
-            body !== null &&
-            "error" in body &&
-            typeof (body as { error: string }).error === "string"
-              ? (body as { error: string }).error
-              : "Não foi possível confirmar o pagamento automaticamente.";
-          setErro(msg);
+          setErro(body.error ?? "Não foi possível confirmar o pagamento automaticamente.");
         } else {
-          await atualizarSessaoComTimeout(() => update());
+          if (body.modulosAtivos || body.modulosVencimentos) {
+            await update({
+              modulosAtivos: body.modulosAtivos,
+              modulosVencimentos: body.modulosVencimentos,
+              planoVenceEm: body.planoVenceEm,
+              planoId: body.planoId,
+              status: body.status ?? "ativo_plataforma",
+            });
+          } else {
+            await update();
+          }
+          if (body.destino?.startsWith("/aluno/")) {
+            setDestino(body.destino);
+            router.replace(body.destino);
+            return;
+          }
         }
       } catch {
         if (ativo) {
@@ -81,7 +119,7 @@ function PagamentoSucessoConteudo() {
   }, []);
 
   const dashHref =
-    role === "professor" ? "/professor/dashboard" : "/aluno/dashboard";
+    role === "professor" ? "/professor/dashboard" : destino;
   const perfilHref =
     role === "professor" ? "/professor/perfil" : "/aluno/perfil";
 
@@ -110,17 +148,11 @@ function PagamentoSucessoConteudo() {
         {erro ? <p className="erro-campo">{erro}</p> : null}
         <div className="action-row" style={{ width: "100%", marginTop: "8px" }}>
           <Link href={dashHref} className="btn-primary">
-            Ir para o início
+            Continuar
           </Link>
-          {role === "aluno" ? (
-            <Link href="/aluno/treinos" className="btn-secondary">
-              Ver musculação
-            </Link>
-          ) : (
-            <Link href={perfilHref} className="btn-secondary">
-              Ver perfil
-            </Link>
-          )}
+          <Link href={perfilHref} className="btn-secondary">
+            Ver perfil
+          </Link>
         </div>
       </div>
     </main>

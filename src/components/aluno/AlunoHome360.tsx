@@ -15,7 +15,6 @@ import {
 import { listarTreinosDoAlunoPorDia } from "@/services/alunoService";
 import { buscarEstatisticasSessaoAluno } from "@/services/sessaoService";
 import { EstatisticasSessaoAluno, Treino } from "@/types";
-import { atualizarSessaoComTimeout } from "@/lib/atualizar-sessao";
 import {
   moduloVigente,
   type ModuloAlunoId,
@@ -85,25 +84,13 @@ function ModuloQuickLink({
 
 export function AlunoHome360() {
   const router = useRouter();
-  const { data: session, update, status } = useSession();
+  const { data: session, status } = useSession();
   const [stats, setStats] = useState<EstatisticasSessaoAluno | null>(null);
   const [treinoHoje, setTreinoHoje] = useState<Treino | null>(null);
-  const [syncOk, setSyncOk] = useState(false);
 
   const primeiroNome = session?.user?.name?.split(" ")[0];
   const diaAtual = getDiaSemanaAtual();
   const alunoId = session?.user?.alunoId ?? session?.user?.id;
-
-  useEffect(() => {
-    if (status !== "authenticated") return;
-    let ativo = true;
-    void atualizarSessaoComTimeout(() => update(), 8000).finally(() => {
-      if (ativo) setSyncOk(true);
-    });
-    return () => {
-      ativo = false;
-    };
-  }, [status, update]);
 
   useEffect(() => {
     let ativo = true;
@@ -120,7 +107,7 @@ export function AlunoHome360() {
   }, []);
 
   useEffect(() => {
-    if (!alunoId) return;
+    if (!alunoId || status !== "authenticated") return;
     let ativo = true;
     void listarTreinosDoAlunoPorDia(alunoId)
       .then((treinos) => {
@@ -134,7 +121,7 @@ export function AlunoHome360() {
     return () => {
       ativo = false;
     };
-  }, [alunoId, diaAtual, syncOk]);
+  }, [alunoId, diaAtual, status]);
 
   const modulosAtivos = useMemo(() => {
     const venc = session?.user?.modulosVencimentos ?? {};

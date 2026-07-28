@@ -4,6 +4,13 @@ import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { confirmarPagamentoPaymentIntent } from "@/lib/pagamento-stripe";
 import { resolveAlunoId } from "@/lib/sessao-treino-server";
+import { destinoAposModulos } from "@/lib/destino-pos-pagamento";
+import {
+  menorVencimentoVigente,
+  modulosVigentes,
+  normalizarModulos,
+  parseModulosVencimentos,
+} from "@/lib/modulos-aluno";
 
 async function autorizarPagamento(
   session: NonNullable<Awaited<ReturnType<typeof getApiSession>>>,
@@ -66,9 +73,60 @@ export async function POST(req: NextRequest) {
     }
 
     const confirmado = await confirmarPagamentoPaymentIntent(paymentIntent);
+
+    const alunoIdMeta = paymentIntent.metadata?.alunoId?.trim();
+    const modulosPagos = (paymentIntent.metadata?.modulos ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    let sessaoAluno: {
+      modulosAtivos: string[];
+      modulosVencimentos: Record<string, string>;
+      planoVenceEm?: string;
+      planoId?: string;
+      status: string;
+      destino: string;
+    } | null = null;
+
+    if (alunoIdMeta) {
+      const aluno = await prisma.aluno.findUnique({
+        where: { id: alunoIdMeta },
+        select: {
+          planoId: true,
+          planoVenceEm: true,
+          modulosAtivos: true,
+          modulosVencimentos: true,
+          status: true,
+        },
+      });
+      if (aluno) {
+        let venc = parseModulosVencimentos(aluno.modulosVencimentos);
+        if (Object.keys(venc).length === 0 && aluno.planoVenceEm) {
+          for (const id of normalizarModulos(aluno.modulosAtivos)) {
+            venc[id] = aluno.planoVenceEm.toISOString();
+          }
+        }
+        const vigentes = modulosVigentes(venc);
+        sessaoAluno = {
+          modulosAtivos: vigentes,
+          modulosVencimentos: venc as Record<string, string>,
+          planoVenceEm:
+            menorVencimentoVigente(venc) ??
+            aluno.planoVenceEm?.toISOString(),
+          planoId: aluno.planoId || undefined,
+          status: aluno.status,
+          destino: destinoAposModulos(
+            modulosPagos.length ? modulosPagos : vigentes
+          ),
+        };
+      }
+    }
+
     return NextResponse.json({
       confirmado,
       paymentStatus: paymentIntent.status,
+      ...(sessaoAluno ?? {}),
     });
   } catch (error) {
     console.error("[pagamentos/confirmar]", error);

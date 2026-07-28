@@ -102,7 +102,7 @@ export const authOptions: NextAuthOptions = {
 
       return true;
     },
-    async jwt({ token, user, account, trigger }) {
+    async jwt({ token, user, account, trigger, session }) {
       if (user) {
         if (account?.provider === "google" && user.email) {
           try {
@@ -138,12 +138,35 @@ export const authOptions: NextAuthOptions = {
         return token;
       }
 
-      // Após pagamento `update()` deve reler o banco na hora.
-      const forcarSync = trigger === "update";
+      // update({ modulosAtivos, ... }) após pagamento — aplica no JWT na hora.
+      if (trigger === "update" && session && typeof session === "object") {
+        const s = session as Record<string, unknown>;
+        if (Array.isArray(s.modulosAtivos)) {
+          token.modulosAtivos = s.modulosAtivos;
+        }
+        if (s.modulosVencimentos && typeof s.modulosVencimentos === "object") {
+          token.modulosVencimentos = s.modulosVencimentos;
+        }
+        if (typeof s.planoVenceEm === "string" || s.planoVenceEm === null) {
+          token.planoVenceEm = s.planoVenceEm ?? undefined;
+        }
+        if (typeof s.planoId === "string") token.planoId = s.planoId;
+        if (
+          s.status === "ativo_professor" ||
+          s.status === "ativo_plataforma" ||
+          s.status === "inativo"
+        ) {
+          token.status = s.status;
+        }
+        if (typeof s.alunoId === "string") token.alunoId = s.alunoId;
+        token.lastDbSync = Date.now();
+        return token;
+      }
+
+      // Sync periódico (não a cada request — evita lentidão).
       const lastSync =
         typeof token.lastDbSync === "number" ? token.lastDbSync : 0;
-      // Sync frequente: 5s era pouco agressivo após pagamento no edge.
-      if (token.id && (forcarSync || Date.now() - lastSync > 3_000)) {
+      if (token.id && Date.now() - lastSync > 60_000) {
         try {
           const dados = await carregarDadosSessaoPorId(token.id as string);
           if (dados) {
