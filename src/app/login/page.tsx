@@ -30,6 +30,12 @@ function LoginContent() {
 
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
+  // Só em local ou Preview (dev). Produção nunca mostra.
+  const mostrarCredenciaisTeste =
+    process.env.NEXT_PUBLIC_SHOW_TEST_LOGIN === "1" ||
+    process.env.NEXT_PUBLIC_VERCEL_ENV === "preview" ||
+    process.env.NODE_ENV === "development";
+
   return (
     <main className="auth-page">
       <div className="auth-card card">
@@ -139,10 +145,12 @@ function LoginContent() {
           Aluno: cadastro só pelo link de convite.
         </p>
 
-        <div className="chart-empty auth-demo-hint">
-          <p>Professor: ricardo@fraber.com / 123456</p>
-          <p>Aluno: carlos@fraber.com / 123456</p>
-        </div>
+        {mostrarCredenciaisTeste ? (
+          <div className="chart-empty auth-demo-hint">
+            <p>Professor: ricardo@fraber.com / 123456</p>
+            <p>Aluno: carlos@fraber.com / 123456</p>
+          </div>
+        ) : null}
       </div>
     </main>
   );

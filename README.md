@@ -113,6 +113,39 @@ Fluxo: combo de plano → `POST /api/pagamentos/checkout` → redirect Stripe �
 
 Após pagar, **saia e entre de novo** para o JWT trazer `status` e `planoId` atualizados.
 
+## Dev vs Produção (Vercel + Supabase + Stripe)
+
+| | Preview (`dev` / `dev.fraber360.com.br`) | Produção (`main` / `www.fraber360.com.br`) |
+|--|--|--|
+| Banco | Projeto Supabase **dev** | Projeto Supabase **prod** |
+| Stripe | `sk_test_` / `pk_test_` + webhook teste | `sk_live_` / `pk_live_` + webhook live |
+| `NEXTAUTH_URL` | `https://dev.fraber360.com.br` | `https://www.fraber360.com.br` |
+| Credenciais de teste no login | Sim (Preview) | Não |
+
+### Supabase: duas bases sem cobrar a mais?
+
+No plano **Free** você pode ter **até 2 projetos ativos** — use um para **dev** e outro para **prod**. Não precisa de Liquibase: o app já usa **Prisma Migrate** (`prisma migrate deploy` no build). Cada ambiente aponta para seu `DATABASE_URL` / `DIRECT_URL`.
+
+1. Crie o 2º projeto no Supabase (ex.: `fraber-maromba-prod`).
+2. No Vercel → Project → **Settings → Environment Variables**:
+   - **Preview**: URLs do projeto **dev**
+   - **Production**: URLs do projeto **prod**
+3. No primeiro deploy de cada ambiente, o build roda `prisma migrate deploy` e cria as tabelas.
+
+### Stripe: test vs live
+
+1. **Dashboard → Developers → API keys** — modo Test para Preview; modo Live para Production.
+2. Dois webhooks apontando para:
+   - `https://dev.fraber360.com.br/api/pagamentos/webhook`
+   - `https://www.fraber360.com.br/api/pagamentos/webhook`
+3. Cada um com seu `STRIPE_WEBHOOK_SECRET` (`whsec_...`) no ambiente correspondente do Vercel.
+
+### Google OAuth
+
+Inclua os dois callbacks:
+- `https://dev.fraber360.com.br/api/auth/callback/google`
+- `https://www.fraber360.com.br/api/auth/callback/google`
+
 ## Testes manuais
 
 Marque cada item após validar em `npm run dev`.
