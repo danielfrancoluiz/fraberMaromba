@@ -6,11 +6,11 @@ import { useSession } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
 import {
   ChevronRight,
-  CreditCard,
   Dumbbell,
   Salad,
   Trophy,
   Wind,
+  type LucideIcon,
 } from "lucide-react";
 import { listarTreinosDoAlunoPorDia } from "@/services/alunoService";
 import { buscarEstatisticasSessaoAluno } from "@/services/sessaoService";
@@ -58,6 +58,28 @@ function StatCard({
       <span className="student-stat-value">{value}</span>
       <span className="student-stat-label">{label}</span>
     </div>
+  );
+}
+
+function ModuloQuickLink({
+  href,
+  icon: Icon,
+  titulo,
+  detalhe,
+}: {
+  href: string;
+  icon: LucideIcon;
+  titulo: string;
+  detalhe?: string | null;
+}) {
+  return (
+    <Link href={href} className="student-quick-link">
+      <Icon size={18} />
+      <span className="student-quick-link-title">{titulo}</span>
+      {detalhe ? (
+        <span className="student-quick-link-meta">{detalhe}</span>
+      ) : null}
+    </Link>
   );
 }
 
@@ -123,10 +145,9 @@ export function AlunoHome360() {
     return (session?.user?.modulosAtivos ?? []) as ModuloAlunoId[];
   }, [session?.user?.modulosAtivos, session?.user?.modulosVencimentos]);
 
-  const faltaCorrida = !modulosAtivos.includes("corrida");
-  const faltaMusc = !modulosAtivos.includes("musculacao");
   const temMusc = modulosAtivos.includes("musculacao");
   const temCorrida = modulosAtivos.includes("corrida");
+  const temNutri = modulosAtivos.includes("nutricao");
 
   const vencMusc = formatarVencimento(
     session?.user?.modulosVencimentos?.musculacao ?? session?.user?.planoVenceEm
@@ -134,33 +155,13 @@ export function AlunoHome360() {
   const vencCorrida = formatarVencimento(
     session?.user?.modulosVencimentos?.corrida
   );
+  const vencNutri = formatarVencimento(
+    session?.user?.modulosVencimentos?.nutricao
+  );
 
   const completed = stats?.treinosConcluidos ?? 0;
   const frequency =
     completed > 0 ? Math.min(100, Math.round((completed / 12) * 100)) : 0;
-
-  const textoBotaoContratar =
-    faltaMusc && faltaCorrida
-      ? "Contratar módulos"
-      : faltaCorrida
-        ? "Contratar corrida"
-        : faltaMusc
-          ? "Contratar musculação"
-          : null;
-
-  const textoVencimento =
-    temMusc && temCorrida
-      ? [
-          vencMusc ? `Musculação até ${vencMusc}` : null,
-          vencCorrida ? `Corrida até ${vencCorrida}` : null,
-        ]
-          .filter(Boolean)
-          .join(" · ")
-      : temMusc && vencMusc
-        ? `Musculação até ${vencMusc}`
-        : temCorrida && vencCorrida
-          ? `Corrida até ${vencCorrida}`
-          : null;
 
   return (
     <div className="student-home-stack">
@@ -171,46 +172,27 @@ export function AlunoHome360() {
             ? `Bem-vindo de volta, ${primeiroNome}`
             : "Bem-vindo de volta"}
         </h1>
-        <p className="student-greeting-sub">
-          Aqui está um resumo da sua conta e do que fazer agora.
-        </p>
       </section>
 
-      {(textoBotaoContratar || textoVencimento) && (
-        <section className="student-modules-card card">
-          {textoVencimento ? (
-            <p className="student-modules-meta text-muted" style={{ margin: "0 0 10px" }}>
-              {textoVencimento}
-            </p>
-          ) : null}
-          {textoBotaoContratar ? (
-            <Link href="/aluno/planos" className="btn-secondary btn-compact">
-              <CreditCard size={16} style={{ marginRight: 6 }} />
-              {textoBotaoContratar}
-            </Link>
-          ) : null}
-        </section>
-      )}
-
       <div className="student-quick-links">
-        <Link
+        <ModuloQuickLink
           href={temMusc ? "/aluno/treinos" : "/aluno/planos"}
-          className="student-quick-link"
-        >
-          <Dumbbell size={18} />
-          <span>{temMusc ? "Musculação" : "Contratar musculação"}</span>
-        </Link>
-        <Link
+          icon={Dumbbell}
+          titulo={temMusc ? "Musculação" : "Contratar musculação"}
+          detalhe={temMusc && vencMusc ? `até ${vencMusc}` : null}
+        />
+        <ModuloQuickLink
           href={temCorrida ? "/aluno/corrida" : "/aluno/planos"}
-          className="student-quick-link"
-        >
-          <Wind size={18} />
-          <span>{temCorrida ? "Corrida" : "Contratar corrida"}</span>
-        </Link>
-        <Link href="/aluno/nutricao" className="student-quick-link">
-          <Salad size={18} />
-          <span>Nutrição</span>
-        </Link>
+          icon={Wind}
+          titulo={temCorrida ? "Corrida" : "Contratar corrida"}
+          detalhe={temCorrida && vencCorrida ? `até ${vencCorrida}` : null}
+        />
+        <ModuloQuickLink
+          href="/aluno/nutricao"
+          icon={Salad}
+          titulo={temNutri ? "Nutrição" : "Nutrição"}
+          detalhe={temNutri && vencNutri ? `até ${vencNutri}` : null}
+        />
       </div>
 
       {treinoHoje ? (
