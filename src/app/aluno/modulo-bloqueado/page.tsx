@@ -90,9 +90,6 @@ function Conteudo() {
           <Link href="/aluno/dashboard" className="btn-secondary">
             Voltar ao início
           </Link>
-          <Link href="/aluno/nutricao" className="btn-secondary">
-            Ir para Nutrição
-          </Link>
         </div>
       </div>
     </main>
