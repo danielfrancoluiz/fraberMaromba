@@ -52,33 +52,27 @@ function temCorridaAtiva(user: {
 export default function Page() {
   const { data: session, update, status } = useSession();
   const alunoId = session?.user?.alunoId ?? "";
-  const [acessoOk, setAcessoOk] = useState<boolean | null>(null);
+
+  // Decide na hora pela sessão — sem ficar preso em "Carregando..."
+  const acessoOk = temCorridaAtiva(session?.user);
 
   const hoje = dataISOLocal();
   const [selecionado, setSelecionado] = useState(hoje);
   const [treinos, setTreinos] = useState<TreinoCorridaDTO[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
   const dias = useMemo(() => faixaSemana(selecionado), [selecionado]);
 
-  // Sincroniza JWT com o banco (pós-pagamento / sessão atrasada).
+  // Se o banco já liberou e o JWT está atrasado, sincroniza em background.
   useEffect(() => {
-    if (status !== "authenticated") return;
+    if (status !== "authenticated" || acessoOk) return;
     let ativo = true;
 
-    async function syncAcesso() {
-      if (temCorridaAtiva(session?.user)) {
-        if (ativo) setAcessoOk(true);
-        return;
-      }
-
+    void (async () => {
       try {
         const res = await fetch("/api/aluno/acesso", { credentials: "include" });
-        if (!res.ok) {
-          if (ativo) setAcessoOk(false);
-          return;
-        }
+        if (!res.ok || !ativo) return;
         const body = (await res.json()) as {
           modulosAtivos?: ModuloAlunoId[];
           modulosVencimentos?: Partial<Record<ModuloAlunoId, string>>;
@@ -86,6 +80,14 @@ export default function Page() {
           planoId?: string | null;
           status?: string;
         };
+        if (
+          !temCorridaAtiva({
+            modulosAtivos: body.modulosAtivos,
+            modulosVencimentos: body.modulosVencimentos,
+          })
+        ) {
+          return;
+        }
         await update({
           modulosAtivos: body.modulosAtivos,
           modulosVencimentos: body.modulosVencimentos,
@@ -93,25 +95,15 @@ export default function Page() {
           planoId: body.planoId,
           status: body.status,
         });
-        if (ativo) {
-          setAcessoOk(
-            temCorridaAtiva({
-              modulosAtivos: body.modulosAtivos,
-              modulosVencimentos: body.modulosVencimentos,
-            })
-          );
-        }
       } catch {
-        if (ativo) setAcessoOk(temCorridaAtiva(session?.user));
+        /* mantém tela de contratar */
       }
-    }
+    })();
 
-    void syncAcesso();
     return () => {
       ativo = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- sync uma vez ao autenticar
-  }, [status, alunoId]);
+  }, [status, acessoOk, update]);
 
   const carregar = useCallback(async (de: string, ate: string) => {
     setLoading(true);
@@ -133,7 +125,7 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
-    if (acessoOk !== true) return;
+    if (!acessoOk) return;
     const de = dias[0];
     const ate = dias[dias.length - 1];
     void carregar(de, ate);
@@ -151,6 +143,38 @@ export default function Page() {
     );
   }
 
+  if (status === "loading") {
+    return (
+      <main className="page-main">
+        <div className="page-container">
+          <p className="text-muted">Carregando...</p>
+        </div>
+      </main>
+    );
+  }
+
+  // Sem corrida: mesmo fluxo do botão "Contratar corrida" (ofertas de treino).
+  if (!acessoOk) {
+    return (
+      <main className="page-main">
+        <div className="page-container page-stack">
+          {alunoId ? (
+            <OfertasContratar
+              alunoId={alunoId}
+              grupo="treino"
+              titulo="Contratar corrida"
+              subtitulo="Escolha a oferta de corrida ou o combo com musculação."
+              modulosAtuais={session?.user?.modulosAtivos ?? []}
+              modulosVencimentos={session?.user?.modulosVencimentos ?? null}
+            />
+          ) : (
+            <p className="text-muted">Faça login como aluno para contratar.</p>
+          )}
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="page-main">
       <div className="page-container page-stack corrida-aluno">
@@ -165,91 +189,70 @@ export default function Page() {
                 className="text-muted"
                 style={{ margin: "2px 0 0", fontSize: "0.85rem" }}
               >
-                {acessoOk
-                  ? "Seu plano do dia, passo a passo"
-                  : "Contrate o módulo para ver seus treinos"}
+                Seu plano do dia, passo a passo
               </p>
             </div>
           </div>
         </header>
 
-        {status === "loading" || acessoOk === null ? (
+        <div className="corrida-date-strip" role="tablist" aria-label="Dias">
+          {dias.map((iso) => {
+            const { dia, num } = labelPill(iso);
+            const ativo = iso === selecionado;
+            const tem = datasComTreino.has(iso);
+            return (
+              <button
+                key={iso}
+                type="button"
+                role="tab"
+                aria-selected={ativo}
+                className={`corrida-date-pill${ativo ? " corrida-date-pill--ativo" : ""}${tem ? " corrida-date-pill--tem" : ""}`}
+                onClick={() => setSelecionado(iso)}
+              >
+                <span>{dia}.</span>
+                <strong>{num}</strong>
+              </button>
+            );
+          })}
+        </div>
+
+        {loading ? (
           <p className="text-muted">Carregando...</p>
-        ) : !acessoOk ? (
-          alunoId ? (
-            <OfertasContratar
-              alunoId={alunoId}
-              grupo="treino"
-              titulo="Contratar corrida"
-              subtitulo="Escolha a oferta de corrida ou o combo com musculação."
-              modulosAtuais={session?.user?.modulosAtivos ?? []}
-              modulosVencimentos={session?.user?.modulosVencimentos ?? null}
-            />
-          ) : (
-            <p className="text-muted">Faça login como aluno para contratar.</p>
-          )
+        ) : erro ? (
+          <p className="field-error">{erro}</p>
+        ) : doDia.length === 0 ? (
+          <EmptyState
+            icon={Wind}
+            title="Nada prescrito neste dia"
+            description="Quando seu professor montar a corrida, ela aparece aqui."
+          />
         ) : (
-          <>
-            <div className="corrida-date-strip" role="tablist" aria-label="Dias">
-              {dias.map((iso) => {
-                const { dia, num } = labelPill(iso);
-                const ativo = iso === selecionado;
-                const tem = datasComTreino.has(iso);
-                return (
-                  <button
-                    key={iso}
-                    type="button"
-                    role="tab"
-                    aria-selected={ativo}
-                    className={`corrida-date-pill${ativo ? " corrida-date-pill--ativo" : ""}${tem ? " corrida-date-pill--tem" : ""}`}
-                    onClick={() => setSelecionado(iso)}
-                  >
-                    <span>{dia}.</span>
-                    <strong>{num}</strong>
-                  </button>
-                );
-              })}
-            </div>
+          doDia.map((treino) => (
+            <article key={treino.id} className="card corrida-dia-card">
+              <div className="corrida-dia-card-head">
+                <div>
+                  <p className="corrida-dia-tipo">
+                    <Wind size={16} aria-hidden /> Corrida
+                  </p>
+                  <h2 className="corrida-dia-titulo">{treino.titulo}</h2>
+                </div>
+                <span className="corrida-preview-badge">
+                  {treino.status === "concluido" ? "Concluído" : "Planejado"}
+                </span>
+              </div>
 
-            {loading ? (
-              <p className="text-muted">Carregando...</p>
-            ) : erro ? (
-              <p className="field-error">{erro}</p>
-            ) : doDia.length === 0 ? (
-              <EmptyState
-                icon={Wind}
-                title="Nada prescrito neste dia"
-                description="Quando seu professor montar a corrida, ela aparece aqui."
+              {treino.observacao ? (
+                <p className="corrida-dia-obs">{treino.observacao}</p>
+              ) : null}
+
+              <CorridaEstruturaView estrutura={treino.estrutura} />
+
+              <CorridaFeedbackAluno
+                treino={treino}
+                onAtualizado={atualizarTreino}
               />
-            ) : (
-              doDia.map((treino) => (
-                <article key={treino.id} className="card corrida-dia-card">
-                  <div className="corrida-dia-card-head">
-                    <div>
-                      <p className="corrida-dia-tipo">
-                        <Wind size={16} aria-hidden /> Corrida
-                      </p>
-                      <h2 className="corrida-dia-titulo">{treino.titulo}</h2>
-                    </div>
-                    <span className="corrida-preview-badge">
-                      {treino.status === "concluido" ? "Concluído" : "Planejado"}
-                    </span>
-                  </div>
-
-                  {treino.observacao ? (
-                    <p className="corrida-dia-obs">{treino.observacao}</p>
-                  ) : null}
-
-                  <CorridaEstruturaView estrutura={treino.estrutura} />
-
-                  <CorridaFeedbackAluno
-                    treino={treino}
-                    onAtualizado={atualizarTreino}
-                  />
-                </article>
-              ))
-            )}
-          </>
+            </article>
+          ))
         )}
       </div>
     </main>
