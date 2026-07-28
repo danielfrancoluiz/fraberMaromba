@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { LockKeyhole, Loader2 } from "lucide-react";
 import {
@@ -37,9 +37,9 @@ function temAcessoModulo(
 
 function Conteudo() {
   const params = useSearchParams();
-  const router = useRouter();
   const { data: session, update, status } = useSession();
   const [verificando, setVerificando] = useState(true);
+  const jaSincronizou = useRef(false);
 
   const m = params.get("m") ?? "";
   const modulo: ModuloAlunoId | null = isModuloAlunoId(m) ? m : null;
@@ -47,44 +47,45 @@ function Conteudo() {
 
   useEffect(() => {
     if (!modulo || status === "loading") return;
+    if (jaSincronizou.current) return;
+    jaSincronizou.current = true;
+
     let cancelado = false;
 
     async function sincronizarDoBanco() {
       try {
-        // 1) Se a sessão já tem o módulo, libera.
         if (temAcessoModulo(modulo!, session?.user)) {
-          if (!cancelado) router.replace(destinoModulo(modulo!));
+          window.location.replace(destinoModulo(modulo!));
           return;
         }
 
-        // 2) Lê o banco e atualiza o JWT (corrige sessão atrasada pós-pagamento).
         const res = await fetch("/api/aluno/acesso", { credentials: "include" });
-        if (!res.ok) return;
-        const body = (await res.json()) as {
-          modulosAtivos?: string[];
-          modulosVencimentos?: Partial<Record<string, string>>;
-          planoVenceEm?: string | null;
-          planoId?: string | null;
-          status?: string;
-        };
+        if (res.ok) {
+          const body = (await res.json()) as {
+            modulosAtivos?: string[];
+            modulosVencimentos?: Partial<Record<string, string>>;
+            planoVenceEm?: string | null;
+            planoId?: string | null;
+            status?: string;
+          };
 
-        await update({
-          modulosAtivos: body.modulosAtivos,
-          modulosVencimentos: body.modulosVencimentos,
-          planoVenceEm: body.planoVenceEm,
-          planoId: body.planoId,
-          status: body.status,
-        });
-
-        if (
-          !cancelado &&
-          temAcessoModulo(modulo!, {
+          await update({
             modulosAtivos: body.modulosAtivos,
             modulosVencimentos: body.modulosVencimentos,
-          })
-        ) {
-          router.replace(destinoModulo(modulo!));
-          return;
+            planoVenceEm: body.planoVenceEm,
+            planoId: body.planoId,
+            status: body.status,
+          });
+
+          if (
+            temAcessoModulo(modulo!, {
+              modulosAtivos: body.modulosAtivos,
+              modulosVencimentos: body.modulosVencimentos,
+            })
+          ) {
+            window.location.replace(destinoModulo(modulo!));
+            return;
+          }
         }
       } catch {
         /* mostra tela de bloqueio */
@@ -98,13 +99,22 @@ function Conteudo() {
     return () => {
       cancelado = true;
     };
-  }, [modulo, status, session?.user, update, router]);
+    // Roda uma vez após a sessão carregar — evita loop com update() da sessão.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modulo, status]);
+
+  // Timeout de segurança: nunca ficar preso em "Verificando..."
+  useEffect(() => {
+    if (!verificando) return;
+    const t = window.setTimeout(() => setVerificando(false), 8000);
+    return () => window.clearTimeout(t);
+  }, [verificando]);
 
   if (verificando || status === "loading") {
     return (
       <main className="page-main inativo-page">
         <div className="inativo-page-inner card">
-          <Loader2 size={40} className="text-accent" aria-hidden />
+          <Loader2 size={40} className="text-accent pagamento-cartao-spinner" aria-hidden />
           <p className="text-muted">Verificando acesso...</p>
         </div>
       </main>

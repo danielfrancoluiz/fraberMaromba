@@ -51,6 +51,7 @@ export default withAuth(
         "/aluno/planos",
         "/aluno/perfil",
         "/aluno/nutricao",
+        "/aluno/corrida",
         "/aluno/inativo",
         "/aluno/modulo-bloqueado",
         "/aluno/login",
@@ -75,15 +76,7 @@ export default withAuth(
           }
         }
 
-        if (pathname.startsWith("/aluno/corrida")) {
-          if (!tokenTemModulo(token ?? {}, "corrida")) {
-            return NextResponse.redirect(
-              new URL("/aluno/modulo-bloqueado?m=corrida", req.url)
-            );
-          }
-        }
-
-        // Nutrição fica liberada para ver ofertas / anamnese (compra na própria aba).
+        // Corrida e nutrição: a própria página mostra contratar ou conteúdo.
       }
     }
 
