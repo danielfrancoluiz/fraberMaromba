@@ -2,23 +2,13 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { CheckCircle, Loader2 } from "lucide-react";
-
-type ConfirmarBody = {
-  confirmado?: boolean;
-  modulosAtivos?: string[];
-  modulosVencimentos?: Record<string, string>;
-  planoVenceEm?: string;
-  planoId?: string;
-  status?: string;
-  destino?: string;
-};
+import { finalizarPosPagamentoAluno } from "@/lib/pos-pagamento-cliente";
 
 function PagamentoSucessoConteudo() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const { data: session, update } = useSession();
   const paymentIntentId = searchParams.get("payment_intent");
   const ok = searchParams.get("ok") === "1";
@@ -32,7 +22,9 @@ function PagamentoSucessoConteudo() {
 
   const [confirmando, setConfirmando] = useState(Boolean(paymentIntentId) && !ok);
   const [erro, setErro] = useState<string | null>(null);
-  const [destino, setDestino] = useState("/aluno/dashboard");
+  const [destino, setDestino] = useState(
+    role === "professor" ? "/professor/dashboard" : "/aluno/dashboard"
+  );
   const jaRodou = useRef(false);
 
   useEffect(() => {
@@ -44,21 +36,9 @@ function PagamentoSucessoConteudo() {
     async function rodar() {
       if (ok) {
         try {
-          const res = await fetch("/api/aluno/acesso", { credentials: "include" });
-          if (res.ok) {
-            const body = (await res.json()) as ConfirmarBody;
-            await update({
-              modulosAtivos: body.modulosAtivos,
-              modulosVencimentos: body.modulosVencimentos,
-              planoVenceEm: body.planoVenceEm,
-              planoId: body.planoId,
-              status: body.status,
-            });
-          } else {
-            await update();
-          }
+          await update({ syncFromDb: true });
         } catch {
-          await update();
+          /* ignore */
         }
         return;
       }
@@ -66,39 +46,21 @@ function PagamentoSucessoConteudo() {
       if (!paymentIntentId) return;
 
       try {
-        const res = await fetch("/api/pagamentos/confirmar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ paymentIntentId }),
-        });
-
-        if (!ativo) return;
-
-        const body = (await res.json().catch(() => ({}))) as ConfirmarBody & {
-          error?: string;
-        };
-
-        if (!res.ok) {
-          setErro(body.error ?? "Não foi possível confirmar o pagamento automaticamente.");
-        } else {
-          if (body.modulosAtivos || body.modulosVencimentos) {
-            await update({
-              modulosAtivos: body.modulosAtivos,
-              modulosVencimentos: body.modulosVencimentos,
-              planoVenceEm: body.planoVenceEm,
-              planoId: body.planoId,
-              status: body.status ?? "ativo_plataforma",
-            });
-          } else {
-            await update();
+        if (role === "professor") {
+          await update({ syncFromDb: true });
+          if (ativo) {
+            setDestino("/professor/dashboard");
+            setConfirmando(false);
           }
-          if (body.destino?.startsWith("/aluno/")) {
-            setDestino(body.destino);
-            router.replace(body.destino);
-            return;
-          }
+          return;
         }
+
+        const url = await finalizarPosPagamentoAluno({
+          paymentIntentId,
+          update,
+          navegar: true,
+        });
+        if (ativo) setDestino(url);
       } catch {
         if (ativo) {
           setErro(

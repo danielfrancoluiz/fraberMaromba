@@ -177,7 +177,7 @@ export function AlunoHome360() {
         <ModuloQuickLink
           href="/aluno/nutricao"
           icon={Salad}
-          titulo={temNutri ? "Nutrição" : "Nutrição"}
+          titulo={temNutri ? "Nutrição" : "Contratar nutrição"}
           detalhe={temNutri && vencNutri ? `até ${vencNutri}` : null}
         />
       </div>

@@ -138,27 +138,64 @@ export const authOptions: NextAuthOptions = {
         return token;
       }
 
-      // update({ modulosAtivos, ... }) após pagamento — aplica no JWT na hora.
-      if (trigger === "update" && session && typeof session === "object") {
-        const s = session as Record<string, unknown>;
-        if (Array.isArray(s.modulosAtivos)) {
-          token.modulosAtivos = s.modulosAtivos;
+      // update({ ... }) após pagamento — aplica no JWT na hora.
+      // update() sem payload ou com syncFromDb: true → relê o banco (não só bumpa lastDbSync).
+      if (trigger === "update") {
+        const s =
+          session && typeof session === "object"
+            ? (session as Record<string, unknown>)
+            : null;
+        const forcarDb = !s || s.syncFromDb === true;
+        const temPayload =
+          Boolean(s) &&
+          (Array.isArray(s!.modulosAtivos) ||
+            (s!.modulosVencimentos &&
+              typeof s!.modulosVencimentos === "object") ||
+            typeof s!.planoVenceEm === "string" ||
+            typeof s!.planoId === "string" ||
+            typeof s!.status === "string" ||
+            typeof s!.alunoId === "string");
+
+        if (forcarDb || !temPayload) {
+          if (token.id) {
+            try {
+              const dados = await carregarDadosSessaoPorId(token.id as string);
+              if (dados) {
+                token.role = dados.role;
+                token.status = dados.status;
+                token.professorId = dados.professorId;
+                token.alunoId = dados.alunoId;
+                token.planoId = dados.planoId;
+                token.planoVenceEm = dados.planoVenceEm;
+                token.modulosAtivos = dados.modulosAtivos;
+                token.modulosVencimentos = dados.modulosVencimentos;
+              }
+            } catch (error) {
+              console.error("[auth] falha ao sincronizar pós-update:", error);
+            }
+          }
+          token.lastDbSync = Date.now();
+          return token;
         }
-        if (s.modulosVencimentos && typeof s.modulosVencimentos === "object") {
-          token.modulosVencimentos = s.modulosVencimentos;
+
+        if (Array.isArray(s!.modulosAtivos)) {
+          token.modulosAtivos = s!.modulosAtivos;
         }
-        if (typeof s.planoVenceEm === "string" || s.planoVenceEm === null) {
-          token.planoVenceEm = s.planoVenceEm ?? undefined;
+        if (s!.modulosVencimentos && typeof s!.modulosVencimentos === "object") {
+          token.modulosVencimentos = s!.modulosVencimentos;
         }
-        if (typeof s.planoId === "string") token.planoId = s.planoId;
+        if (typeof s!.planoVenceEm === "string" || s!.planoVenceEm === null) {
+          token.planoVenceEm = s!.planoVenceEm ?? undefined;
+        }
+        if (typeof s!.planoId === "string") token.planoId = s!.planoId;
         if (
-          s.status === "ativo_professor" ||
-          s.status === "ativo_plataforma" ||
-          s.status === "inativo"
+          s!.status === "ativo_professor" ||
+          s!.status === "ativo_plataforma" ||
+          s!.status === "inativo"
         ) {
-          token.status = s.status;
+          token.status = s!.status;
         }
-        if (typeof s.alunoId === "string") token.alunoId = s.alunoId;
+        if (typeof s!.alunoId === "string") token.alunoId = s!.alunoId;
         token.lastDbSync = Date.now();
         return token;
       }

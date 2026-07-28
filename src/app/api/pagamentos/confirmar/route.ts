@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiSession } from "@/lib/get-api-session";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
-import { confirmarPagamentoPaymentIntent } from "@/lib/pagamento-stripe";
+import {
+  ativarAlunoAposPagamento,
+  confirmarPagamentoPaymentIntent,
+} from "@/lib/pagamento-stripe";
 import { resolveAlunoId } from "@/lib/sessao-treino-server";
 import { destinoAposModulos } from "@/lib/destino-pos-pagamento";
 import {
@@ -41,6 +44,13 @@ async function autorizarPagamento(
   return false;
 }
 
+function lerModulosMeta(raw: string | undefined): string[] {
+  return (raw ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getApiSession(req);
@@ -75,10 +85,20 @@ export async function POST(req: NextRequest) {
     const confirmado = await confirmarPagamentoPaymentIntent(paymentIntent);
 
     const alunoIdMeta = paymentIntent.metadata?.alunoId?.trim();
-    const modulosPagos = (paymentIntent.metadata?.modulos ?? "")
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const pagamento = await prisma.pagamento.findFirst({
+      where: { stripePaymentIntentId: paymentIntentId },
+      select: {
+        modulos: true,
+        dataVencimento: true,
+        planoId: true,
+        alunoId: true,
+      },
+    });
+
+    const modulosMeta = lerModulosMeta(paymentIntent.metadata?.modulos);
+    const modulosPagos = normalizarModulos(
+      modulosMeta.length ? modulosMeta : (pagamento?.modulos ?? [])
+    );
 
     let sessaoAluno: {
       modulosAtivos: string[];
@@ -90,6 +110,43 @@ export async function POST(req: NextRequest) {
     } | null = null;
 
     if (alunoIdMeta) {
+      // Garante liberação mesmo se o 1º activate veio sem módulos / race.
+      if (modulosPagos.length > 0) {
+        const alunoAntes = await prisma.aluno.findUnique({
+          where: { id: alunoIdMeta },
+          select: {
+            modulosAtivos: true,
+            modulosVencimentos: true,
+            planoVenceEm: true,
+          },
+        });
+        if (alunoAntes) {
+          let vencAntes = parseModulosVencimentos(alunoAntes.modulosVencimentos);
+          if (Object.keys(vencAntes).length === 0 && alunoAntes.planoVenceEm) {
+            for (const id of normalizarModulos(alunoAntes.modulosAtivos)) {
+              vencAntes[id] = alunoAntes.planoVenceEm.toISOString();
+            }
+          }
+          const vigentesAntes = new Set(modulosVigentes(vencAntes));
+          const faltam = modulosPagos.filter((m) => !vigentesAntes.has(m));
+          if (faltam.length > 0) {
+            const vence =
+              pagamento?.dataVencimento ??
+              (() => {
+                const d = new Date();
+                d.setDate(d.getDate() + 30);
+                return d;
+              })();
+            await ativarAlunoAposPagamento(
+              alunoIdMeta,
+              pagamento?.planoId ?? paymentIntent.metadata?.planoId,
+              vence,
+              faltam
+            );
+          }
+        }
+      }
+
       const aluno = await prisma.aluno.findUnique({
         where: { id: alunoIdMeta },
         select: {

@@ -7,27 +7,16 @@ import {
   useStripe,
 } from "@stripe/react-stripe-js";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { finalizarPosPagamentoAluno } from "@/lib/pos-pagamento-cliente";
 
 interface FormularioCartaoProps {
   onCancelar?: () => void;
 }
 
-type ConfirmarBody = {
-  confirmado?: boolean;
-  modulosAtivos?: string[];
-  modulosVencimentos?: Record<string, string>;
-  planoVenceEm?: string;
-  planoId?: string;
-  status?: string;
-  destino?: string;
-};
-
 export function FormularioCartao({ onCancelar }: FormularioCartaoProps) {
   const stripe = useStripe();
   const elements = useElements();
-  const router = useRouter();
   const { data: session, update } = useSession();
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -55,41 +44,17 @@ export function FormularioCartao({ onCancelar }: FormularioCartaoProps) {
       }
 
       if (paymentIntent?.status === "succeeded") {
-        let body: ConfirmarBody = {};
-        try {
-          const res = await fetch("/api/pagamentos/confirmar", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ paymentIntentId: paymentIntent.id }),
-          });
-          body = (await res.json().catch(() => ({}))) as ConfirmarBody;
-        } catch {
-          /* webhook ainda pode confirmar */
-        }
-
-        if (body.modulosAtivos || body.modulosVencimentos) {
-          await update({
-            modulosAtivos: body.modulosAtivos,
-            modulosVencimentos: body.modulosVencimentos,
-            planoVenceEm: body.planoVenceEm,
-            planoId: body.planoId,
-            status: body.status ?? "ativo_plataforma",
-          });
-        } else {
-          await update();
-        }
-
         const role = session?.user?.role;
         if (role === "professor") {
-          router.replace("/pagamento/sucesso?ok=1&role=professor");
-        } else {
-          const destino = body.destino?.startsWith("/aluno/")
-            ? body.destino
-            : "/aluno/dashboard";
-          router.replace(destino);
+          await update({ syncFromDb: true });
+          window.location.assign("/pagamento/sucesso?ok=1&role=professor");
+          return;
         }
-        router.refresh();
+
+        await finalizarPosPagamentoAluno({
+          paymentIntentId: paymentIntent.id,
+          update,
+        });
         return;
       }
 
