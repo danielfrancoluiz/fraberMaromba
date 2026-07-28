@@ -4098,7 +4098,7 @@ body {
   font-size: 0.85rem;
 }
 
-/* Nav dias semana — só UM dia ativo; :hover/:focus não mantêm vermelho no mobile */
+/* Nav dias semana — cor do ativo/inativo vem de style inline no componente */
 .nav-dias-semana {
   display: flex;
   flex-wrap: nowrap;
@@ -4116,6 +4116,8 @@ body {
 
 .nav-dia-btn {
   flex-shrink: 0;
+  appearance: none;
+  -webkit-appearance: none;
   border: 2px solid transparent;
   border-radius: 999px;
   padding: 10px 16px;
@@ -4125,39 +4127,16 @@ body {
   white-space: nowrap;
   font-family: inherit;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-.nav-dia-btn--active,
-.nav-dia-btn[data-selected="true"],
-.nav-dia-btn--active:hover,
-.nav-dia-btn--active:focus,
-.nav-dia-btn--active:active,
-.nav-dia-btn[data-selected="true"]:hover,
-.nav-dia-btn[data-selected="true"]:focus,
-.nav-dia-btn[data-selected="true"]:active {
-  background: var(--fraber-primary);
-  color: var(--fraber-text);
-  border-color: transparent;
   outline: none;
+  box-shadow: none;
 }
 
-.nav-dia-btn--inactive,
-.nav-dia-btn[data-selected="false"],
-.nav-dia-btn--inactive:hover,
-.nav-dia-btn--inactive:focus,
-.nav-dia-btn--inactive:active,
-.nav-dia-btn[data-selected="false"]:hover,
-.nav-dia-btn[data-selected="false"]:focus,
-.nav-dia-btn[data-selected="false"]:active {
-  background: var(--fraber-surface);
-  color: var(--fraber-text-muted);
-  border-color: transparent;
+.nav-dia-btn:focus,
+.nav-dia-btn:focus-visible,
+.nav-dia-btn:active,
+.nav-dia-btn:hover {
   outline: none;
-}
-
-.nav-dia-btn[data-selected="true"]:focus-visible {
-  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: none;
 }
 
 /* Check-in */

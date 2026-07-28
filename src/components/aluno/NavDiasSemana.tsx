@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 
 const DIA_LABELS: Record<string, string> = {
   segunda: "Segunda",
@@ -22,6 +22,19 @@ function labelDia(dia: string): string {
   return DIA_LABELS[dia] ?? dia;
 }
 
+/** Cores via style inline — no mobile :hover/:focus de CSS não “prende” o vermelho. */
+const ESTILO_ATIVO: CSSProperties = {
+  background: "var(--fraber-primary)",
+  color: "var(--fraber-text)",
+  borderColor: "transparent",
+};
+
+const ESTILO_INATIVO: CSSProperties = {
+  background: "var(--fraber-surface)",
+  color: "var(--fraber-text-muted)",
+  borderColor: "transparent",
+};
+
 export function NavDiasSemana({
   dias,
   diaSelecionado,
@@ -33,8 +46,14 @@ export function NavDiasSemana({
     const nav = navRef.current;
     if (!nav) return;
 
-    const botao = nav.querySelector<HTMLElement>(`[data-dia="${diaSelecionado}"]`);
-    botao?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+    const botao = nav.querySelector<HTMLElement>(
+      `[data-dia="${CSS.escape(diaSelecionado)}"]`
+    );
+    botao?.scrollIntoView({
+      inline: "center",
+      block: "nearest",
+      behavior: "smooth",
+    });
   }, [diaSelecionado]);
 
   return (
@@ -52,19 +71,14 @@ export function NavDiasSemana({
             type="button"
             role="tab"
             data-dia={dia}
-            data-selected={selecionado ? "true" : "false"}
             aria-selected={selecionado}
             tabIndex={selecionado ? 0 : -1}
-            onClick={(e) => {
-              onChange(dia);
-              // Evita dia anterior ficar com estilo de :focus/:hover no mobile.
-              e.currentTarget.blur();
+            className="nav-dia-btn"
+            style={selecionado ? ESTILO_ATIVO : ESTILO_INATIVO}
+            onPointerUp={(e) => {
+              (e.currentTarget as HTMLButtonElement).blur();
             }}
-            className={
-              selecionado
-                ? "nav-dia-btn nav-dia-btn--active"
-                : "nav-dia-btn nav-dia-btn--inactive"
-            }
+            onClick={() => onChange(dia)}
           >
             {labelDia(dia)}
           </button>
