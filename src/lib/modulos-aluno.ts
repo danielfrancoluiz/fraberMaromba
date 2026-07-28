@@ -51,19 +51,6 @@ export function labelsModulos(modulos: string[]): string {
   return `${labels.slice(0, -1).join(", ")} e ${labels[labels.length - 1]}`;
 }
 
-/** Preços padrão (centavos) por quantidade de módulos — espelha o seed do banco. */
-export const PRECOS_MODULOS_PADRAO: Record<1 | 2 | 3, number> = {
-  1: 1990,
-  2: 2990,
-  3: 3990,
-};
-
-export const DIAS_VALIDADE_MODULOS = 30;
-
-export function planoIdPorQuantidade(qtd: number): string {
-  return `modulos_${qtd}`;
-}
-
 export function parseModulosVencimentos(value: unknown): ModulosVencimentos {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   const out: ModulosVencimentos = {};
@@ -132,11 +119,4 @@ export function mesclarVencimentosModulos(
     next[id] = iso;
   }
   return next;
-}
-
-export function precoPorModuloCentavos(
-  qtd: 1 | 2 | 3,
-  totalCentavos: number
-): number {
-  return Math.round(totalCentavos / qtd);
 }

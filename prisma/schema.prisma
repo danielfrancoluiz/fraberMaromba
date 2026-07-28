@@ -291,15 +291,6 @@ model ConfigApp {
   atualizadoEm        DateTime @updatedAt
 }
 
-/// Preço mensal conforme quantidade de módulos (legado — preferir OfertaPlano).
-model PrecoPacoteModulos {
-  quantidade    Int     @id
-  valorCentavos Int
-  diasValidade  Int     @default(30)
-  ativo         Boolean @default(true)
-  atualizadoEm  DateTime @updatedAt
-}
-
 /// Ofertas comerciais do aluno (treino / nutrição). Editáveis no app do professor.
 model OfertaPlano {
   id            String   @id
