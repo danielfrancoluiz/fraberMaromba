@@ -7,7 +7,6 @@ import { usePagamento } from "@/hooks/usePagamento";
 import {
   formatarPrecoCentavos,
   labelValidadeOferta,
-  resumoOfertas,
 } from "@/lib/ofertas-planos";
 
 type Oferta = {
@@ -25,7 +24,7 @@ interface OfertasContratarProps {
   alunoId: string;
   grupo: "treino" | "nutricao";
   titulo?: string;
-  /** Se omitido, monta automaticamente a partir dos preços do banco. */
+  /** Texto curto opcional (sem lista de preços — os cards já mostram). */
   subtitulo?: string;
   modulosAtuais?: string[];
 }
@@ -110,13 +109,6 @@ export function OfertasContratar({
     ofertas.find((o) => o.badge)?.badge ??
     ofertasVisiveis.find((o) => o.badge)?.badge ??
     null;
-  const subtituloAuto =
-    subtitulo ??
-    (ofertas.length > 0
-      ? resumoOfertas(ofertas)
-      : grupo === "treino"
-        ? "Escolha a oferta de treino desejada."
-        : "Escolha o plano nutricional. Após a compra, preencha a anamnese.");
 
   return (
     <div className="page-stack ofertas-contratar">
@@ -129,9 +121,11 @@ export function OfertasContratar({
           {titulo ?? (grupo === "treino" ? "Contratar treino" : "Nutrição")}
         </h1>
         {badgeGeral ? <p className="ofertas-badge">{badgeGeral}</p> : null}
-        <p className="text-muted" style={{ margin: "8px 0 0" }}>
-          {subtituloAuto}
-        </p>
+        {subtitulo ? (
+          <p className="text-muted" style={{ margin: "8px 0 0" }}>
+            {subtitulo}
+          </p>
+        ) : null}
       </div>
 
       {loadingLista ? (

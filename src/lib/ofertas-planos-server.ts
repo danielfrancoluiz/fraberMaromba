@@ -44,26 +44,36 @@ function toDTO(row: {
   };
 }
 
+/** Evita 7 upserts a cada request (isso deixava a tela em "Carregando..."). */
+let seedPromise: Promise<void> | null = null;
+
 /** Garante ofertas no banco. Não sobrescreve edições feitas no painel. */
 export async function ensureOfertasPlanosSeeded(): Promise<void> {
-  for (const o of OFERTAS_PLANOS_PADRAO) {
-    await prisma.ofertaPlano.upsert({
-      where: { id: o.id },
-      create: {
-        id: o.id,
-        grupo: o.grupo,
-        nome: o.nome,
-        descricao: o.descricao,
-        valorCentavos: o.valorCentavos,
-        diasValidade: o.diasValidade,
-        modulos: o.modulos,
-        ordem: o.ordem,
-        ativo: o.ativo,
-        badge: o.badge ?? null,
-      },
-      update: {},
+  if (!seedPromise) {
+    seedPromise = (async () => {
+      const count = await prisma.ofertaPlano.count();
+      if (count > 0) return;
+      await prisma.ofertaPlano.createMany({
+        data: OFERTAS_PLANOS_PADRAO.map((o) => ({
+          id: o.id,
+          grupo: o.grupo,
+          nome: o.nome,
+          descricao: o.descricao,
+          valorCentavos: o.valorCentavos,
+          diasValidade: o.diasValidade,
+          modulos: o.modulos,
+          ordem: o.ordem,
+          ativo: o.ativo,
+          badge: o.badge ?? null,
+        })),
+        skipDuplicates: true,
+      });
+    })().catch((error) => {
+      seedPromise = null;
+      throw error;
     });
   }
+  await seedPromise;
 }
 
 export async function listarOfertas(params?: {
