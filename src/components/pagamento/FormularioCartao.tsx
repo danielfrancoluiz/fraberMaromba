@@ -55,17 +55,15 @@ export function FormularioCartao({ onCancelar }: FormularioCartaoProps) {
           /* webhook ainda pode confirmar */
         }
 
-        // Não bloqueia a navegação se o sync da sessão travar.
-        const sessaoAtualizada = (await atualizarSessaoComTimeout(() =>
-          update()
-        )) as { user?: { role?: string } } | null;
-        const role = sessaoAtualizada?.user?.role ?? session?.user?.role;
-
+        // Relê o banco no JWT (módulos liberados) antes de navegar.
+        await atualizarSessaoComTimeout(() => update(), 10_000);
+        const role = session?.user?.role;
         router.replace(
           role === "professor"
             ? "/pagamento/sucesso?ok=1&role=professor"
             : "/pagamento/sucesso?ok=1&role=aluno"
         );
+        router.refresh();
         return;
       }
 

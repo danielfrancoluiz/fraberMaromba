@@ -114,7 +114,7 @@ export function OfertasContratar({
     };
   }, [grupo]);
 
-  /** Treino: mostra todas as ofertas ativas (exceto combo se já tem um dos módulos). */
+  /** Treino: só ofertas ainda não contratadas (ex.: tem musc → só corrida). */
   const ofertasVisiveis = useMemo(() => {
     if (grupo !== "treino") return ofertas;
     const temMusc = ativos.has("musculacao");
@@ -123,19 +123,17 @@ export function OfertasContratar({
       if (o.id === "treino_combo_musc_corrida") {
         return !temMusc && !temCorrida;
       }
+      if (o.id === "treino_musculacao") return !temMusc;
+      if (o.id === "treino_corrida") return !temCorrida;
+      // Oferta genérica: esconde se todos os módulos dela já estão ativos
+      if (o.modulos.length > 0 && o.modulos.every((m) => ativos.has(m))) {
+        return false;
+      }
       return true;
     });
   }, [ofertas, grupo, ativos]);
 
-  function ofertaJaAtiva(o: Oferta): boolean {
-    if (grupo !== "treino") return false;
-    if (o.modulos.length === 0) return false;
-    return o.modulos.every((m) => ativos.has(m));
-  }
-
-  const ofertaSel =
-    ofertasVisiveis.find((o) => o.id === escolhida && !ofertaJaAtiva(o)) ??
-    null;
+  const ofertaSel = ofertasVisiveis.find((o) => o.id === escolhida) ?? null;
   const badgeGeral =
     ofertas.find((o) => o.badge)?.badge ??
     ofertasVisiveis.find((o) => o.badge)?.badge ??
@@ -172,30 +170,22 @@ export function OfertasContratar({
       ) : (
         <div className="ofertas-lista" role="radiogroup" aria-label="Ofertas">
           {ofertasVisiveis.map((o) => {
-            const jaAtiva = ofertaJaAtiva(o);
-            const selected = escolhida === o.id && !jaAtiva;
+            const selected = escolhida === o.id;
             return (
               <button
                 key={o.id}
                 type="button"
                 role="radio"
                 aria-checked={selected}
-                aria-disabled={jaAtiva}
-                disabled={jaAtiva}
-                className={`oferta-card${selected ? " oferta-card--ativo" : ""}${jaAtiva ? " oferta-card--disabled" : ""}`}
+                className={`oferta-card${selected ? " oferta-card--ativo" : ""}`}
                 onClick={() => {
-                  if (jaAtiva) return;
                   setEscolhida(o.id);
                   cancelarPagamento();
                 }}
               >
                 <span className="oferta-card-top">
                   <span className="oferta-card-nome">{o.nome}</span>
-                  {jaAtiva ? (
-                    <span className="oferta-card-status">Já ativo</span>
-                  ) : selected ? (
-                    <Check size={18} aria-hidden />
-                  ) : null}
+                  {selected ? <Check size={18} aria-hidden /> : null}
                 </span>
                 {o.descricao ? (
                   <span className="oferta-card-desc text-muted">{o.descricao}</span>

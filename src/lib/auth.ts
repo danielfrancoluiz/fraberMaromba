@@ -138,11 +138,12 @@ export const authOptions: NextAuthOptions = {
         return token;
       }
 
-      // Após pagamento `update()` deve reler o banco na hora (não esperar 30s).
+      // Após pagamento `update()` deve reler o banco na hora.
       const forcarSync = trigger === "update";
       const lastSync =
         typeof token.lastDbSync === "number" ? token.lastDbSync : 0;
-      if (token.id && (forcarSync || Date.now() - lastSync > 5_000)) {
+      // Sync frequente: 5s era pouco agressivo após pagamento no edge.
+      if (token.id && (forcarSync || Date.now() - lastSync > 3_000)) {
         try {
           const dados = await carregarDadosSessaoPorId(token.id as string);
           if (dados) {

@@ -1,14 +1,20 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { PageTopBar } from "@/components/ui/PageTopBar";
 import { OfertasContratar } from "@/components/pagamento/OfertasContratar";
+import { atualizarSessaoComTimeout } from "@/lib/atualizar-sessao";
 
 export default function Page() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const alunoId = session?.user?.alunoId ?? "";
+
+  useEffect(() => {
+    void atualizarSessaoComTimeout(() => update(), 8000);
+  }, [update]);
 
   return (
     <main className="page-main">
@@ -16,7 +22,7 @@ export default function Page() {
         <PageTopBar
           title="Planos"
           subtitle="Contrate ou renove seus módulos de treino"
-          onBack={() => router.push("/aluno/perfil")}
+          onBack={() => router.push("/aluno/dashboard")}
         />
         {alunoId ? (
           <OfertasContratar

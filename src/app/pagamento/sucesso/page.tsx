@@ -110,11 +110,17 @@ function PagamentoSucessoConteudo() {
         {erro ? <p className="erro-campo">{erro}</p> : null}
         <div className="action-row" style={{ width: "100%", marginTop: "8px" }}>
           <Link href={dashHref} className="btn-primary">
-            Ir para o dashboard
+            Ir para o início
           </Link>
-          <Link href={perfilHref} className="btn-secondary">
-            Ver perfil
-          </Link>
+          {role === "aluno" ? (
+            <Link href="/aluno/treinos" className="btn-secondary">
+              Ver musculação
+            </Link>
+          ) : (
+            <Link href={perfilHref} className="btn-secondary">
+              Ver perfil
+            </Link>
+          )}
         </div>
       </div>
     </main>

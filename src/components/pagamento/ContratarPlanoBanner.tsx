@@ -73,15 +73,21 @@ export function semPlanoContratado(params?: {
   planoId?: string | null;
   planoVenceEm?: string | null;
   modulosAtivos?: string[] | null;
+  modulosVencimentos?: Partial<Record<string, string>> | null;
 } | string | null): boolean {
   // Compat: chamada antiga com só planoId string
   if (typeof params === "string" || params === null || params === undefined) {
     return !params?.trim();
   }
-  if (params.modulosAtivos !== undefined || params.planoVenceEm !== undefined) {
+  if (
+    params.modulosAtivos !== undefined ||
+    params.planoVenceEm !== undefined ||
+    params.modulosVencimentos !== undefined
+  ) {
     return !alunoPlanoAtivo({
       planoVenceEm: params.planoVenceEm,
       modulosAtivos: params.modulosAtivos,
+      modulosVencimentos: params.modulosVencimentos ?? undefined,
     });
   }
   return !params.planoId?.trim();

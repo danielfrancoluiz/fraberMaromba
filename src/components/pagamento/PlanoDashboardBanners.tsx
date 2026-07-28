@@ -55,10 +55,15 @@ export function PlanoDashboardBanners({
   const planoId = session?.user?.planoId;
   const planoVenceEm = session?.user?.planoVenceEm;
   const modulosAtivos = session?.user?.modulosAtivos;
+  const modulosVencimentos = session?.user?.modulosVencimentos;
 
   const semPlano =
     role === "aluno"
-      ? semPlanoContratado({ planoVenceEm, modulosAtivos })
+      ? semPlanoContratado({
+          planoVenceEm,
+          modulosAtivos,
+          modulosVencimentos,
+        })
       : semPlanoContratado(planoId);
 
   const vencido = planoVencido(planoVenceEm);
