@@ -164,7 +164,7 @@ function filtrarSubstitutosPorGrupo(
 export async function listarTreinosDoAlunoPorDia(
   _alunoId: string
 ): Promise<Record<string, Treino[]>> {
-  const res = await fetch("/api/aluno/treinos");
+  const res = await fetch("/api/aluno/treinos", { credentials: "include" });
   const agrupado = await handleResponse<TreinosPorDiaApi>(res);
 
   const resultado: Record<string, Treino[]> = {};

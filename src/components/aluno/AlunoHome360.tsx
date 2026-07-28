@@ -17,7 +17,6 @@ import { buscarEstatisticasSessaoAluno } from "@/services/sessaoService";
 import { EstatisticasSessaoAluno, Treino } from "@/types";
 import { atualizarSessaoComTimeout } from "@/lib/atualizar-sessao";
 import {
-  labelModulo,
   moduloVigente,
   type ModuloAlunoId,
 } from "@/lib/modulos-aluno";
@@ -73,7 +72,6 @@ export function AlunoHome360() {
   const diaAtual = getDiaSemanaAtual();
   const alunoId = session?.user?.alunoId ?? session?.user?.id;
 
-  // Após pagamento, o JWT pode estar desatualizado — força sync ao abrir o início.
   useEffect(() => {
     if (status !== "authenticated") return;
     let ativo = true;
@@ -125,22 +123,44 @@ export function AlunoHome360() {
     return (session?.user?.modulosAtivos ?? []) as ModuloAlunoId[];
   }, [session?.user?.modulosAtivos, session?.user?.modulosVencimentos]);
 
-  const faltamTreino = useMemo(() => {
-    const falta: { id: ModuloAlunoId; label: string; href: string }[] = [];
-    if (!modulosAtivos.includes("musculacao")) {
-      falta.push({ id: "musculacao", label: "Musculação", href: "/aluno/planos" });
-    }
-    if (!modulosAtivos.includes("corrida")) {
-      falta.push({ id: "corrida", label: "Corrida", href: "/aluno/planos" });
-    }
-    return falta;
-  }, [modulosAtivos]);
+  const faltaCorrida = !modulosAtivos.includes("corrida");
+  const faltaMusc = !modulosAtivos.includes("musculacao");
+  const temMusc = modulosAtivos.includes("musculacao");
+  const temCorrida = modulosAtivos.includes("corrida");
+
+  const vencMusc = formatarVencimento(
+    session?.user?.modulosVencimentos?.musculacao ?? session?.user?.planoVenceEm
+  );
+  const vencCorrida = formatarVencimento(
+    session?.user?.modulosVencimentos?.corrida
+  );
 
   const completed = stats?.treinosConcluidos ?? 0;
   const frequency =
     completed > 0 ? Math.min(100, Math.round((completed / 12) * 100)) : 0;
 
-  const temMusc = modulosAtivos.includes("musculacao");
+  const textoBotaoContratar =
+    faltaMusc && faltaCorrida
+      ? "Contratar módulos"
+      : faltaCorrida
+        ? "Contratar corrida"
+        : faltaMusc
+          ? "Contratar musculação"
+          : null;
+
+  const textoVencimento =
+    temMusc && temCorrida
+      ? [
+          vencMusc ? `Musculação até ${vencMusc}` : null,
+          vencCorrida ? `Corrida até ${vencCorrida}` : null,
+        ]
+          .filter(Boolean)
+          .join(" · ")
+      : temMusc && vencMusc
+        ? `Musculação até ${vencMusc}`
+        : temCorrida && vencCorrida
+          ? `Corrida até ${vencCorrida}`
+          : null;
 
   return (
     <div className="student-home-stack">
@@ -156,45 +176,21 @@ export function AlunoHome360() {
         </p>
       </section>
 
-      <section className="student-modules-card card">
-        <p className="field-label" style={{ marginBottom: 10 }}>
-          Seus módulos
-        </p>
-        {modulosAtivos.length === 0 ? (
-          <p className="text-muted" style={{ margin: "0 0 12px" }}>
-            Você ainda não tem módulos de treino ativos.
-          </p>
-        ) : (
-          <ul className="student-modules-list">
-            {modulosAtivos.map((id) => {
-              const vence = formatarVencimento(
-                session?.user?.modulosVencimentos?.[id] ??
-                  session?.user?.planoVenceEm
-              );
-              return (
-                <li key={id} className="student-modules-item">
-                  <span className="student-modules-name">{labelModulo(id)}</span>
-                  <span className="student-modules-meta text-muted">
-                    {vence ? `até ${vence}` : "Ativo"}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-
-        {faltamTreino.length > 0 ? (
-          <Link href="/aluno/planos" className="btn-secondary btn-compact" style={{ marginTop: 8 }}>
-            <CreditCard size={16} style={{ marginRight: 6 }} />
-            Contratar{" "}
-            {faltamTreino.map((f) => f.label).join(" ou ")}
-          </Link>
-        ) : (
-          <p className="text-muted" style={{ margin: "8px 0 0", fontSize: "0.85rem" }}>
-            Musculação e Corrida ativas neste período.
-          </p>
-        )}
-      </section>
+      {(textoBotaoContratar || textoVencimento) && (
+        <section className="student-modules-card card">
+          {textoVencimento ? (
+            <p className="student-modules-meta text-muted" style={{ margin: "0 0 10px" }}>
+              {textoVencimento}
+            </p>
+          ) : null}
+          {textoBotaoContratar ? (
+            <Link href="/aluno/planos" className="btn-secondary btn-compact">
+              <CreditCard size={16} style={{ marginRight: 6 }} />
+              {textoBotaoContratar}
+            </Link>
+          ) : null}
+        </section>
+      )}
 
       <div className="student-quick-links">
         <Link
@@ -202,22 +198,14 @@ export function AlunoHome360() {
           className="student-quick-link"
         >
           <Dumbbell size={18} />
-          <span>{temMusc ? "Musculação" : "Liberar musculação"}</span>
+          <span>{temMusc ? "Musculação" : "Contratar musculação"}</span>
         </Link>
         <Link
-          href={
-            modulosAtivos.includes("corrida")
-              ? "/aluno/corrida"
-              : "/aluno/planos"
-          }
+          href={temCorrida ? "/aluno/corrida" : "/aluno/planos"}
           className="student-quick-link"
         >
           <Wind size={18} />
-          <span>
-            {modulosAtivos.includes("corrida")
-              ? "Corrida"
-              : "Liberar corrida"}
-          </span>
+          <span>{temCorrida ? "Corrida" : "Contratar corrida"}</span>
         </Link>
         <Link href="/aluno/nutricao" className="student-quick-link">
           <Salad size={18} />

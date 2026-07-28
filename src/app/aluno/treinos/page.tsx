@@ -10,7 +10,6 @@ import { TreinoResumoCard } from "@/components/aluno/TreinoResumoCard";
 import { contarSeriesConcluidasTreino } from "@/services/sessaoService";
 import { Treino } from "@/types";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { atualizarSessaoComTimeout } from "@/lib/atualizar-sessao";
 
 const DIAS_SEMANA = [
   "segunda",
@@ -24,7 +23,7 @@ const DIAS_SEMANA = [
 
 export default function Page() {
   const router = useRouter();
-  const { data: session, update } = useSession();
+  const { data: session } = useSession();
   const {
     treinosPorDia,
     loading,
@@ -37,10 +36,6 @@ export default function Page() {
 
   const treinosDoDia: Treino[] = treinosPorDia[diaSelecionado] ?? [];
   const primeiroNome = session?.user?.name?.split(" ")[0];
-
-  useEffect(() => {
-    void atualizarSessaoComTimeout(() => update(), 8000);
-  }, [update]);
 
   useEffect(() => {
     const treinos = treinosPorDia[diaSelecionado] ?? [];

@@ -35,6 +35,11 @@ export function useAlunoDashboard(): UseAlunoDashboardReturn {
   const [aluno, setAluno] = useState<AlunoMock | null>(null);
   const [diaSelecionado, setDiaSelecionado] = useState(getDiaSemanaAtual);
 
+  const userId = session?.user?.id;
+  const alunoId = session?.user?.alunoId ?? userId;
+  const nomeAluno = session?.user?.name;
+  const emailAluno = session?.user?.email;
+
   useEffect(() => {
     if (status === "loading") {
       setLoading(true);
@@ -45,9 +50,6 @@ export function useAlunoDashboard(): UseAlunoDashboardReturn {
       router.push("/login");
       return;
     }
-
-    const alunoId = session?.user?.id;
-    const nomeAluno = session?.user?.name;
 
     if (!alunoId) {
       setLoading(false);
@@ -63,7 +65,7 @@ export function useAlunoDashboard(): UseAlunoDashboardReturn {
       setAluno({
         id: alunoId,
         nome: nomeAluno ?? "",
-        email: session?.user?.email ?? "",
+        email: emailAluno ?? "",
         senha: "",
       });
 
@@ -89,7 +91,8 @@ export function useAlunoDashboard(): UseAlunoDashboardReturn {
     return () => {
       ativo = false;
     };
-  }, [status, session, router]);
+    // Não depender do objeto session inteiro — update() da sessão reiniciava o load em loop.
+  }, [status, alunoId, nomeAluno, emailAluno, router]);
 
   return {
     treinosPorDia,
