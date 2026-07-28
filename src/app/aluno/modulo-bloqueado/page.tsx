@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { LockKeyhole, Loader2 } from "lucide-react";
+import { LockKeyhole } from "lucide-react";
 import {
   isModuloAlunoId,
   labelModulo,
@@ -13,82 +13,66 @@ import {
 } from "@/lib/modulos-aluno";
 import { atualizarSessaoComTimeout } from "@/lib/atualizar-sessao";
 
+function destinoModulo(modulo: ModuloAlunoId): string {
+  if (modulo === "musculacao") return "/aluno/treinos";
+  if (modulo === "corrida") return "/aluno/corrida";
+  return "/aluno/nutricao";
+}
+
+function temAcessoModulo(
+  modulo: ModuloAlunoId,
+  user:
+    | {
+        modulosAtivos?: string[];
+        modulosVencimentos?: Partial<Record<string, string>>;
+      }
+    | undefined
+): boolean {
+  if (!user) return false;
+  const venc = user.modulosVencimentos?.[modulo];
+  if (typeof venc === "string" && moduloVigente(venc)) return true;
+  return (user.modulosAtivos ?? []).includes(modulo);
+}
+
 function Conteudo() {
   const params = useSearchParams();
   const router = useRouter();
-  const { update, status } = useSession();
-  const [sincronizando, setSincronizando] = useState(true);
-  const jaRodou = useRef(false);
+  const { data: session, update, status } = useSession();
 
   const m = params.get("m") ?? "";
   const modulo: ModuloAlunoId | null = isModuloAlunoId(m) ? m : null;
   const nome = modulo ? labelModulo(modulo) : "este módulo";
 
-  // Se a sessão ficar em loading, não trava a tela para sempre.
+  // Se o aluno já tem o módulo (ex.: acabou de pagar), redireciona.
   useEffect(() => {
-    if (status !== "loading") return;
-    const t = window.setTimeout(() => {
-      setSincronizando(false);
-    }, 6000);
-    return () => window.clearTimeout(t);
-  }, [status]);
-
-  useEffect(() => {
-    if (status === "loading") return;
-    if (jaRodou.current) return;
-    jaRodou.current = true;
-
-    let ativo = true;
-
-    async function sincronizar() {
-      try {
-        const sessao = (await atualizarSessaoComTimeout(() => update())) as {
-          user?: {
-            modulosAtivos?: string[];
-            modulosVencimentos?: Partial<Record<string, string>>;
-          };
-        } | null;
-        if (!ativo || !modulo) return;
-
-        const venc = sessao?.user?.modulosVencimentos?.[modulo];
-        const ativos = sessao?.user?.modulosAtivos ?? [];
-        const liberado =
-          (typeof venc === "string" && moduloVigente(venc)) ||
-          ativos.includes(modulo);
-
-        if (liberado) {
-          const destino =
-            modulo === "musculacao"
-              ? "/aluno/treinos"
-              : modulo === "corrida"
-                ? "/aluno/corrida"
-                : "/aluno/nutricao";
-          router.replace(destino);
-          return;
-        }
-      } finally {
-        if (ativo) setSincronizando(false);
-      }
+    if (!modulo || status === "loading") return;
+    if (temAcessoModulo(modulo, session?.user)) {
+      router.replace(destinoModulo(modulo));
     }
+  }, [modulo, status, session?.user, router]);
 
-    void sincronizar();
+  // Atualiza a sessão em segundo plano — sem travar a UI.
+  useEffect(() => {
+    if (!modulo || status === "loading") return;
+    let cancelado = false;
+
+    void (async () => {
+      const sessao = (await atualizarSessaoComTimeout(() => update())) as {
+        user?: {
+          modulosAtivos?: string[];
+          modulosVencimentos?: Partial<Record<string, string>>;
+        };
+      } | null;
+      if (cancelado || !sessao?.user) return;
+      if (temAcessoModulo(modulo, sessao.user)) {
+        router.replace(destinoModulo(modulo));
+      }
+    })();
 
     return () => {
-      ativo = false;
+      cancelado = true;
     };
-  }, [status, update, modulo, router]);
-
-  if (sincronizando) {
-    return (
-      <main className="page-main inativo-page">
-        <div className="inativo-page-inner card">
-          <Loader2 size={48} className="text-accent" aria-hidden />
-          <h1>Verificando acesso...</h1>
-          <p className="text-muted">Atualizando seus módulos contratados.</p>
-        </div>
-      </main>
-    );
-  }
+  }, [modulo, status, update, router]);
 
   return (
     <main className="page-main inativo-page">
@@ -106,6 +90,9 @@ function Conteudo() {
           <Link href="/aluno/dashboard" className="btn-secondary">
             Voltar ao início
           </Link>
+          <Link href="/aluno/nutricao" className="btn-secondary">
+            Ir para Nutrição
+          </Link>
         </div>
       </div>
     </main>
@@ -116,8 +103,10 @@ export default function Page() {
   return (
     <Suspense
       fallback={
-        <main className="page-main">
-          <p className="text-muted">Carregando...</p>
+        <main className="page-main inativo-page">
+          <div className="inativo-page-inner card">
+            <p className="text-muted">Carregando...</p>
+          </div>
         </main>
       }
     >
