@@ -3406,6 +3406,39 @@ body {
   gap: 12px;
 }
 
+.pagamento-cartao-fields-wrap {
+  position: relative;
+  min-height: 140px;
+}
+
+.pagamento-cartao-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  background: var(--fraber-surface, var(--fraber-bg, #111));
+}
+
+.pagamento-cartao-spinner {
+  animation: pagamento-cartao-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pagamento-cartao-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Stripe monta por baixo do overlay; só some o skeleton visual até onReady. */
+.pagamento-cartao-fields--pending {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .planos-grid {
   display: grid;
   gap: 16px;

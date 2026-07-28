@@ -8,6 +8,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 interface FormularioCartaoProps {
   onCancelar?: () => void;
@@ -30,10 +31,11 @@ export function FormularioCartao({ onCancelar }: FormularioCartaoProps) {
   const { data: session, update } = useSession();
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [formPronto, setFormPronto] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!stripe || !elements) return;
+    if (!stripe || !elements || !formPronto) return;
 
     setLoading(true);
     setErro(null);
@@ -66,7 +68,6 @@ export function FormularioCartao({ onCancelar }: FormularioCartaoProps) {
           /* webhook ainda pode confirmar */
         }
 
-        // Atualiza o JWT com os módulos liberados (sem timeout) — middleware precisa disso.
         if (body.modulosAtivos || body.modulosVencimentos) {
           await update({
             modulosAtivos: body.modulosAtivos,
@@ -102,38 +103,69 @@ export function FormularioCartao({ onCancelar }: FormularioCartaoProps) {
 
   return (
     <form className="pagamento-cartao-form" onSubmit={(e) => void handleSubmit(e)}>
-      <PaymentElement
-        options={{
-          layout: "tabs",
-          paymentMethodOrder: ["card"],
-          wallets: {
-            applePay: "never",
-            googlePay: "never",
-          },
-        }}
-      />
+      <p className="pagamento-cartao-titulo">Dados do cartão</p>
 
-      {erro ? <p className="field-error">{erro}</p> : null}
-
-      <div className="action-row" style={{ marginTop: 16 }}>
-        <button
-          type="submit"
-          className="btn-primary"
-          disabled={!stripe || !elements || loading}
-        >
-          {loading ? "Processando..." : "Pagar agora"}
-        </button>
-        {onCancelar ? (
-          <button
-            type="button"
-            className="btn-ghost"
-            disabled={loading}
-            onClick={onCancelar}
-          >
-            Cancelar
-          </button>
+      <div className="pagamento-cartao-fields-wrap">
+        {!formPronto ? (
+          <div className="pagamento-cartao-loading" role="status">
+            <Loader2
+              size={22}
+              className="pagamento-cartao-spinner text-accent"
+              aria-hidden
+            />
+            <p className="text-muted" style={{ margin: 0 }}>
+              Carregando formulário do cartão...
+            </p>
+          </div>
         ) : null}
+
+        <div
+          className={
+            formPronto
+              ? "pagamento-cartao-fields"
+              : "pagamento-cartao-fields pagamento-cartao-fields--pending"
+          }
+          aria-hidden={!formPronto}
+        >
+          <PaymentElement
+            onReady={() => setFormPronto(true)}
+            options={{
+              layout: "tabs",
+              paymentMethodOrder: ["card"],
+              wallets: {
+                applePay: "never",
+                googlePay: "never",
+              },
+            }}
+          />
+        </div>
       </div>
+
+      {formPronto ? (
+        <>
+          {erro ? <p className="field-error">{erro}</p> : null}
+
+          <div className="action-row" style={{ marginTop: 16 }}>
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={!stripe || !elements || loading}
+            >
+              {loading ? "Processando..." : "Pagar agora"}
+            </button>
+            {onCancelar ? (
+              <button
+                type="button"
+                className="btn-ghost"
+                disabled={loading}
+                onClick={onCancelar}
+              >
+                Cancelar
+              </button>
+            ) : null}
+          </div>
+        </>
+      ) : null}
     </form>
   );
 }

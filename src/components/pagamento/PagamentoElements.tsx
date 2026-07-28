@@ -15,7 +15,6 @@ export function PagamentoElements({
 }: PagamentoElementsProps) {
   return (
     <div className="pagamento-cartao-wrap">
-      <p className="pagamento-cartao-titulo">Dados do cartão</p>
       <Elements
         stripe={getStripeBrowser()}
         options={{
