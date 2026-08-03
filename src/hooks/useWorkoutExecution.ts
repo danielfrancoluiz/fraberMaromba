@@ -237,29 +237,43 @@ export function useWorkoutExecution(
     }
   }, [sessaoId, sessionTimer, onTreinoConcluido]);
 
-  const concluirExercicioAtual = useCallback(() => {
-    if (modoEscolhaLivre) {
-      sessionTimer.pause();
-      onExercicioConcluido?.();
-      return;
-    }
+  const concluirExercicioAtual = useCallback(
+    (opts?: { irParaProximo?: boolean }) => {
+      const irParaProximo = opts?.irParaProximo === true;
+      const temProximo = exIdx < exercicios.length - 1;
 
-    if (exIdx < exercicios.length - 1) {
-      setExIdx((i) => i + 1);
-      setSetIdx(0);
-      setPhase("exercise");
-      return;
-    }
+      // Conjugado / fluxo sequencial: avança dentro da execução mesmo no modo lista.
+      if (irParaProximo && temProximo) {
+        setExIdx((i) => i + 1);
+        setSetIdx(0);
+        setPhase("exercise");
+        return;
+      }
 
-    void finalizarTreino();
-  }, [
-    modoEscolhaLivre,
-    onExercicioConcluido,
-    sessionTimer,
-    exIdx,
-    exercicios.length,
-    finalizarTreino,
-  ]);
+      if (modoEscolhaLivre) {
+        sessionTimer.pause();
+        onExercicioConcluido?.();
+        return;
+      }
+
+      if (temProximo) {
+        setExIdx((i) => i + 1);
+        setSetIdx(0);
+        setPhase("exercise");
+        return;
+      }
+
+      void finalizarTreino();
+    },
+    [
+      modoEscolhaLivre,
+      onExercicioConcluido,
+      sessionTimer,
+      exIdx,
+      exercicios.length,
+      finalizarTreino,
+    ]
+  );
 
   const avancarAposDescanso = useCallback(() => {
     if (!exercicioAtual) return;
@@ -331,16 +345,16 @@ export function useWorkoutExecution(
 
     if (conjugado) {
       if (isUltimaSerie) {
-        // Acabou as séries → próximo exercício (ou fim do treino), sem tela de descanso.
+        // Acabou as séries → próximo exercício (sem voltar à lista no modo escolha).
+        if (exIdx < exercicios.length - 1) {
+          concluirExercicioAtual({ irParaProximo: true });
+          return;
+        }
         if (modoEscolhaLivre) {
           concluirExercicioAtual();
           return;
         }
-        if (exIdx >= exercicios.length - 1) {
-          void finalizarTreino();
-          return;
-        }
-        concluirExercicioAtual();
+        void finalizarTreino();
         return;
       }
 

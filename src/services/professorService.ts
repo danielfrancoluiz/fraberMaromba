@@ -42,6 +42,7 @@ interface ExercicioCatalogoApi {
   gifUrl?: string | null;
   imagemUrl?: string | null;
   unilateral?: boolean;
+  exercicioContinuo?: boolean;
 }
 
 interface ExercicioApi {
@@ -53,6 +54,7 @@ interface ExercicioApi {
   grupoMuscular?: string | null;
   observacao?: string | null;
   restSeconds?: number | null;
+  exercicioContinuo?: boolean;
   exercicioCatalogoId?: string | null;
   catalogo?: ExercicioCatalogoApi | null;
 }
@@ -144,6 +146,7 @@ function mapExercicioPayload(exercicio: Exercicio, index: number) {
     ordem: index + 1,
     exercicioCatalogoId: exercicio.exercicioCatalogoId,
     restSeconds: exercicio.restSeconds ?? 60,
+    exercicioContinuo: exercicio.exercicioContinuo ?? false,
   };
 }
 
@@ -170,6 +173,9 @@ function mapExercicio(exercicio: ExercicioApi): Exercicio {
     dificuldade: exercicio.catalogo?.dificuldade ?? undefined,
     restSeconds: exercicio.restSeconds ?? 60,
     unilateral: exercicio.catalogo?.unilateral ?? false,
+    exercicioContinuo:
+      exercicio.exercicioContinuo === true ||
+      exercicio.catalogo?.exercicioContinuo === true,
   };
 }
 

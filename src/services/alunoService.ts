@@ -67,6 +67,7 @@ interface ExercicioApi {
   grupoMuscular?: string | null;
   observacao?: string | null;
   restSeconds?: number | null;
+  exercicioContinuo?: boolean;
   exercicioCatalogoId?: string | null;
   catalogo?: ExercicioCatalogoApi | null;
 }
@@ -117,7 +118,9 @@ function mapTreino(treino: TreinoApi): Treino {
       dificuldade: exercicio.catalogo?.dificuldade ?? undefined,
       restSeconds: exercicio.restSeconds ?? 60,
       unilateral: exercicio.catalogo?.unilateral ?? false,
-      exercicioContinuo: exercicio.catalogo?.exercicioContinuo ?? false,
+      exercicioContinuo:
+        exercicio.exercicioContinuo === true ||
+        exercicio.catalogo?.exercicioContinuo === true,
     })),
   };
 }

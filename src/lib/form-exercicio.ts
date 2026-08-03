@@ -12,6 +12,7 @@ export function criarExercicioFormVazio(): ExercicioForm {
     grupoMuscular: "",
     modoSeries: "iguais",
     passoDecrescente: "2",
+    exercicioContinuo: false,
   };
 }
 
@@ -30,6 +31,7 @@ function modoFromPrescricao(
 
 export function exercicioFormFromExercicio(ex: Exercicio): ExercicioForm {
   const modo = modoFromPrescricao(ex.series, ex.repeticoesPorSerie);
+  const continuo = ex.exercicioContinuo === true;
   return {
     id: ex.id,
     exercicioCatalogoId: ex.exercicioCatalogoId,
@@ -40,11 +42,12 @@ export function exercicioFormFromExercicio(ex: Exercicio): ExercicioForm {
         ? modo.repeticoesPorSerie[0]
         : ex.repeticoes
     ),
-    restSeconds: String(ex.restSeconds ?? 60),
+    restSeconds: String(continuo ? 0 : (ex.restSeconds ?? 60)),
     observacao: ex.observacao ?? "",
     grupoMuscular: ex.grupoMuscular ?? "",
     imagemUrl: ex.imagemUrl ?? ex.gifUrl,
     passoDecrescente: "2",
+    exercicioContinuo: continuo,
     ...modo,
   };
 }
@@ -63,6 +66,7 @@ export function exercicioFormFromCatalogo(item: ExercicioCatalogo): ExercicioFor
     imagemUrl: item.imagemUrl ?? item.gifUrl ?? undefined,
     modoSeries: "iguais",
     passoDecrescente: "2",
+    exercicioContinuo: continuo,
   };
 }
 
@@ -85,15 +89,11 @@ export function sincronizarRepsPorSerie(exercicio: ExercicioForm): ExercicioForm
     if (typeof valor === "number" && Number.isFinite(valor) && valor >= 1) {
       lista.push(Math.min(100, Math.floor(valor)));
     } else {
-      lista.push(i > 0 ? lista[i - 1] : baseSafe);
+      lista.push(Math.max(1, baseSafe - i * 2));
     }
   }
 
-  return {
-    ...exercicio,
-    repeticoes: String(lista[0] ?? baseSafe),
-    repeticoesPorSerie: lista,
-  };
+  return { ...exercicio, repeticoesPorSerie: lista };
 }
 
 export function setRepsDaSerie(
@@ -125,6 +125,7 @@ export function exercicioFormParaPayload(exercicio: ExercicioForm) {
   const rest = Number.parseInt(sync.restSeconds, 10);
   const series = Number.parseInt(sync.series, 10);
   const repeticoes = Number.parseInt(sync.repeticoes, 10);
+  const continuo = sync.exercicioContinuo === true;
   const porSerie =
     sync.modoSeries === "decrescente" &&
     sync.repeticoesPorSerie &&
@@ -137,7 +138,8 @@ export function exercicioFormParaPayload(exercicio: ExercicioForm) {
     series,
     repeticoes: porSerie.length > 0 ? porSerie[0] : repeticoes,
     repeticoesPorSerie: porSerie,
-    restSeconds: Number.isNaN(rest) ? 60 : rest,
+    restSeconds: continuo ? 0 : Number.isNaN(rest) ? 60 : rest,
+    exercicioContinuo: continuo,
     observacao: sync.observacao.trim() || undefined,
     grupoMuscular:
       normalizarGrupoMuscular(sync.grupoMuscular) ||

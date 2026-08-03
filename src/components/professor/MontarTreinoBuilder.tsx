@@ -310,7 +310,11 @@ export function MontarTreinoBuilder({
                         ) : null}
                         <CounterGroup
                           label="Descanso"
-                          value={`${exercicio.restSeconds}s`}
+                          value={
+                            exercicio.exercicioContinuo
+                              ? "Conjugado"
+                              : `${exercicio.restSeconds}s`
+                          }
                           onMinus={() =>
                             ajustarExercicio(exercicio.id, "restSeconds", -5)
                           }
@@ -321,6 +325,31 @@ export function MontarTreinoBuilder({
                       </div>
                     }
                   />
+
+                  <div className="montar-treino-conjugado-wrap">
+                    <button
+                      type="button"
+                      className={`chip ${exercicio.exercicioContinuo ? "chip-active" : ""}`}
+                      onClick={() =>
+                        patchExercicio(exercicio.id, {
+                          exercicioContinuo: !exercicio.exercicioContinuo,
+                          restSeconds: !exercicio.exercicioContinuo
+                            ? "0"
+                            : exercicio.restSeconds === "0"
+                              ? "60"
+                              : exercicio.restSeconds,
+                        })
+                      }
+                      aria-pressed={exercicio.exercicioContinuo === true}
+                    >
+                      Exercício conjugado
+                    </button>
+                    <p className="text-muted" style={{ margin: "6px 0 0", fontSize: "0.8rem" }}>
+                      {exercicio.exercicioContinuo
+                        ? "Após as séries, o aluno vai direto ao próximo exercício"
+                        : "Desmarcado: após as séries volta à lista ou usa descanso"}
+                    </p>
+                  </div>
 
                   <div>
                     <label className="field-label" htmlFor={`obs-${exercicio.id}`}>

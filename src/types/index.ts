@@ -166,6 +166,8 @@ export interface ExercicioForm {
   repeticoesPorSerie?: number[];
   exercicioCatalogoId?: string;
   imagemUrl?: string;
+  /** Sem descanso: após as séries vai ao próximo exercício (conjugado). */
+  exercicioContinuo?: boolean;
 }
 
 export interface TreinoFormErrors {

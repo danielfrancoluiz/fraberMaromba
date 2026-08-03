@@ -176,6 +176,8 @@ model Exercicio {
   grupoMuscular       String?
   observacao          String?
   restSeconds         Int     @default(60)
+  /// Sem descanso após as séries: no modo lista, vai direto ao próximo exercício.
+  exercicioContinuo   Boolean @default(false)
   ordem               Int     @default(0)
 
   treino    Treino             @relation(fields: [treinoId], references: [id], onDelete: Cascade)
@@ -205,6 +207,7 @@ model ExercicioTemplate {
   grupoMuscular       String?
   observacao          String?
   restSeconds         Int     @default(60)
+  exercicioContinuo   Boolean @default(false)
   ordem               Int     @default(0)
 
   template  TreinoTemplate      @relation(fields: [templateId], references: [id], onDelete: Cascade)

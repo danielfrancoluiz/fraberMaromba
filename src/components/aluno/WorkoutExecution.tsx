@@ -294,7 +294,8 @@ export function WorkoutExecution({
           )}
         </div>
 
-        {proximoExercicio && !modoEscolhaLivre ? (
+        {proximoExercicio &&
+        (!modoEscolhaLivre || continuo) ? (
           <div className="workout-exec-next card">
             <span className="workout-exec-next-label">A seguir</span>
             <div className="workout-exec-next-thumb">

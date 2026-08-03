@@ -298,6 +298,7 @@ export function useMontarTreino({
         grupoMuscular: p.grupoMuscular,
         exercicioCatalogoId: p.exercicioCatalogoId,
         restSeconds: p.restSeconds,
+        exercicioContinuo: p.exercicioContinuo,
       };
     });
 

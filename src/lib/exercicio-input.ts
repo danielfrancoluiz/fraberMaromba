@@ -8,6 +8,7 @@ export interface ExercicioInputPayload {
   ordem?: number;
   exercicioCatalogoId?: string;
   restSeconds?: number;
+  exercicioContinuo?: boolean;
 }
 
 function isIntArray(value: unknown): value is number[] {
@@ -30,7 +31,8 @@ export function isExercicioInputPayload(value: unknown): value is ExercicioInput
     (dados.ordem === undefined || typeof dados.ordem === "number") &&
     (dados.exercicioCatalogoId === undefined ||
       typeof dados.exercicioCatalogoId === "string") &&
-    (dados.restSeconds === undefined || typeof dados.restSeconds === "number")
+    (dados.restSeconds === undefined || typeof dados.restSeconds === "number") &&
+    (dados.exercicioContinuo === undefined || typeof dados.exercicioContinuo === "boolean")
   );
 }
 
@@ -43,6 +45,7 @@ export function mapExercicioCreateInput(
     porSerie.length === exercicio.series
       ? porSerie
       : [];
+  const continuo = exercicio.exercicioContinuo === true;
 
   return {
     nome: exercicio.nome.trim(),
@@ -53,6 +56,7 @@ export function mapExercicioCreateInput(
     observacao: exercicio.observacao?.trim() || null,
     ordem: exercicio.ordem ?? index + 1,
     exercicioCatalogoId: exercicio.exercicioCatalogoId ?? null,
-    restSeconds: exercicio.restSeconds ?? 60,
+    restSeconds: continuo ? 0 : (exercicio.restSeconds ?? 60),
+    exercicioContinuo: continuo,
   };
 }
