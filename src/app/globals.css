@@ -4169,7 +4169,7 @@ body {
   display: none;
 }
 
-.nav-dias-semana-next {
+.nav-dias-semana-arrow {
   flex-shrink: 0;
   display: grid;
   place-items: center;
@@ -4185,7 +4185,7 @@ body {
   box-shadow: none;
 }
 
-.nav-dias-semana-next:active {
+.nav-dias-semana-arrow:active {
   background: var(--fraber-primary);
   color: var(--fraber-text);
 }

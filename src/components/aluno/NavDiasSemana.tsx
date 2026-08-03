@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type CSSProperties } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const DIA_LABELS: Record<string, string> = {
   segunda: "Segunda",
@@ -58,16 +58,28 @@ export function NavDiasSemana({
   }, [diaSelecionado]);
 
   const indiceAtual = Math.max(0, dias.indexOf(diaSelecionado));
-  const temProximo = dias.length > 1;
+  const podeNavegar = dias.length > 1;
 
-  function irParaProximoDia() {
+  function irParaDia(delta: number) {
     if (dias.length === 0) return;
-    const proximo = dias[(indiceAtual + 1) % dias.length];
+    const proximo =
+      dias[(indiceAtual + delta + dias.length) % dias.length];
     onChange(proximo);
   }
 
   return (
     <div className="nav-dias-semana-wrap">
+      {podeNavegar ? (
+        <button
+          type="button"
+          className="nav-dias-semana-arrow"
+          onClick={() => irParaDia(-1)}
+          aria-label="Dia anterior"
+        >
+          <ChevronLeft size={20} strokeWidth={2.5} />
+        </button>
+      ) : null}
+
       <nav
         ref={navRef}
         className="nav-dias-semana"
@@ -97,11 +109,11 @@ export function NavDiasSemana({
         })}
       </nav>
 
-      {temProximo ? (
+      {podeNavegar ? (
         <button
           type="button"
-          className="nav-dias-semana-next"
-          onClick={irParaProximoDia}
+          className="nav-dias-semana-arrow"
+          onClick={() => irParaDia(1)}
           aria-label="Próximo dia"
         >
           <ChevronRight size={20} strokeWidth={2.5} />
