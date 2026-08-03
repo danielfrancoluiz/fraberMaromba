@@ -46,17 +46,17 @@ export function getExercicioImagemUrl(nome: string): string | null {
 
 export function getGrupoMuscularCor(grupo?: string): string {
   const mapa: Record<string, string> = {
-    peito: "#3b82f6",
-    costas: "#6366f1",
-    pernas: "#22c55e",
-    ombros: "#f59e0b",
-    bíceps: "#ec4899",
-    biceps: "#ec4899",
-    tríceps: "#e8001c",
-    triceps: "#e8001c",
-    abdômen: "#14b8a6",
-    abdomen: "#14b8a6",
+    peito: "#2f5aa8",
+    costas: "#5b6abf",
+    pernas: "#3d9a5f",
+    ombros: "#c4923a",
+    bíceps: "#b85a8a",
+    biceps: "#b85a8a",
+    tríceps: "#c62828",
+    triceps: "#c62828",
+    abdômen: "#2a9a8f",
+    abdomen: "#2a9a8f",
   };
   const key = grupo?.trim().toLowerCase() ?? "";
-  return mapa[key] ?? "#64748b";
+  return mapa[key] ?? "#6b6b6b";
 }

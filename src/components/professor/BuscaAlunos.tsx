@@ -8,10 +8,10 @@ interface BuscaAlunosProps {
 }
 
 const colors = {
-  surface: "#132035",
-  textPrimary: "#F0F4FF",
-  textSecondary: "#7A9CC4",
-  border: "#1E3050",
+  surface: "#181818",
+  textPrimary: "#f0f0f0",
+  textSecondary: "#888888",
+  border: "#2c2c2c",
 };
 
 export function BuscaAlunos({ valor, onChange }: BuscaAlunosProps) {

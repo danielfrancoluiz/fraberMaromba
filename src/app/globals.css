@@ -1,21 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --fraber-bg: #050f1a;
-  --fraber-bg-soft: #0a1628;
-  --fraber-surface: #111d32;
-  --fraber-surface-hover: #1a2944;
-  --fraber-border: #243652;
-  --fraber-primary: #3b82f6;
-  --fraber-primary-dim: #2563eb;
-  --fraber-accent: #e8001c;
-  --fraber-text: #f1f5f9;
-  --fraber-text-muted: #94a3b8;
-  --fraber-success: #22c55e;
-  --fraber-radius: 14px;
-  --fraber-radius-sm: 10px;
-  --fraber-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-  --fraber-glow: 0 0 0 1px rgba(59, 130, 246, 0.15);
+  /* Soft Pro — monocromático + vermelho/azul contidos (logo) */
+  --fraber-bg: #0d0d0d;
+  --fraber-bg-soft: #121212;
+  --fraber-surface: #181818;
+  --fraber-surface-hover: #1f1f1f;
+  --fraber-border: #2c2c2c;
+  --fraber-primary: #2f5aa8;
+  --fraber-primary-dim: #274d91;
+  --fraber-accent: #c62828;
+  --fraber-text: #f0f0f0;
+  --fraber-text-muted: #888888;
+  --fraber-success: #3d9a5f;
+  --fraber-radius: 10px;
+  --fraber-radius-sm: 8px;
+  --fraber-shadow: 0 10px 32px rgba(0, 0, 0, 0.4);
+  --fraber-glow: 0 0 0 1px rgba(47, 90, 168, 0.12);
 }
 
 @theme inline {
@@ -35,7 +36,7 @@ html {
 body {
   min-height: 100%;
   margin: 0;
-  background: radial-gradient(ellipse 120% 80% at 50% -20%, #1e3a5f 0%, var(--fraber-bg) 55%);
+  background: var(--fraber-bg);
   color: var(--fraber-text);
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -59,6 +60,19 @@ body {
   width: 100%;
   display: flex;
   flex-direction: column;
+  background: var(--fraber-bg);
+}
+
+.app-shell::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--fraber-accent), var(--fraber-primary));
+  z-index: 60;
+  pointer-events: none;
 }
 
 .app-shell-inner {
@@ -153,24 +167,14 @@ body {
   background: var(--fraber-primary);
 }
 
-/* —— Aluno FRABER 360° —— */
+/* —— Aluno — mesmo Soft Pro do sistema —— */
 .aluno-shell {
-  --fraber-bg: #0d0d0f;
-  --fraber-bg-soft: #111116;
-  --fraber-surface: #16161c;
-  --fraber-surface-hover: #1e1e26;
-  --fraber-border: rgba(255, 255, 255, 0.08);
-  --fraber-primary: #e02020;
-  --fraber-primary-dim: #c41a1a;
-  --fraber-accent: #e02020;
-  --fraber-text: #f4f4f5;
-  --fraber-text-muted: #8888a0;
   background: var(--fraber-bg);
 }
 
 .aluno-shell .list-card-icon-wrap {
-  background: rgba(224, 32, 32, 0.1);
-  border-color: rgba(224, 32, 32, 0.18);
+  background: rgba(198, 40, 40, 0.1);
+  border-color: rgba(198, 40, 40, 0.18);
 }
 
 .aluno-shell .list-card-icon {
@@ -178,12 +182,12 @@ body {
 }
 
 .aluno-shell .list-card-progress-fill {
-  background: linear-gradient(90deg, var(--fraber-accent), var(--fraber-primary-dim));
+  background: var(--fraber-accent);
 }
 
 .aluno-shell .ui-badge--primary {
-  background: rgba(224, 32, 32, 0.15);
-  color: #f87171;
+  background: rgba(198, 40, 40, 0.12);
+  color: #e57373;
 }
 
 .aluno-shell body,
@@ -251,7 +255,7 @@ body {
 }
 
 .student-header-avatar--active {
-  box-shadow: 0 0 0 3px rgba(224, 32, 32, 0.35);
+  box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.35);
 }
 
 .student-page-main {
@@ -389,7 +393,7 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: rgba(224, 32, 32, 0.12);
+  background: rgba(198, 40, 40, 0.12);
   color: var(--fraber-accent);
 }
 
@@ -591,15 +595,15 @@ body {
 .aluno-shell .bottom-nav-item--active:hover,
 .aluno-shell .bottom-nav-item--active:focus,
 .aluno-shell .bottom-nav-item--active:active {
-  color: var(--fraber-accent);
-  background: rgba(224, 32, 32, 0.1);
+  color: var(--fraber-primary);
+  background: rgba(47, 90, 168, 0.1);
 }
 
 .aluno-shell .bottom-nav-indicator {
   width: 0.25rem;
   height: 0.25rem;
   border-radius: 999px;
-  background: var(--fraber-accent);
+  background: var(--fraber-primary);
   bottom: 0.25rem;
 }
 
@@ -607,7 +611,7 @@ body {
   margin: 0 -1rem 1rem;
   padding: 1.25rem 1.25rem 1.5rem;
   border-radius: 0 0 1.5rem 1.5rem;
-  background: linear-gradient(145deg, #0f172a 0%, #111d32 45%, #0a1628 100%);
+  background: var(--fraber-surface);
   border-bottom: 1px solid var(--fraber-border);
 }
 
@@ -692,7 +696,7 @@ body {
   border-radius: 14px;
   font-weight: 700;
   color: var(--fraber-text);
-  background: linear-gradient(135deg, var(--fraber-primary) 0%, var(--fraber-primary-dim) 100%);
+  background: var(--fraber-primary);
   border: 2px solid rgba(255, 255, 255, 0.12);
   flex-shrink: 0;
 }
@@ -858,8 +862,8 @@ body {
   font-size: 0.75rem;
   font-weight: 700;
   color: #dbeafe;
-  background: rgba(59, 130, 246, 0.25);
-  border: 1px solid rgba(59, 130, 246, 0.4);
+  background: rgba(47, 90, 168, 0.25);
+  border: 1px solid rgba(47, 90, 168, 0.4);
   flex-shrink: 0;
 }
 
@@ -947,7 +951,7 @@ body {
 }
 
 .confirm-dialog-btn-danger {
-  background: linear-gradient(135deg, #dc2626 0%, var(--fraber-accent) 100%) !important;
+  background: var(--fraber-accent) !important;
 }
 
 .exercise-picker {
@@ -1002,7 +1006,7 @@ body {
 }
 
 .exercise-picker-item:hover {
-  border-color: rgba(59, 130, 246, 0.45);
+  border-color: rgba(47, 90, 168, 0.45);
   background: var(--fraber-surface-hover);
 }
 
@@ -1114,20 +1118,20 @@ body {
   border: 1px solid var(--fraber-border);
   border-radius: var(--fraber-radius);
   padding: 1.125rem;
-  box-shadow: var(--fraber-glow);
+  box-shadow: none;
 }
 
 .card-hover:hover {
   background: var(--fraber-surface-hover);
-  border-color: rgba(59, 130, 246, 0.35);
+  border-color: #3a3a3a;
 }
 
 .btn-primary {
   min-height: 48px;
   border: none;
   border-radius: var(--fraber-radius-sm);
-  background: linear-gradient(135deg, var(--fraber-primary) 0%, var(--fraber-primary-dim) 100%);
-  color: var(--fraber-text);
+  background: var(--fraber-accent);
+  color: #fff;
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
@@ -1170,7 +1174,7 @@ body {
 
 .input-field:focus {
   border-color: var(--fraber-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 3px rgba(47, 90, 168, 0.2);
 }
 
 /* Remove setinhas de type=number (fallback) e campos numéricos livres */
@@ -1235,12 +1239,12 @@ body {
 }
 
 .chip:hover {
-  border-color: rgba(59, 130, 246, 0.5);
+  border-color: rgba(47, 90, 168, 0.5);
 }
 
 .chip-active {
   border-color: var(--fraber-primary);
-  background: rgba(59, 130, 246, 0.18);
+  background: rgba(47, 90, 168, 0.18);
   color: #dbeafe;
 }
 
@@ -1345,7 +1349,7 @@ body {
 
 .workout-exec-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--fraber-primary), var(--fraber-primary-dim));
+  background: var(--fraber-primary);
   transition: width 0.4s ease;
 }
 
@@ -1458,7 +1462,7 @@ body {
 .workout-exec-media-gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(5, 15, 26, 0.85), transparent 45%);
+  background: linear-gradient(to top, rgba(13, 13, 13, 0.85), transparent 45%);
   pointer-events: none;
 }
 
@@ -1614,7 +1618,7 @@ body {
   background: var(--fraber-primary);
   color: #fff;
   border-color: var(--fraber-primary);
-  box-shadow: 0 0 0 2px var(--fraber-bg), 0 0 0 4px rgba(59, 130, 246, 0.45);
+  box-shadow: 0 0 0 2px var(--fraber-bg), 0 0 0 4px rgba(47, 90, 168, 0.45);
 }
 
 .workout-exec-notes {
@@ -1670,8 +1674,8 @@ body {
 }
 
 .workout-exec-tag--diff {
-  background: rgba(59, 130, 246, 0.15);
-  color: #93c5fd;
+  background: rgba(47, 90, 168, 0.15);
+  color: #7aa0d4;
 }
 
 .workout-exec-actions {
@@ -1701,9 +1705,9 @@ body {
 }
 
 .workout-exec-btn-primary {
-  background: linear-gradient(135deg, var(--fraber-primary), var(--fraber-primary-dim));
+  background: var(--fraber-accent);
   color: #fff;
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+  box-shadow: none;
 }
 
 .workout-exec-btn-secondary {
@@ -1855,7 +1859,7 @@ body {
 }
 
 .workout-sub-item:hover {
-  border-color: rgba(59, 130, 246, 0.45);
+  border-color: rgba(47, 90, 168, 0.45);
 }
 
 .workout-sub-thumb {
@@ -1974,7 +1978,7 @@ body {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: rgba(59, 130, 246, 0.15);
+  background: rgba(47, 90, 168, 0.15);
   color: var(--fraber-primary);
   display: grid;
   place-items: center;
@@ -2085,8 +2089,8 @@ body {
 }
 
 .perfil-badge--aluno {
-  background: rgba(59, 130, 246, 0.15);
-  color: #93c5fd;
+  background: rgba(47, 90, 168, 0.15);
+  color: #7aa0d4;
 }
 
 .perfil-badge--professor {
@@ -2429,7 +2433,7 @@ body {
 
 .page-topbar-back--primary {
   border: none;
-  background: linear-gradient(135deg, var(--fraber-primary), var(--fraber-primary-dim));
+  background: var(--fraber-primary);
   color: var(--fraber-text);
 }
 
@@ -2506,7 +2510,7 @@ body {
 .list-card:hover,
 .list-card:focus-visible {
   background: var(--fraber-surface-hover);
-  border-color: rgba(59, 130, 246, 0.35);
+  border-color: rgba(47, 90, 168, 0.35);
   transform: translateY(-1px);
 }
 
@@ -2528,11 +2532,11 @@ body {
 }
 
 .list-card-accent--primary {
-  background: linear-gradient(180deg, var(--fraber-primary), var(--fraber-primary-dim));
+  background: var(--fraber-primary);
 }
 
 .list-card-accent--accent {
-  background: linear-gradient(180deg, var(--fraber-accent), #b80016);
+  background: linear-gradient(180deg, var(--fraber-accent), #9e2020);
 }
 
 .list-card-accent--success {
@@ -2550,8 +2554,8 @@ body {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: rgba(59, 130, 246, 0.12);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: rgba(47, 90, 168, 0.12);
+  border: 1px solid rgba(47, 90, 168, 0.2);
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -2612,7 +2616,7 @@ body {
 .list-card-progress-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--fraber-primary), var(--fraber-primary-dim));
+  background: var(--fraber-primary);
   transition: width 0.3s ease;
 }
 
@@ -2633,23 +2637,23 @@ body {
 }
 
 .ui-badge--primary {
-  background: rgba(59, 130, 246, 0.18);
-  color: #93c5fd;
+  background: rgba(47, 90, 168, 0.14);
+  color: #7aa0d4;
 }
 
 .ui-badge--success {
-  background: rgba(34, 197, 94, 0.15);
+  background: rgba(61, 154, 95, 0.14);
   color: var(--fraber-success);
 }
 
 .ui-badge--warning {
-  background: rgba(251, 146, 60, 0.15);
-  color: #fb923c;
+  background: rgba(251, 146, 60, 0.12);
+  color: #e0a060;
 }
 
 .ui-badge--danger {
-  background: rgba(232, 0, 28, 0.15);
-  color: #f87171;
+  background: rgba(198, 40, 40, 0.12);
+  color: #e57373;
 }
 
 .ui-badge--muted {
@@ -3049,12 +3053,27 @@ body {
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
+  background: var(--fraber-bg);
+}
+
+.auth-page::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--fraber-accent), var(--fraber-primary));
+  z-index: 60;
 }
 
 .auth-card {
   width: 100%;
   max-width: 420px;
   padding: 1.75rem 1.5rem;
+  background: var(--fraber-surface);
+  border: 1px solid var(--fraber-border);
+  border-radius: var(--fraber-radius);
 }
 
 .auth-logo-wrap {
@@ -3152,8 +3171,8 @@ body {
   margin-bottom: 1rem;
   padding: 0.875rem 1rem;
   border-radius: var(--fraber-radius-sm);
-  background: rgba(59, 130, 246, 0.08);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: rgba(47, 90, 168, 0.08);
+  border: 1px solid rgba(47, 90, 168, 0.2);
   font-size: 0.875rem;
   line-height: 1.5;
   color: var(--fraber-text-muted);
@@ -3567,8 +3586,8 @@ body {
 }
 
 .modulos-pacote--destaque {
-  border-color: var(--fraber-accent, #e02020);
-  background: color-mix(in srgb, var(--fraber-accent, #e02020) 12%, var(--fraber-bg-soft));
+  border-color: var(--fraber-accent, #c62828);
+  background: color-mix(in srgb, var(--fraber-accent, #c62828) 12%, var(--fraber-bg-soft));
 }
 
 .modulos-pacote-titulo {
@@ -3594,7 +3613,7 @@ body {
   margin: 8px 0 0;
   font-size: 0.68rem;
   font-weight: 600;
-  color: var(--fraber-accent, #f87171);
+  color: var(--fraber-accent, #e57373);
 }
 
 .modulos-aviso {
@@ -3606,7 +3625,7 @@ body {
 .modulos-aviso svg {
   flex-shrink: 0;
   margin-top: 2px;
-  color: var(--fraber-accent, #f87171);
+  color: var(--fraber-accent, #e57373);
 }
 
 .modulos-grid {
@@ -3763,7 +3782,7 @@ body {
   padding: 12px 18px;
   border: none;
   border-radius: 999px;
-  background: linear-gradient(135deg, var(--fraber-primary), var(--fraber-primary-dim));
+  background: var(--fraber-primary);
   color: var(--fraber-text);
   font-weight: 700;
   font-size: 0.9rem;
@@ -3804,12 +3823,12 @@ body {
 
 .quick-action-card:hover {
   transform: translateY(-1px);
-  border-color: rgba(59, 130, 246, 0.35);
+  border-color: rgba(47, 90, 168, 0.35);
 }
 
 .quick-action-card--primary {
-  border-color: rgba(59, 130, 246, 0.35);
-  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(47, 90, 168, 0.35);
+  background: rgba(47, 90, 168, 0.1);
 }
 
 .quick-action-card svg {
@@ -3963,8 +3982,8 @@ body {
   width: 28px;
   height: 28px;
   border-radius: 999px;
-  background: rgba(59, 130, 246, 0.15);
-  color: #93c5fd;
+  background: rgba(47, 90, 168, 0.15);
+  color: #7aa0d4;
   font-size: 0.8rem;
   font-weight: 700;
   display: grid;
@@ -4127,12 +4146,12 @@ body {
 }
 
 .template-picker-item:hover {
-  border-color: rgba(59, 130, 246, 0.35);
+  border-color: rgba(47, 90, 168, 0.35);
 }
 
 .template-picker-item--selected {
   border-color: var(--fraber-primary);
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(47, 90, 168, 0.1);
 }
 
 .template-picker-item strong {
@@ -4233,7 +4252,7 @@ body {
 
 .checkin-btn--default {
   border: none;
-  background: linear-gradient(135deg, var(--fraber-primary), var(--fraber-primary-dim));
+  background: var(--fraber-primary);
   color: var(--fraber-text);
 }
 
@@ -4279,10 +4298,10 @@ body {
 @keyframes timer-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 0 0 rgba(47, 90, 168, 0.4);
   }
   50% {
-    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 0 6px rgba(47, 90, 168, 0.15);
   }
 }
 
@@ -4426,9 +4445,9 @@ body {
   letter-spacing: 0.04em;
   padding: 0.2rem 0.45rem;
   border-radius: 999px;
-  background: rgba(59, 130, 246, 0.15);
-  color: #93c5fd;
-  border: 1px solid rgba(59, 130, 246, 0.35);
+  background: rgba(47, 90, 168, 0.15);
+  color: #7aa0d4;
+  border: 1px solid rgba(47, 90, 168, 0.35);
 }
 
 .exercicio-catalogo-card-actions {
@@ -4749,7 +4768,7 @@ body {
 
 .treino-exercicio-card-badge--progress {
   background: rgba(46, 127, 217, 0.15);
-  color: #93c5fd;
+  color: #7aa0d4;
 }
 
 .treino-exercicio-card-nome {

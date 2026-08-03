@@ -8,13 +8,13 @@ interface GerarConviteButtonProps {
 }
 
 const colors = {
-  surface: "#132035",
-  primary: "#2E7FD9",
-  secondary: "#E8001C",
-  success: "#22c55e",
-  textPrimary: "#F0F4FF",
-  textSecondary: "#7A9CC4",
-  border: "#1E3050",
+  surface: "#181818",
+  primary: "#2f5aa8",
+  secondary: "#c62828",
+  success: "#3d9a5f",
+  textPrimary: "#f0f0f0",
+  textSecondary: "#888888",
+  border: "#2c2c2c",
 };
 
 export function GerarConviteButton({ professorId }: GerarConviteButtonProps) {

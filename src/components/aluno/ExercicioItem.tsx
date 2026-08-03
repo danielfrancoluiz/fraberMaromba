@@ -16,13 +16,13 @@ interface ExercicioItemProps {
 }
 
 const colors = {
-  surface: "#132035",
-  primary: "#2E7FD9",
-  textPrimary: "#F0F4FF",
-  textSecondary: "#7A9CC4",
-  border: "#1E3050",
-  concluidoBg: "#0d2b1a",
-  concluidoIcon: "#22c55e",
+  surface: "#181818",
+  primary: "#2f5aa8",
+  textPrimary: "#f0f0f0",
+  textSecondary: "#888888",
+  border: "#2c2c2c",
+  concluidoBg: "#141a16",
+  concluidoIcon: "#3d9a5f",
 };
 
 function ExercicioThumbnail({ exercicio }: { exercicio: Exercicio }) {

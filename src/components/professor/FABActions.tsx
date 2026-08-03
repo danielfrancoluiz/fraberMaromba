@@ -9,9 +9,9 @@ interface FABActionsProps {
 }
 
 const colors = {
-  primary: "#2E7FD9",
-  secondary: "#E8001C",
-  textPrimary: "#F0F4FF",
+  primary: "#2f5aa8",
+  secondary: "#c62828",
+  textPrimary: "#f0f0f0",
 };
 
 export function FABActions({ onCadastrar, onCriarTreino, className = "" }: FABActionsProps) {

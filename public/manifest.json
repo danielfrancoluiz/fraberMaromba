@@ -4,8 +4,8 @@
   "description": "Plataforma de treinos Fraber 360",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#050f1a",
-  "theme_color": "#050f1a",
+  "background_color": "#0d0d0d",
+  "theme_color": "#0d0d0d",
   "orientation": "portrait-primary",
   "lang": "pt-BR",
   "icons": [
