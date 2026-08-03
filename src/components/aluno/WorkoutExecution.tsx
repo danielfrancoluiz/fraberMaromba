@@ -109,7 +109,9 @@ export function WorkoutExecution({
     proximoExercicio?.gifUrl ?? proximoExercicio?.imagemUrl ?? null;
   const setsDone = completedSets[exercicioAtual.id] ?? [];
   const descansoPadrao = exercicioAtual.restSeconds ?? 60;
-  const continuo = exercicioAtual.exercicioContinuo === true;
+  const continuo =
+    exercicioAtual.exercicioContinuo === true ||
+    (exercicioAtual.restSeconds ?? 60) === 0;
 
   return (
     <div className="workout-exec">
@@ -210,7 +212,7 @@ export function WorkoutExecution({
               <p className="workout-exec-stat-label">Descanso</p>
               <p className="workout-exec-stat-value">
                 {continuo ? (
-                  <span style={{ fontSize: "0.85rem" }}>Contínuo</span>
+                  <span style={{ fontSize: "0.85rem" }}>Conjugado</span>
                 ) : (
                   <>
                     {descansoPadrao}

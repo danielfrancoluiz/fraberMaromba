@@ -118,7 +118,7 @@ export default function Page() {
                       <span className="exercicio-badge-unilateral">Unilateral</span>
                     ) : null}
                     {item.exercicioContinuo ? (
-                      <span className="exercicio-badge-unilateral">Contínuo</span>
+                      <span className="exercicio-badge-unilateral">Conjugado</span>
                     ) : null}
                   </div>
                   <p className="exercicio-catalogo-card-meta">
@@ -130,7 +130,7 @@ export default function Page() {
                   <p className="exercicio-catalogo-card-stats">
                     {item.seriesPadrao ?? 3}×{item.repeticoesPadrao ?? 12}
                     {item.exercicioContinuo
-                      ? " · contínuo (sem descanso)"
+                      ? " · conjugado (sem descanso)"
                       : ` · ${item.descansoPadrao ?? 60}s descanso`}
                   </p>
                   <div className="exercicio-catalogo-card-actions">

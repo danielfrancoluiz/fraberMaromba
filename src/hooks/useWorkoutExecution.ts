@@ -324,25 +324,38 @@ export function useWorkoutExecution(
     void marcarSerieSessao(sessaoId, key, numeroSerie).catch(() => {});
 
     const descanso = exercicioAtual.restSeconds ?? 60;
-    const continuo = exercicioAtual.exercicioContinuo === true;
+    // Flag do catálogo ou descanso 0 (exercício conjugado / contínuo).
+    const conjugado =
+      exercicioAtual.exercicioContinuo === true || descanso === 0;
     const isUltimaSerie = setIdx >= total - 1;
 
-    if (isUltimaSerie) {
-      if (modoEscolhaLivre) {
+    if (conjugado) {
+      if (isUltimaSerie) {
+        // Acabou as séries → próximo exercício (ou fim do treino), sem tela de descanso.
+        if (modoEscolhaLivre) {
+          concluirExercicioAtual();
+          return;
+        }
+        if (exIdx >= exercicios.length - 1) {
+          void finalizarTreino();
+          return;
+        }
         concluirExercicioAtual();
         return;
       }
 
-      const isUltimoExercicio = exIdx >= exercicios.length - 1;
-      if (isUltimoExercicio) {
-        void finalizarTreino();
-        return;
-      }
+      setSetIdx((s) => s + 1);
+      setPhase("exercise");
+      return;
     }
 
-    // Exercício contínuo: sem tela de descanso — vai direto à próxima série/exercício.
-    if (continuo) {
-      avancarAposDescanso();
+    if (isUltimaSerie && modoEscolhaLivre) {
+      concluirExercicioAtual();
+      return;
+    }
+
+    if (isUltimaSerie && exIdx >= exercicios.length - 1) {
+      void finalizarTreino();
       return;
     }
 
@@ -359,7 +372,6 @@ export function useWorkoutExecution(
     finalizarTreino,
     modoEscolhaLivre,
     concluirExercicioAtual,
-    avancarAposDescanso,
   ]);
 
   const pularDescanso = useCallback(() => {

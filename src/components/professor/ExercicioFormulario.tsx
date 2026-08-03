@@ -298,18 +298,18 @@ export function ExercicioFormulario({ exercicioId }: ExercicioFormularioProps) {
           </div>
 
           <div className="exercicio-unilateral-wrap">
-            <span className="field-label">Pausa entre séries</span>
+            <span className="field-label">Exercício conjugado</span>
             <button
               type="button"
               className={`chip exercicio-unilateral-btn ${form.exercicioContinuo ? "chip-active" : ""}`}
               onClick={toggleExercicioContinuo}
               aria-pressed={form.exercicioContinuo}
             >
-              Exercício contínuo
+              Exercício conjugado
             </button>
             <p className="text-muted exercicio-unilateral-hint">
               {form.exercicioContinuo
-                ? "Marcado: sem descanso — vai direto para a próxima série/exercício"
+                ? "Marcado: sem descanso — ao terminar as séries vai direto ao próximo exercício"
                 : "Desmarcado: usa o tempo de descanso após cada série"}
             </p>
           </div>
