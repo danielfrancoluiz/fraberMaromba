@@ -4145,6 +4145,13 @@ body {
 }
 
 /* Nav dias semana — cor do ativo/inativo vem de style inline no componente */
+.nav-dias-semana-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
 .nav-dias-semana {
   display: flex;
   flex-wrap: nowrap;
@@ -4154,10 +4161,33 @@ body {
   scrollbar-width: none;
   -ms-overflow-style: none;
   padding: 2px 0;
+  flex: 1;
+  min-width: 0;
 }
 
 .nav-dias-semana::-webkit-scrollbar {
   display: none;
+}
+
+.nav-dias-semana-next {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--fraber-surface);
+  color: var(--fraber-text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  box-shadow: none;
+}
+
+.nav-dias-semana-next:active {
+  background: var(--fraber-primary);
+  color: var(--fraber-text);
 }
 
 .nav-dia-btn {

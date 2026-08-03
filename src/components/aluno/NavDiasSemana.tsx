@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type CSSProperties } from "react";
+import { ChevronRight } from "lucide-react";
 
 const DIA_LABELS: Record<string, string> = {
   segunda: "Segunda",
@@ -56,34 +57,56 @@ export function NavDiasSemana({
     });
   }, [diaSelecionado]);
 
+  const indiceAtual = Math.max(0, dias.indexOf(diaSelecionado));
+  const temProximo = dias.length > 1;
+
+  function irParaProximoDia() {
+    if (dias.length === 0) return;
+    const proximo = dias[(indiceAtual + 1) % dias.length];
+    onChange(proximo);
+  }
+
   return (
-    <nav
-      ref={navRef}
-      className="nav-dias-semana"
-      aria-label="Dias da semana"
-      role="tablist"
-    >
-      {dias.map((dia) => {
-        const selecionado = dia === diaSelecionado;
-        return (
-          <button
-            key={dia}
-            type="button"
-            role="tab"
-            data-dia={dia}
-            aria-selected={selecionado}
-            tabIndex={selecionado ? 0 : -1}
-            className="nav-dia-btn"
-            style={selecionado ? ESTILO_ATIVO : ESTILO_INATIVO}
-            onPointerUp={(e) => {
-              (e.currentTarget as HTMLButtonElement).blur();
-            }}
-            onClick={() => onChange(dia)}
-          >
-            {labelDia(dia)}
-          </button>
-        );
-      })}
-    </nav>
+    <div className="nav-dias-semana-wrap">
+      <nav
+        ref={navRef}
+        className="nav-dias-semana"
+        aria-label="Dias da semana"
+        role="tablist"
+      >
+        {dias.map((dia) => {
+          const selecionado = dia === diaSelecionado;
+          return (
+            <button
+              key={dia}
+              type="button"
+              role="tab"
+              data-dia={dia}
+              aria-selected={selecionado}
+              tabIndex={selecionado ? 0 : -1}
+              className="nav-dia-btn"
+              style={selecionado ? ESTILO_ATIVO : ESTILO_INATIVO}
+              onPointerUp={(e) => {
+                (e.currentTarget as HTMLButtonElement).blur();
+              }}
+              onClick={() => onChange(dia)}
+            >
+              {labelDia(dia)}
+            </button>
+          );
+        })}
+      </nav>
+
+      {temProximo ? (
+        <button
+          type="button"
+          className="nav-dias-semana-next"
+          onClick={irParaProximoDia}
+          aria-label="Próximo dia"
+        >
+          <ChevronRight size={20} strokeWidth={2.5} />
+        </button>
+      ) : null}
+    </div>
   );
 }
