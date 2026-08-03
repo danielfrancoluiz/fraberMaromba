@@ -124,13 +124,51 @@ Após pagar, **saia e entre de novo** para o JWT trazer `status` e `planoId` atu
 
 ### Supabase: duas bases sem cobrar a mais?
 
-No plano **Free** você pode ter **até 2 projetos ativos** — use um para **dev** e outro para **prod**. Não precisa de Liquibase: o app já usa **Prisma Migrate** (`prisma migrate deploy` no build). Cada ambiente aponta para seu `DATABASE_URL` / `DIRECT_URL`.
+No plano **Free** você pode ter **até 2 projetos ativos** — use um para **dev** e outro para **prod**. O app usa **Prisma Migrate** (`prisma migrate deploy` no build).
 
-1. Crie o 2º projeto no Supabase (ex.: `fraber-maromba-prod`).
-2. No Vercel → Project → **Settings → Environment Variables**:
-   - **Preview**: URLs do projeto **dev**
-   - **Production**: URLs do projeto **prod**
-3. No primeiro deploy de cada ambiente, o build roda `prisma migrate deploy` e cria as tabelas.
+| Ambiente | Domínio | Projeto Supabase |
+|--|--|--|
+| **DEV** (Preview) | `dev.fraber360.com.br` | [epwypeqmgykzgpgwlnhq](https://supabase.com/dashboard/project/epwypeqmgykzgpgwlnhq) |
+| **PRD** (Production) | `www.fraber360.com.br` | [zdtqfvvlqpwoiigbuikl](https://supabase.com/dashboard/project/zdtqfvvlqpwoiigbuikl) |
+
+#### Configurar PRD (projeto novo)
+
+1. Abra o [projeto PRD](https://supabase.com/dashboard/project/zdtqfvvlqpwoiigbuikl) → **Project Settings → API** e copie:
+   - Project URL → `NEXT_PUBLIC_SUPABASE_URL`
+   - `anon` → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `service_role` → `SUPABASE_SERVICE_ROLE_KEY`
+   - JWT Secret → `SUPABASE_JWT_SECRET` (opcional)
+2. **Settings → Database → Connection string**:
+   - **Session pooler** (porta **5432**) → `DIRECT_URL`
+   - **Transaction pooler** (porta **6543**, `?pgbouncer=true`) → `DATABASE_URL`
+3. Copie o exemplo e preencha:
+
+```bash
+cp .env.production.local.example .env.production.local
+# edite .env.production.local com senha e keys do PRD
+```
+
+4. Crie as tabelas no PRD:
+
+```bash
+npx dotenv -e .env.production.local -- npx prisma migrate deploy
+npx dotenv -e .env.production.local -- npm run storage:setup
+# opcional seed só se quiser usuários de teste no PRD:
+# npx dotenv -e .env.production.local -- npm run db:seed
+```
+
+5. Envie as envs para a Vercel (projeto `fraber-maromba-hyyo`):
+
+```bash
+npx vercel link --project fraber-maromba-hyyo --yes
+node scripts/vercel-env-dual.cjs
+```
+
+Isso grava:
+- **Preview + Development** ← `.env.local` (DEV) + `NEXTAUTH_URL=https://dev.fraber360.com.br`
+- **Production** ← `.env.production.local` (PRD) + `NEXTAUTH_URL=https://www.fraber360.com.br`
+
+6. Redeploy na Vercel: Preview (`dev`) e Production (`main`).
 
 ### Stripe: test vs live
 
