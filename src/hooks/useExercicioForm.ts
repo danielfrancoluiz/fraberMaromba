@@ -20,6 +20,7 @@ const FORM_INICIAL: CriarExercicioForm = {
   repeticoes: "12",
   descanso: "60",
   unilateral: false,
+  exercicioContinuo: false,
 };
 
 function exercicioParaForm(item: ExercicioCatalogo): CriarExercicioForm {
@@ -32,6 +33,7 @@ function exercicioParaForm(item: ExercicioCatalogo): CriarExercicioForm {
     repeticoes: String(item.repeticoesPadrao ?? 12),
     descanso: String(item.descansoPadrao ?? 60),
     unilateral: item.unilateral ?? false,
+    exercicioContinuo: item.exercicioContinuo ?? false,
   };
 }
 
@@ -54,14 +56,17 @@ function validarForm(form: CriarExercicioForm): CriarExercicioFormErrors {
     errors.series = "Informe séries válidas";
   }
 
-  const repeticoes = Number.parseInt(form.repeticoes, 10);
-  if (!form.repeticoes.trim() || Number.isNaN(repeticoes) || repeticoes < 1) {
-    errors.repeticoes = "Informe repetições válidas";
+  // Aceita só dígitos (digitação livre, sem setas do type=number).
+  const repsRaw = form.repeticoes.trim();
+  if (!/^\d+$/.test(repsRaw) || Number.parseInt(repsRaw, 10) < 1) {
+    errors.repeticoes = "Informe um número de repetições válido";
   }
 
-  const descanso = Number.parseInt(form.descanso, 10);
-  if (!form.descanso.trim() || Number.isNaN(descanso) || descanso < 0) {
-    errors.descanso = "Informe o descanso em segundos";
+  if (!form.exercicioContinuo) {
+    const descanso = Number.parseInt(form.descanso, 10);
+    if (!form.descanso.trim() || Number.isNaN(descanso) || descanso < 0) {
+      errors.descanso = "Informe o descanso em segundos";
+    }
   }
 
   if (form.gifUrl.trim()) {
@@ -82,9 +87,12 @@ function formParaPayload(form: CriarExercicioForm) {
     grupoMuscular: form.grupoMuscular,
     subGrupoMuscular: form.subGrupoMuscular,
     series: Number.parseInt(form.series, 10),
-    repeticoes: Number.parseInt(form.repeticoes, 10),
-    descanso: Number.parseInt(form.descanso, 10),
+    repeticoes: Number.parseInt(form.repeticoes.trim(), 10),
+    descanso: form.exercicioContinuo
+      ? 0
+      : Number.parseInt(form.descanso, 10),
     unilateral: form.unilateral,
+    exercicioContinuo: form.exercicioContinuo,
   };
 }
 
@@ -150,6 +158,16 @@ export function useExercicioForm({ exercicioId }: UseExercicioFormOptions = {}) 
 
   const toggleUnilateral = useCallback(() => {
     setForm((prev) => ({ ...prev, unilateral: !prev.unilateral }));
+    setFeedbackErro(null);
+    setFeedbackSucesso(null);
+  }, []);
+
+  const toggleExercicioContinuo = useCallback(() => {
+    setForm((prev) => ({
+      ...prev,
+      exercicioContinuo: !prev.exercicioContinuo,
+    }));
+    setErrors((prev) => ({ ...prev, descanso: undefined }));
     setFeedbackErro(null);
     setFeedbackSucesso(null);
   }, []);
@@ -250,6 +268,7 @@ export function useExercicioForm({ exercicioId }: UseExercicioFormOptions = {}) 
     modoEdicao,
     handleChange,
     toggleUnilateral,
+    toggleExercicioContinuo,
     handleSubmit,
     loadingUpload,
     previewLocal,

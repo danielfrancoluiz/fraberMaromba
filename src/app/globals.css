@@ -1166,6 +1166,21 @@ body {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
+/* Remove setinhas de type=number (fallback) e campos numéricos livres */
+.input-field--no-spinner,
+.input-field[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.input-field--no-spinner::-webkit-outer-spin-button,
+.input-field--no-spinner::-webkit-inner-spin-button,
+.input-field[type="number"]::-webkit-outer-spin-button,
+.input-field[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .text-muted {
   color: var(--fraber-text-muted);
 }

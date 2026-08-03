@@ -50,6 +50,7 @@ export function mapPayloadParaDados(body: ExercicioCatalogoPayload) {
     repeticoesPadrao: body.repeticoes,
     descansoPadrao: body.descanso,
     unilateral: body.unilateral,
+    exercicioContinuo: body.exercicioContinuo,
   };
 }
 

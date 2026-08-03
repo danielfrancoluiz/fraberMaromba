@@ -11,6 +11,7 @@ const mimeTypes = [
   "video/mp4",
   "video/webm",
   "video/quicktime",
+  "video/x-m4v",
   "image/gif",
   "image/webp",
   "image/jpeg",

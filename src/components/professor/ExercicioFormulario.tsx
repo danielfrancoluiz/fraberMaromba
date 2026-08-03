@@ -46,6 +46,7 @@ export function ExercicioFormulario({ exercicioId }: ExercicioFormularioProps) {
     modoEdicao,
     handleChange,
     toggleUnilateral,
+    toggleExercicioContinuo,
     handleSubmit,
     loadingUpload,
     previewLocal,
@@ -131,7 +132,7 @@ export function ExercicioFormulario({ exercicioId }: ExercicioFormularioProps) {
             <input
               ref={inputMidiaRef}
               type="file"
-              accept="video/mp4,video/webm,video/quicktime,image/gif,image/webp,image/png,image/jpeg"
+              accept="video/mp4,video/webm,video/quicktime,video/x-m4v,image/gif,image/webp,image/png,image/jpeg,.mp4,.webm,.mov,.m4v,.gif"
               className="exercicio-midia-input-hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0];
@@ -250,23 +251,32 @@ export function ExercicioFormulario({ exercicioId }: ExercicioFormularioProps) {
 
           <Campo label="Repetições" erro={errors.repeticoes}>
             <input
-              className="input-field"
-              type="number"
-              min={1}
-              max={999}
+              className="input-field input-field--no-spinner"
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="Ex: 12"
               value={form.repeticoes}
-              onChange={(e) => handleChange("repeticoes", e.target.value)}
+              onChange={(e) => {
+                const onlyDigits = e.target.value.replace(/\D/g, "");
+                handleChange("repeticoes", onlyDigits);
+              }}
             />
           </Campo>
 
           <Campo label="Descanso (segundos)" erro={errors.descanso}>
             <input
-              className="input-field"
-              type="number"
-              min={0}
-              max={600}
-              value={form.descanso}
-              onChange={(e) => handleChange("descanso", e.target.value)}
+              className="input-field input-field--no-spinner"
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="Ex: 60"
+              value={form.exercicioContinuo ? "0" : form.descanso}
+              disabled={form.exercicioContinuo}
+              onChange={(e) => {
+                const onlyDigits = e.target.value.replace(/\D/g, "");
+                handleChange("descanso", onlyDigits);
+              }}
             />
           </Campo>
 
@@ -284,6 +294,23 @@ export function ExercicioFormulario({ exercicioId }: ExercicioFormularioProps) {
               {form.unilateral
                 ? "Marcado: trabalha um lado de cada vez"
                 : "Desmarcado: exercício bilateral"}
+            </p>
+          </div>
+
+          <div className="exercicio-unilateral-wrap">
+            <span className="field-label">Pausa entre séries</span>
+            <button
+              type="button"
+              className={`chip exercicio-unilateral-btn ${form.exercicioContinuo ? "chip-active" : ""}`}
+              onClick={toggleExercicioContinuo}
+              aria-pressed={form.exercicioContinuo}
+            >
+              Exercício contínuo
+            </button>
+            <p className="text-muted exercicio-unilateral-hint">
+              {form.exercicioContinuo
+                ? "Marcado: sem descanso — vai direto para a próxima série/exercício"
+                : "Desmarcado: usa o tempo de descanso após cada série"}
             </p>
           </div>
 

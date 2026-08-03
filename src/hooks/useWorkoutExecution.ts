@@ -27,6 +27,7 @@ function aplicarSubstituto(
     imagemUrl: substituto.imagemUrl ?? substituto.gifUrl,
     gifUrl: substituto.gifUrl ?? substituto.imagemUrl,
     unilateral: substituto.unilateral ?? false,
+    exercicioContinuo: substituto.exercicioContinuo ?? false,
   };
 }
 
@@ -43,6 +44,7 @@ function catalogoParaSubstituto(
     imagemUrl: cat.imagemUrl ?? cat.gifUrl ?? undefined,
     gifUrl: cat.gifUrl ?? undefined,
     unilateral: cat.unilateral ?? false,
+    exercicioContinuo: cat.exercicioContinuo ?? false,
   };
 }
 
@@ -322,6 +324,7 @@ export function useWorkoutExecution(
     void marcarSerieSessao(sessaoId, key, numeroSerie).catch(() => {});
 
     const descanso = exercicioAtual.restSeconds ?? 60;
+    const continuo = exercicioAtual.exercicioContinuo === true;
     const isUltimaSerie = setIdx >= total - 1;
 
     if (isUltimaSerie) {
@@ -337,6 +340,12 @@ export function useWorkoutExecution(
       }
     }
 
+    // Exercício contínuo: sem tela de descanso — vai direto à próxima série/exercício.
+    if (continuo) {
+      avancarAposDescanso();
+      return;
+    }
+
     setPhase("rest");
     countdown.reset(descanso);
     countdown.start(descanso);
@@ -350,6 +359,7 @@ export function useWorkoutExecution(
     finalizarTreino,
     modoEscolhaLivre,
     concluirExercicioAtual,
+    avancarAposDescanso,
   ]);
 
   const pularDescanso = useCallback(() => {

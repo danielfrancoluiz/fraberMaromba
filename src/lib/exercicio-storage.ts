@@ -1,37 +1,21 @@
 import { randomUUID } from "crypto";
+import {
+  BUCKET_EXERCICIOS_MIDIA,
+  MAX_MIDIA_BYTES,
+  extensaoMidiaPermitida,
+  mimesMidiaPermitidos,
+  resolverMimeMidia,
+  validarArquivoMidia,
+} from "@/lib/exercicio-midia";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
-export const BUCKET_EXERCICIOS_MIDIA = "exercicios-midia";
-
-export const MAX_MIDIA_BYTES = 50 * 1024 * 1024;
-
-const EXT_POR_MIME: Record<string, string> = {
-  "video/mp4": "mp4",
-  "video/webm": "webm",
-  "video/quicktime": "mov",
-  "image/gif": "gif",
-  "image/webp": "webp",
-  "image/jpeg": "jpg",
-  "image/png": "png",
-};
-
-export function extensaoMidiaPermitida(mime: string): string | null {
-  return EXT_POR_MIME[mime.toLowerCase()] ?? null;
-}
-
-export function validarArquivoMidia(file: File): string | null {
-  if (file.size <= 0) return "Arquivo vazio";
-  if (file.size > MAX_MIDIA_BYTES) {
-    return "Arquivo muito grande (máximo 50 MB)";
-  }
-
-  const ext = extensaoMidiaPermitida(file.type);
-  if (!ext) {
-    return "Formato não suportado. Use MP4, WebM, MOV, GIF, WebP, JPG ou PNG";
-  }
-
-  return null;
-}
+export {
+  BUCKET_EXERCICIOS_MIDIA,
+  MAX_MIDIA_BYTES,
+  extensaoMidiaPermitida,
+  resolverMimeMidia,
+  validarArquivoMidia,
+} from "@/lib/exercicio-midia";
 
 let bucketGarantido = false;
 
@@ -41,7 +25,7 @@ export async function garantirBucketExerciciosMidia(): Promise<void> {
   const { error } = await getSupabaseAdmin().storage.createBucket(BUCKET_EXERCICIOS_MIDIA, {
     public: true,
     fileSizeLimit: MAX_MIDIA_BYTES,
-    allowedMimeTypes: Object.keys(EXT_POR_MIME),
+    allowedMimeTypes: mimesMidiaPermitidos(),
   });
 
   if (error && !/already exists|duplicate/i.test(error.message)) {
@@ -63,10 +47,22 @@ export function urlPublicaMidia(caminho: string): string {
   return data.publicUrl;
 }
 
-export async function enviarMidiaExercicio(
-  file: File,
-  professorId: string
-): Promise<string> {
+export interface UploadAssinadoExercicio {
+  path: string;
+  token: string;
+  signedUrl: string;
+  publicUrl: string;
+  contentType: string;
+}
+
+/**
+ * Gera URL assinada para o browser enviar o arquivo direto ao Supabase,
+ * evitando o limite de body das funções serverless (~4,5 MB na Vercel).
+ */
+export async function criarUploadAssinadoExercicio(
+  professorId: string,
+  file: Pick<File, "type" | "name" | "size">
+): Promise<UploadAssinadoExercicio> {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error(
       "Storage não configurado. Defina NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY."
@@ -76,23 +72,24 @@ export async function enviarMidiaExercicio(
   const erroValidacao = validarArquivoMidia(file);
   if (erroValidacao) throw new Error(erroValidacao);
 
-  const ext = extensaoMidiaPermitida(file.type)!;
+  const contentType = resolverMimeMidia(file);
+  const ext = extensaoMidiaPermitida(contentType)!;
   await garantirBucketExerciciosMidia();
 
-  const caminho = caminhoMidiaExercicio(professorId, ext);
-  const buffer = Buffer.from(await file.arrayBuffer());
-
-  const { error } = await getSupabaseAdmin().storage
+  const path = caminhoMidiaExercicio(professorId, ext);
+  const { data, error } = await getSupabaseAdmin().storage
     .from(BUCKET_EXERCICIOS_MIDIA)
-    .upload(caminho, buffer, {
-      contentType: file.type,
-      upsert: false,
-      cacheControl: "3600",
-    });
+    .createSignedUploadUrl(path);
 
-  if (error) {
-    throw new Error(`Falha no upload: ${error.message}`);
+  if (error || !data) {
+    throw new Error(`Falha ao preparar upload: ${error?.message ?? "resposta vazia"}`);
   }
 
-  return urlPublicaMidia(caminho);
+  return {
+    path: data.path,
+    token: data.token,
+    signedUrl: data.signedUrl,
+    publicUrl: urlPublicaMidia(data.path),
+    contentType,
+  };
 }

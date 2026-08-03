@@ -7,6 +7,7 @@ export interface ExercicioCatalogoPayload {
   repeticoes: number;
   descanso: number;
   unilateral: boolean;
+  exercicioContinuo: boolean;
 }
 
 export function isExercicioCatalogoPayload(value: unknown): value is ExercicioCatalogoPayload {
@@ -20,6 +21,7 @@ export function isExercicioCatalogoPayload(value: unknown): value is ExercicioCa
     typeof dados.repeticoes === "number" &&
     typeof dados.descanso === "number" &&
     typeof dados.unilateral === "boolean" &&
+    typeof dados.exercicioContinuo === "boolean" &&
     (dados.gifUrl === undefined || typeof dados.gifUrl === "string")
   );
 }

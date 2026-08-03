@@ -117,6 +117,9 @@ export default function Page() {
                     {item.unilateral ? (
                       <span className="exercicio-badge-unilateral">Unilateral</span>
                     ) : null}
+                    {item.exercicioContinuo ? (
+                      <span className="exercicio-badge-unilateral">Contínuo</span>
+                    ) : null}
                   </div>
                   <p className="exercicio-catalogo-card-meta">
                     {labelGrupoMuscular(item.grupoMuscular)}
@@ -125,8 +128,10 @@ export default function Page() {
                       : ""}
                   </p>
                   <p className="exercicio-catalogo-card-stats">
-                    {item.seriesPadrao ?? 3}×{item.repeticoesPadrao ?? 12} ·{" "}
-                    {item.descansoPadrao ?? 60}s descanso
+                    {item.seriesPadrao ?? 3}×{item.repeticoesPadrao ?? 12}
+                    {item.exercicioContinuo
+                      ? " · contínuo (sem descanso)"
+                      : ` · ${item.descansoPadrao ?? 60}s descanso`}
                   </p>
                   <div className="exercicio-catalogo-card-actions">
                     <button

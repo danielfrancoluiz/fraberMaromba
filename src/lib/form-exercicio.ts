@@ -50,13 +50,14 @@ export function exercicioFormFromExercicio(ex: Exercicio): ExercicioForm {
 }
 
 export function exercicioFormFromCatalogo(item: ExercicioCatalogo): ExercicioForm {
+  const continuo = item.exercicioContinuo === true;
   return {
     id: crypto.randomUUID(),
     exercicioCatalogoId: item.id,
     nome: item.nome,
     series: String(item.seriesPadrao ?? 3),
     repeticoes: String(item.repeticoesPadrao ?? 12),
-    restSeconds: String(item.descansoPadrao ?? 60),
+    restSeconds: String(continuo ? 0 : (item.descansoPadrao ?? 60)),
     observacao: "",
     grupoMuscular: labelGrupoMuscular(item.grupoMuscular) || item.grupoMuscular,
     imagemUrl: item.imagemUrl ?? item.gifUrl ?? undefined,

@@ -53,6 +53,7 @@ export async function criarExercicioProfessor(dados: {
   repeticoes: number;
   descanso: number;
   unilateral: boolean;
+  exercicioContinuo: boolean;
 }): Promise<ExercicioCatalogo> {
   const res = await fetch("/api/professor/exercicios", {
     method: "POST",
@@ -132,6 +133,7 @@ export async function atualizarExercicioProfessor(
     repeticoes: number;
     descanso: number;
     unilateral: boolean;
+    exercicioContinuo: boolean;
   }
 ): Promise<ExercicioCatalogo> {
   const res = await fetch(`/api/professor/exercicios/${id}`, {
