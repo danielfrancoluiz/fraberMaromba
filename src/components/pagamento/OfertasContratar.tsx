@@ -1,27 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, CreditCard } from "lucide-react";
 import { PagamentoElements } from "@/components/pagamento/PagamentoElements";
 import { usePagamento } from "@/hooks/usePagamento";
+import { useOfertasPlanos } from "@/hooks/useOfertasPlanos";
 import {
   formatarPrecoCentavos,
   labelValidadeOferta,
 } from "@/lib/ofertas-planos";
-import {
-  moduloVigente,
-} from "@/lib/modulos-aluno";
-
-type Oferta = {
-  id: string;
-  grupo: string;
-  nome: string;
-  descricao: string | null;
-  valorCentavos: number;
-  diasValidade: number;
-  modulos: string[];
-  badge: string | null;
-};
+import { moduloVigente } from "@/lib/modulos-aluno";
 
 interface OfertasContratarProps {
   alunoId: string;
@@ -60,10 +48,12 @@ export function OfertasContratar({
     () => modulosVigentesAgora(modulosVencimentos, modulosAtuais),
     [modulosVencimentos, modulosAtuais]
   );
-  const [ofertas, setOfertas] = useState<Oferta[]>([]);
+  const {
+    ofertas,
+    loading: loadingLista,
+    erro: erroLista,
+  } = useOfertasPlanos({ grupo });
   const [escolhida, setEscolhida] = useState<string | null>(null);
-  const [loadingLista, setLoadingLista] = useState(true);
-  const [erroLista, setErroLista] = useState<string | null>(null);
 
   const {
     loading,
@@ -75,44 +65,6 @@ export function OfertasContratar({
     alunoId,
     ofertaId: escolhida ?? undefined,
   });
-
-  useEffect(() => {
-    let ativo = true;
-    setLoadingLista(true);
-    setErroLista(null);
-    void fetch(`/api/ofertas?grupo=${encodeURIComponent(grupo)}`, {
-      credentials: "include",
-    })
-      .then(async (r) => {
-        const body: unknown = await r.json().catch(() => null);
-        if (!ativo) return;
-        if (!r.ok) {
-          const msg =
-            body &&
-            typeof body === "object" &&
-            "error" in body &&
-            typeof (body as { error: string }).error === "string"
-              ? (body as { error: string }).error
-              : "Não foi possível carregar as ofertas.";
-          setErroLista(msg);
-          setOfertas([]);
-          return;
-        }
-        setOfertas(Array.isArray(body) ? (body as Oferta[]) : []);
-      })
-      .catch(() => {
-        if (ativo) {
-          setOfertas([]);
-          setErroLista("Não foi possível carregar as ofertas.");
-        }
-      })
-      .finally(() => {
-        if (ativo) setLoadingLista(false);
-      });
-    return () => {
-      ativo = false;
-    };
-  }, [grupo]);
 
   /** Treino: só ofertas ainda não contratadas (ex.: tem musc → só corrida). */
   const ofertasVisiveis = useMemo(() => {

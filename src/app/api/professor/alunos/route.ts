@@ -3,6 +3,7 @@ import { requireProfessorSession } from "@/lib/get-api-session";
 import { prisma } from "@/lib/prisma";
 import { mensagemErroBanco } from "@/lib/erro-banco";
 import { normalizarEmail } from "@/lib/email";
+import { aplicarOfertaAoAluno } from "@/lib/aplicar-oferta-aluno";
 
 export async function GET(req: NextRequest) {
   try {
@@ -36,6 +37,7 @@ interface CriarAlunoBody {
   peso: number;
   altura: number;
   objetivo: string;
+  /** ID da oferta de aluno (`/api/ofertas`), mesmo catálogo da contratação. */
   planoId: string;
 }
 
@@ -72,15 +74,33 @@ export async function POST(req: NextRequest) {
 
     const aluno = await prisma.aluno.create({
       data: {
-        ...body,
+        nomeCompleto: body.nomeCompleto,
+        cpf: body.cpf,
         email: normalizarEmail(body.email),
+        telefone: body.telefone,
+        sexo: body.sexo,
+        dataNascimento: body.dataNascimento,
+        peso: body.peso,
+        altura: body.altura,
+        objetivo: body.objetivo,
+        planoId: body.planoId.trim(),
         professorId: session.user.id,
         modulosAtivos: [],
         status: "inativo",
       },
     });
 
-    return NextResponse.json(aluno, { status: 201 });
+    const aplicado = await aplicarOfertaAoAluno(aluno.id, body.planoId);
+    if (!aplicado.ok) {
+      await prisma.aluno.delete({ where: { id: aluno.id } }).catch(() => {});
+      return NextResponse.json({ error: aplicado.error }, { status: 400 });
+    }
+
+    const alunoAtualizado = await prisma.aluno.findUnique({
+      where: { id: aluno.id },
+    });
+
+    return NextResponse.json(alunoAtualizado ?? aluno, { status: 201 });
   } catch (error) {
     const mensagem =
       error instanceof Error ? error.message : "Erro ao cadastrar aluno";

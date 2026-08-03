@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { CadastroAlunoForm as CadastroAlunoFormType } from "@/types";
 import { useCadastroAluno } from "@/hooks/useCadastroAluno";
 import { PageTopBar } from "@/components/ui/PageTopBar";
+import { SelectOfertaPlano } from "@/components/planos/SelectOfertaPlano";
 
 interface CampoProps {
   nome: keyof CadastroAlunoFormType;
@@ -31,8 +32,6 @@ export function CadastroAlunoForm() {
   const {
     form,
     errors,
-    planos,
-    loadingPlanos,
     loadingSubmit,
     feedbackSucesso,
     feedbackErro,
@@ -154,22 +153,12 @@ export function CadastroAlunoForm() {
             />
           </Campo>
 
-          <Campo nome="planoId" label="Plano" erro={errors.planoId}>
-            <select
-              className="input-field"
+          <Campo nome="planoId" label="Plano" erro={errors.planoId} className="field-span2">
+            <SelectOfertaPlano
               value={form.planoId}
-              onChange={(e) => handleChange("planoId", e.target.value)}
-            >
-              <option value="">
-                {loadingPlanos ? "Carregando planos..." : "Selecione um plano"}
-              </option>
-              {!loadingPlanos &&
-                planos.map((plano) => (
-                  <option key={plano.id} value={plano.id}>
-                    {plano.preco ? `${plano.nome} — ${plano.preco}` : plano.nome}
-                  </option>
-                ))}
-            </select>
+              onChange={(ofertaId) => handleChange("planoId", ofertaId)}
+              placeholder="Selecione um plano"
+            />
           </Campo>
 
           {feedbackSucesso ? (

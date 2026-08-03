@@ -1,14 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CadastroAlunoForm, FormErrors, Plano } from "@/types";
-import { cadastrarAluno, buscarPlanos } from "@/services/professorService";
+import { CadastroAlunoForm, FormErrors } from "@/types";
+import { cadastrarAluno } from "@/services/professorService";
 import { validarFormulario, mascararCPF, mascararTelefone } from "@/utils/validators";
 
 interface UseCadastroAlunoReturn {
   form: CadastroAlunoForm;
   errors: FormErrors;
-  planos: Plano[];
-  loadingPlanos: boolean;
   loadingSubmit: boolean;
   feedbackSucesso: boolean;
   feedbackErro: string | null;
@@ -34,43 +32,9 @@ export function useCadastroAluno(): UseCadastroAlunoReturn {
 
   const [form, setForm] = useState<CadastroAlunoForm>(FORM_INICIAL);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [planos, setPlanos] = useState<Plano[]>([]);
-  const [loadingPlanos, setLoadingPlanos] = useState(true);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [feedbackSucesso, setFeedbackSucesso] = useState(false);
   const [feedbackErro, setFeedbackErro] = useState<string | null>(null);
-
-  useEffect(() => {
-    let ativo = true;
-
-    const carregarPlanos = async (): Promise<void> => {
-      setLoadingPlanos(true);
-      setFeedbackErro(null);
-
-      try {
-        const resultado = await buscarPlanos();
-        if (ativo) {
-          setPlanos(resultado);
-        }
-      } catch (error) {
-        if (ativo) {
-          const mensagem =
-            error instanceof Error ? error.message : "Erro ao carregar planos";
-          setFeedbackErro(mensagem);
-        }
-      } finally {
-        if (ativo) {
-          setLoadingPlanos(false);
-        }
-      }
-    };
-
-    carregarPlanos();
-
-    return () => {
-      ativo = false;
-    };
-  }, []);
 
   const handleChange = (campo: keyof CadastroAlunoForm, valor: string): void => {
     let valorTratado = valor;
@@ -133,8 +97,6 @@ export function useCadastroAluno(): UseCadastroAlunoReturn {
   return {
     form,
     errors,
-    planos,
-    loadingPlanos,
     loadingSubmit,
     feedbackSucesso,
     feedbackErro,

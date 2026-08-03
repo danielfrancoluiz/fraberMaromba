@@ -1,6 +1,9 @@
 /**
- * Catálogo de ofertas — edite aqui e rode o seed / restart,
- * ou altere na tela do professor (Planos → Ofertas alunos).
+ * Catálogo seed de ofertas de aluno — fonte inicial do banco.
+ * Usado em: contratação (`OfertasContratar`), cadastro/edição de aluno,
+ * e painel Planos → Ofertas. Depois do seed, edições no painel do professor
+ * prevalecem no banco (`/api/ofertas`).
+ *
  * Valores em centavos (4900 = R$ 49,00).
  */
 export type OfertaGrupo = "treino" | "nutricao";

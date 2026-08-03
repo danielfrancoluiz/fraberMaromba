@@ -2,6 +2,7 @@
 
 import { Aluno } from "@/types";
 import { useEditarAluno } from "@/hooks/useEditarAluno";
+import { SelectOfertaPlano } from "@/components/planos/SelectOfertaPlano";
 
 interface EditarAlunoFormProps {
   aluno: Aluno;
@@ -17,8 +18,6 @@ export function EditarAlunoForm({
   const {
     form,
     errors,
-    planos,
-    loadingPlanos,
     loadingSubmit,
     feedbackSucesso,
     feedbackErro,
@@ -135,22 +134,12 @@ export function EditarAlunoForm({
           <label className="field-label" htmlFor="editar-plano">
             Plano
           </label>
-          <select
+          <SelectOfertaPlano
             id="editar-plano"
-            className="input-field"
             value={form.planoId}
-            onChange={(e) => handleChange("planoId", e.target.value)}
-          >
-            <option value="">
-              {loadingPlanos ? "Carregando planos..." : "Selecione um plano"}
-            </option>
-            {!loadingPlanos &&
-              planos.map((plano) => (
-                <option key={plano.id} value={plano.id}>
-                  {plano.preco ? `${plano.nome} — ${plano.preco}` : plano.nome}
-                </option>
-              ))}
-          </select>
+            onChange={(ofertaId) => handleChange("planoId", ofertaId)}
+            placeholder="Selecione um plano"
+          />
           {errors.planoId ? <p className="field-error">{errors.planoId}</p> : null}
         </div>
 

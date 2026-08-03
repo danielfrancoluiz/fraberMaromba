@@ -1,5 +1,7 @@
 /** Helpers de UI/cliente para planos (labels estáticos de fallback). */
 
+import { labelOferta, OFERTAS_LABEL_FALLBACK } from "@/lib/ofertas-planos";
+
 export const PLANOS_LABEL: Record<string, string> = {
   mensal: "Mensal",
   semestral: "Semestral",
@@ -9,6 +11,7 @@ export const PLANOS_LABEL: Record<string, string> = {
   modulos_1: "1 módulo",
   modulos_2: "2 módulos",
   modulos_3: "3 módulos",
+  ...OFERTAS_LABEL_FALLBACK,
 };
 
 export type PlanoOpcao = {
@@ -21,6 +24,7 @@ export type PlanoOpcao = {
   ativo?: boolean;
 };
 
+/** Nome do plano: ofertas de aluno (contratação) ou planos do professor. */
 export function labelPlano(planoId: string, nome?: string | null): string {
-  return nome?.trim() || PLANOS_LABEL[planoId] || planoId;
+  return nome?.trim() || PLANOS_LABEL[planoId] || labelOferta(planoId) || planoId;
 }

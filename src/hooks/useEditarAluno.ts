@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Aluno, AlunoEditErrors, AlunoEditForm, Plano } from "@/types";
-import { atualizarAluno, buscarPlanos } from "@/services/professorService";
+import { Aluno, AlunoEditErrors, AlunoEditForm } from "@/types";
+import { atualizarAluno } from "@/services/professorService";
 import {
   mascararTelefone,
   validarAltura,
@@ -13,8 +13,6 @@ import {
 interface UseEditarAlunoReturn {
   form: AlunoEditForm;
   errors: AlunoEditErrors;
-  planos: Plano[];
-  loadingPlanos: boolean;
   loadingSubmit: boolean;
   feedbackSucesso: boolean;
   feedbackErro: string | null;
@@ -95,8 +93,6 @@ export function useEditarAluno(
 ): UseEditarAlunoReturn {
   const [form, setForm] = useState<AlunoEditForm>(mapAlunoToForm(aluno));
   const [errors, setErrors] = useState<AlunoEditErrors>({});
-  const [planos, setPlanos] = useState<Plano[]>([]);
-  const [loadingPlanos, setLoadingPlanos] = useState(true);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [feedbackSucesso, setFeedbackSucesso] = useState(false);
   const [feedbackErro, setFeedbackErro] = useState<string | null>(null);
@@ -107,33 +103,6 @@ export function useEditarAluno(
     setFeedbackErro(null);
     setFeedbackSucesso(false);
   }, [aluno]);
-
-  useEffect(() => {
-    let ativo = true;
-
-    const carregarPlanos = async (): Promise<void> => {
-      setLoadingPlanos(true);
-      setFeedbackErro(null);
-
-      try {
-        const lista = await buscarPlanos();
-        if (ativo) setPlanos(lista);
-      } catch (error) {
-        if (!ativo) return;
-        const mensagem =
-          error instanceof Error ? error.message : "Erro ao carregar planos";
-        setFeedbackErro(mensagem);
-      } finally {
-        if (ativo) setLoadingPlanos(false);
-      }
-    };
-
-    void carregarPlanos();
-
-    return () => {
-      ativo = false;
-    };
-  }, []);
 
   const handleChange = (campo: keyof AlunoEditForm, valor: string): void => {
     const valorTratado = campo === "telefone" ? mascararTelefone(valor) : valor;
@@ -187,8 +156,6 @@ export function useEditarAluno(
   return {
     form,
     errors,
-    planos,
-    loadingPlanos,
     loadingSubmit,
     feedbackSucesso,
     feedbackErro,

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireProfessorSession } from "@/lib/get-api-session";
 import { prisma } from "@/lib/prisma";
+import { aplicarOfertaAoAluno } from "@/lib/aplicar-oferta-aluno";
+import { normalizarEmail } from "@/lib/email";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -104,10 +106,24 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: "Aluno não encontrado" }, { status: 404 });
     }
 
+    const { planoId, email, ...resto } = dados;
     const aluno = await prisma.aluno.update({
       where: { id },
-      data: dados,
+      data: {
+        ...resto,
+        ...(email !== undefined ? { email: normalizarEmail(email) } : {}),
+        ...(planoId !== undefined ? { planoId: planoId.trim() } : {}),
+      },
     });
+
+    if (planoId !== undefined && planoId.trim() !== existente.planoId) {
+      const aplicado = await aplicarOfertaAoAluno(id, planoId);
+      if (!aplicado.ok) {
+        return NextResponse.json({ error: aplicado.error }, { status: 400 });
+      }
+      const atualizado = await prisma.aluno.findUnique({ where: { id } });
+      return NextResponse.json(atualizado ?? aluno);
+    }
 
     return NextResponse.json(aluno);
   } catch (error) {
