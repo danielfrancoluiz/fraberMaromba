@@ -88,7 +88,7 @@ if (!devEnv) {
 if (!prdEnv) {
   console.error(
     "Falta .env.production.local (PRD).\n" +
-      "Copie de .env.production.local.example e preencha com o projeto zdtqfvvlqpwoiigbuikl."
+      "Copie de env.production.local.example e preencha com o projeto zdtqfvvlqpwoiigbuikl."
   );
   process.exit(1);
 }

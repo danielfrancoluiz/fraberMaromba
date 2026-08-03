@@ -6,6 +6,10 @@ import { defineConfig } from "prisma/config";
 // Next.js usa .env.local; o CLI do Prisma só carregava .env (senha antiga → P1000).
 loadEnv({ path: ".env" });
 loadEnv({ path: ".env.local", override: true });
+// PRISMA_ENV=production → usa .env.production.local (banco PRD)
+if (process.env.PRISMA_ENV === "production") {
+  loadEnv({ path: ".env.production.local", override: true });
+}
 
 /** CLI (db push): prefira DIRECT_URL — use Session pooler se db.* só tiver IPv6 (P1001 no Windows). */
 function pickPrismaDatasourceUrl(): string {

@@ -144,17 +144,19 @@ No plano **Free** você pode ter **até 2 projetos ativos** — use um para **de
 3. Copie o exemplo e preencha:
 
 ```bash
-cp .env.production.local.example .env.production.local
+cp env.production.local.example .env.production.local
 # edite .env.production.local com senha e keys do PRD
 ```
 
 4. Crie as tabelas no PRD:
 
 ```bash
-npx dotenv -e .env.production.local -- npx prisma migrate deploy
-npx dotenv -e .env.production.local -- npm run storage:setup
-# opcional seed só se quiser usuários de teste no PRD:
-# npx dotenv -e .env.production.local -- npm run db:seed
+# Windows PowerShell
+$env:PRISMA_ENV="production"; npx prisma migrate deploy
+# se o histórico de migrations for antigo/incompleto num banco novo:
+$env:PRISMA_ENV="production"; npx prisma db push
+$env:PRISMA_ENV="production"; npx prisma migrate resolve --applied <migration>
+node --env-file=.env.production.local scripts/setup-exercicios-storage.mjs
 ```
 
 5. Envie as envs para a Vercel (projeto `fraber-maromba-hyyo`):
