@@ -11,6 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useMontarTreino } from "@/hooks/useMontarTreino";
+import { ExercicioMidia } from "@/components/exercicio/ExercicioMidia";
 import { ExercisePickerModal } from "@/components/professor/ExercisePickerModal";
 import { SeriesModeControls } from "@/components/professor/SeriesModeControls";
 import { OBJETIVOS_TREINO } from "@/lib/treino-objetivos";
@@ -226,26 +227,27 @@ export function MontarTreinoBuilder({
                 <li key={exercicio.id} className="card montar-treino-ex-item">
                   <div className="montar-treino-ex-header">
                     <span className="montar-treino-ex-numero">{idx + 1}</span>
-                    {exercicio.imagemUrl ? (
-                      <img
-                        src={exercicio.imagemUrl}
-                        alt=""
-                        className="montar-treino-thumb"
-                        width={52}
-                        height={52}
-                      />
-                    ) : (
-                      <div
-                        className="montar-treino-thumb montar-treino-thumb--empty"
-                        title="Sem imagem no catálogo"
-                      >
-                        <Dumbbell size={22} />
-                      </div>
-                    )}
+                    <div
+                      className="montar-treino-thumb"
+                      title={exercicio.imagemUrl ? undefined : "Sem mídia no catálogo"}
+                    >
+                      {exercicio.imagemUrl ? (
+                        <ExercicioMidia
+                          url={exercicio.imagemUrl}
+                          alt={exercicio.nome || "Exercício"}
+                          compact
+                          mediaClassName="montar-treino-thumb-media"
+                        />
+                      ) : (
+                        <div className="montar-treino-thumb--empty">
+                          <Dumbbell size={22} />
+                        </div>
+                      )}
+                    </div>
                     <div className="montar-treino-ex-info">
                       <p className="montar-treino-ex-nome">{exercicio.nome || "Exercício sem nome"}</p>
                       <p className="montar-treino-ex-sub text-muted">
-                        {exercicio.imagemUrl ? "Do catálogo" : "Sem imagem no catálogo"}
+                        {exercicio.imagemUrl ? "Do catálogo" : "Sem mídia no catálogo"}
                       </p>
                     </div>
                     <button

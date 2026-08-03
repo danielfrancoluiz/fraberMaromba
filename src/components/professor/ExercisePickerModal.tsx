@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Plus, Search, X } from "lucide-react";
 import { ModalPortal } from "@/components/ModalPortal";
+import { ExercicioMidia } from "@/components/exercicio/ExercicioMidia";
 import { listarExerciciosCatalogo } from "@/services/exercicioCatalogoService";
 import { ExercicioCatalogo } from "@/types";
 import { GRUPOS_MUSCULARES, labelGrupoMuscular } from "@/lib/grupos-musculares";
@@ -145,11 +146,11 @@ export function ExercisePickerModal({
                 >
                   <div className="exercise-picker-thumb">
                     {item.imagemUrl || item.gifUrl ? (
-                      <img
-                        src={item.imagemUrl ?? item.gifUrl ?? ""}
-                        alt=""
-                        width={48}
-                        height={48}
+                      <ExercicioMidia
+                        url={item.imagemUrl ?? item.gifUrl}
+                        alt={item.nome}
+                        compact
+                        mediaClassName="exercise-picker-thumb-media"
                       />
                     ) : (
                       <span className="exercise-picker-thumb-fallback">

@@ -1016,10 +1016,13 @@ body {
   border: 1px solid var(--fraber-border);
 }
 
-.exercise-picker-thumb img {
+.exercise-picker-thumb img,
+.exercise-picker-thumb-media,
+.exercise-picker-thumb .exercicio-midia-video-wrap {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .exercise-picker-thumb-fallback {
@@ -1079,16 +1082,20 @@ body {
   width: 56px;
   height: 56px;
   border-radius: 10px;
-  object-fit: cover;
+  overflow: hidden;
   flex-shrink: 0;
   border: 1px solid var(--fraber-border);
+  background: var(--fraber-surface);
 }
 
-.exercicio-form-thumb--empty {
+.exercicio-form-thumb-media,
+.exercicio-form-thumb .exercicio-midia-video-wrap,
+.exercicio-form-thumb .exercicio-midia--empty {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   display: grid;
   place-items: center;
-  background: var(--fraber-surface);
-  color: var(--fraber-text-muted);
 }
 
 .exercicio-form-catalogo-nome {
@@ -3999,12 +4006,22 @@ body {
   width: 48px;
   height: 48px;
   border-radius: 8px;
-  object-fit: cover;
+  overflow: hidden;
   flex-shrink: 0;
   background: var(--fraber-bg-soft);
 }
 
+.montar-treino-thumb-media,
+.montar-treino-thumb .exercicio-midia-video-wrap {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .montar-treino-thumb--empty {
+  width: 100%;
+  height: 100%;
   border: 1px dashed var(--fraber-border);
   display: grid;
   place-items: center;

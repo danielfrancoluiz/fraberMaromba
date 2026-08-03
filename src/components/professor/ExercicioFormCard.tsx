@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ImageIcon, Search, Trash2 } from "lucide-react";
+import { Search, Trash2 } from "lucide-react";
 import { ExercicioForm } from "@/types";
+import { ExercicioMidia } from "@/components/exercicio/ExercicioMidia";
 import { ExercisePickerModal } from "@/components/professor/ExercisePickerModal";
 import { SeriesModeControls } from "@/components/professor/SeriesModeControls";
 import { exercicioFormFromCatalogo, sincronizarRepsPorSerie } from "@/lib/form-exercicio";
@@ -59,19 +60,14 @@ export function ExercicioFormCard({
         </div>
 
         <div className="exercicio-form-catalogo">
-          {exercicio.imagemUrl ? (
-            <img
-              src={exercicio.imagemUrl}
-              alt=""
-              className="exercicio-form-thumb"
-              width={56}
-              height={56}
+          <div className="exercicio-form-thumb">
+            <ExercicioMidia
+              url={exercicio.imagemUrl}
+              alt={exercicio.nome || "Exercício"}
+              compact
+              mediaClassName="exercicio-form-thumb-media"
             />
-          ) : (
-            <div className="exercicio-form-thumb exercicio-form-thumb--empty">
-              <ImageIcon size={22} />
-            </div>
-          )}
+          </div>
           <div className="exercicio-form-catalogo-info">
             {temCatalogo ? (
               <>
