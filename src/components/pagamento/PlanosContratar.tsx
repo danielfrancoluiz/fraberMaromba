@@ -45,7 +45,7 @@ function PlanoCard({ plano, alunoId, planoAtualId }: PlanoCardProps) {
         </li>
         <li>
           <Check size={16} aria-hidden />
-          Acesso à plataforma Fraber
+          Acesso à plataforma Fraber 360
         </li>
         <li>
           <Check size={16} aria-hidden />

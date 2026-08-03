@@ -12,13 +12,13 @@ export function StudentAppHeader() {
     <header className="student-header">
       <div className="student-header-brand">
         <img
-          src="/logo.jpeg"
-          alt="FRABER 360"
+          src="/logo.png"
+          alt="Fraber 360"
           className="student-header-logo"
         />
         <div>
           <p className="student-header-title">FRABER</p>
-          <p className="student-header-subtitle">360°</p>
+          <p className="student-header-subtitle">360</p>
         </div>
       </div>
 

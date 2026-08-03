@@ -9,17 +9,17 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Fraber CrossFit",
-  description: "Plataforma de gestão Fraber CrossFit",
+  title: "Fraber 360",
+  description: "Plataforma de treinos e gestão Fraber 360",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Fraber",
+    title: "Fraber 360",
   },
   icons: {
-    icon: [{ url: "/logo.jpeg", type: "image/jpeg" }],
-    apple: [{ url: "/logo.jpeg", type: "image/jpeg" }],
+    icon: [{ url: "/logo.png", type: "image/png" }],
+    apple: [{ url: "/logo.png", type: "image/png" }],
   },
 };
 

@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
         amount: plano.valorCentavos,
         currency: "brl",
         payment_method_types: ["card"],
-        description: `Fraber — ${plano.nome}`,
+        description: `Fraber 360 — ${plano.nome}`,
         receipt_email: professor.email || undefined,
         metadata: {
           pagamentoId: pagamento.id,
@@ -249,7 +249,7 @@ export async function POST(req: NextRequest) {
       amount: oferta.valorCentavos,
       currency: "brl",
       payment_method_types: ["card"],
-      description: `Fraber — ${oferta.nome}`,
+      description: `Fraber 360 — ${oferta.nome}`,
       receipt_email: aluno.email || undefined,
       metadata: {
         pagamentoId: pagamento.id,

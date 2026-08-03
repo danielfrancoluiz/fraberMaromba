@@ -18,15 +18,15 @@ export function Logo({ size = 96, showText = false, className = "" }: LogoProps)
       }}
     >
       <Image
-        src="/logo.jpeg"
-        alt="Fraber CrossFit"
+        src="/logo.png"
+        alt="Fraber 360"
         width={size}
         height={size}
         priority
         style={{
           width: size,
           height: size,
-          borderRadius: "50%",
+          borderRadius: "22%",
           objectFit: "cover",
           boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
         }}
@@ -52,7 +52,7 @@ export function Logo({ size = 96, showText = false, className = "" }: LogoProps)
               color: "var(--fraber-accent)",
             }}
           >
-            CrossFit
+            360
           </p>
         </div>
       ) : null}

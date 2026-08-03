@@ -1,4 +1,4 @@
-# Fraber Maromba
+# Fraber 360
 
 Plataforma de treinos Fraber (Next.js, Prisma, NextAuth, tema dark).
 

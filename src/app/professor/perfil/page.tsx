@@ -40,7 +40,7 @@ export default function Page() {
         <p className="text-muted" style={{ margin: "4px 0 0", fontSize: "0.85rem" }}>
           {session?.user?.planoVenceEm
             ? `Válido até ${new Date(session.user.planoVenceEm).toLocaleDateString("pt-BR")}`
-            : "Assinatura da plataforma Fraber"}
+            : "Assinatura da plataforma Fraber 360"}
         </p>
       </Link>
 
