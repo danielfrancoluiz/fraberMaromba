@@ -12,8 +12,9 @@ export function montarProgressoSeries(
 
   for (const row of sessao.series) {
     const arr = completedSets[row.exercicioId];
-    if (arr && row.concluida) {
-      arr[row.numeroSerie - 1] = true;
+    const idx = row.numeroSerie - 1;
+    if (arr && row.concluida && idx >= 0 && idx < arr.length) {
+      arr[idx] = true;
     }
   }
 

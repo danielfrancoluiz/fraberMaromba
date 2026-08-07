@@ -63,6 +63,7 @@ export function WorkoutExecution({
     substituirExercicio,
     sessaoLoading,
     sessaoErro,
+    syncing,
   } = useWorkoutExecution(treino, alunoId, onFinalizar, {
     initialExIdx,
     modoEscolhaLivre,
@@ -285,11 +286,12 @@ export function WorkoutExecution({
             <button
               type="button"
               className="workout-exec-btn-primary"
-              onClick={marcarSerieConcluida}
+              onClick={() => void marcarSerieConcluida()}
+              disabled={syncing}
               aria-label="Marcar série como concluída"
             >
               <CheckCircle2 size={20} />
-              Série concluída
+              {syncing ? "Salvando..." : "Série concluída"}
             </button>
           )}
         </div>

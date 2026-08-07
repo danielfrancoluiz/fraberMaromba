@@ -7,6 +7,7 @@ import {
   criarSeriesParaSessao,
   mapSessaoComCatalogo,
   resolveAlunoId,
+  sincronizarSeriesSessao,
   sessaoInclude,
 } from "@/lib/sessao-treino-server";
 import { mensagemErroBanco } from "@/lib/erro-banco";
@@ -160,7 +161,11 @@ export async function POST(req: NextRequest) {
     });
 
     if (existente) {
-      return NextResponse.json({ sessao: await mapSessaoComCatalogo(existente) });
+      await sincronizarSeriesSessao(existente.id, treinoId);
+      const atualizada = await buscarSessaoCompleta(existente.id);
+      return NextResponse.json({
+        sessao: await mapSessaoComCatalogo(atualizada),
+      });
     }
 
     const sessao = await prisma.treinoSessao.create({

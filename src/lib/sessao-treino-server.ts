@@ -73,6 +73,44 @@ export async function criarSeriesParaSessao(
   }
 }
 
+/** Garante linhas de série se o professor alterou o treino após a sessão ter sido criada. */
+export async function sincronizarSeriesSessao(
+  sessaoId: string,
+  treinoId: string
+): Promise<void> {
+  const exercicios = await prisma.exercicio.findMany({
+    where: { treinoId },
+    orderBy: { ordem: "asc" },
+    select: { id: true, series: true },
+  });
+
+  const existentes = await prisma.treinoSessaoSerie.findMany({
+    where: { sessaoId },
+    select: { exercicioId: true, numeroSerie: true },
+  });
+
+  const chaves = new Set(
+    existentes.map((r) => `${r.exercicioId}:${r.numeroSerie}`)
+  );
+
+  const faltantes = exercicios.flatMap((ex) =>
+    Array.from({ length: ex.series }, (_, i) => {
+      const numeroSerie = i + 1;
+      if (chaves.has(`${ex.id}:${numeroSerie}`)) return [];
+      return {
+        sessaoId,
+        exercicioId: ex.id,
+        numeroSerie,
+        concluida: false,
+      };
+    })
+  );
+
+  if (faltantes.length > 0) {
+    await prisma.treinoSessaoSerie.createMany({ data: faltantes });
+  }
+}
+
 type SessaoComInclude = NonNullable<
   Awaited<ReturnType<typeof prisma.treinoSessao.findFirst<{ include: typeof sessaoInclude }>>>
 >;

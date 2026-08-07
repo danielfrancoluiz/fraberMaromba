@@ -8,6 +8,7 @@ import {
   substituirExercicioSessao,
 } from "@/services/sessaoService";
 import { labelGrupoMuscular } from "@/lib/grupos-musculares";
+import { montarProgressoSeries } from "@/lib/treino-progresso";
 import { useTimer, useCountdown } from "@/hooks/useTimer";
 
 export type WorkoutPhase = "exercise" | "rest" | "done";
@@ -65,8 +66,9 @@ function hydrateFromSessao(
 
   for (const row of sessao.series) {
     const arr = completedSets[row.exercicioId];
-    if (arr && row.concluida) {
-      arr[row.numeroSerie - 1] = true;
+    const idx = row.numeroSerie - 1;
+    if (arr && row.concluida && idx >= 0 && idx < arr.length) {
+      arr[idx] = true;
     }
   }
 
@@ -321,64 +323,65 @@ export function useWorkoutExecution(
     };
   }, [showSubModal, exercicioAtual]);
 
-  const marcarSerieConcluida = useCallback(() => {
-    if (!exercicioAtual || !sessaoId) return;
+  const marcarSerieConcluida = useCallback(async () => {
+    if (!exercicioAtual || !sessaoId || !treino || syncing) return;
 
     const key = exercicioAtual.id;
     const total = exercicioAtual.series;
     const numeroSerie = setIdx + 1;
 
-    setCompletedSets((cs) => {
-      const prev = cs[key] ?? Array<boolean>(total).fill(false);
-      const updated = [...prev];
-      updated[setIdx] = true;
-      return { ...cs, [key]: updated };
-    });
+    setSyncing(true);
+    try {
+      const sessaoAtualizada = await marcarSerieSessao(sessaoId, key, numeroSerie);
+      setCompletedSets(montarProgressoSeries(treino.exercicios, sessaoAtualizada));
 
-    void marcarSerieSessao(sessaoId, key, numeroSerie).catch(() => {});
+      const descanso = exercicioAtual.restSeconds ?? 60;
+      const conjugado =
+        exercicioAtual.exercicioContinuo === true || descanso === 0;
+      const isUltimaSerie = setIdx >= total - 1;
 
-    const descanso = exercicioAtual.restSeconds ?? 60;
-    // Flag do catálogo ou descanso 0 (exercício conjugado / contínuo).
-    const conjugado =
-      exercicioAtual.exercicioContinuo === true || descanso === 0;
-    const isUltimaSerie = setIdx >= total - 1;
-
-    if (conjugado) {
-      if (isUltimaSerie) {
-        // Acabou as séries → próximo exercício (sem voltar à lista no modo escolha).
-        if (exIdx < exercicios.length - 1) {
-          concluirExercicioAtual({ irParaProximo: true });
+      if (conjugado) {
+        if (isUltimaSerie) {
+          if (exIdx < exercicios.length - 1) {
+            concluirExercicioAtual({ irParaProximo: true });
+            return;
+          }
+          if (modoEscolhaLivre) {
+            concluirExercicioAtual();
+            return;
+          }
+          await finalizarTreino();
           return;
         }
-        if (modoEscolhaLivre) {
-          concluirExercicioAtual();
-          return;
-        }
-        void finalizarTreino();
+
+        setSetIdx((s) => s + 1);
+        setPhase("exercise");
         return;
       }
 
-      setSetIdx((s) => s + 1);
-      setPhase("exercise");
-      return;
-    }
+      if (isUltimaSerie && modoEscolhaLivre) {
+        concluirExercicioAtual();
+        return;
+      }
 
-    if (isUltimaSerie && modoEscolhaLivre) {
-      concluirExercicioAtual();
-      return;
-    }
+      if (isUltimaSerie && exIdx >= exercicios.length - 1) {
+        await finalizarTreino();
+        return;
+      }
 
-    if (isUltimaSerie && exIdx >= exercicios.length - 1) {
-      void finalizarTreino();
-      return;
+      setPhase("rest");
+      countdown.reset(descanso);
+      countdown.start(descanso);
+    } catch {
+      setSessaoErro("Não foi possível salvar a série. Tente novamente.");
+    } finally {
+      setSyncing(false);
     }
-
-    setPhase("rest");
-    countdown.reset(descanso);
-    countdown.start(descanso);
   }, [
     exercicioAtual,
     sessaoId,
+    treino,
+    syncing,
     setIdx,
     exIdx,
     exercicios.length,
