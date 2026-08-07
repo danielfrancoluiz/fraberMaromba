@@ -93,18 +93,24 @@ export async function sincronizarSeriesSessao(
     existentes.map((r) => `${r.exercicioId}:${r.numeroSerie}`)
   );
 
-  const faltantes = exercicios.flatMap((ex) =>
-    Array.from({ length: ex.series }, (_, i) => {
-      const numeroSerie = i + 1;
-      if (chaves.has(`${ex.id}:${numeroSerie}`)) return [];
-      return {
+  const faltantes: {
+    sessaoId: string;
+    exercicioId: string;
+    numeroSerie: number;
+    concluida: boolean;
+  }[] = [];
+
+  for (const ex of exercicios) {
+    for (let i = 1; i <= ex.series; i++) {
+      if (chaves.has(`${ex.id}:${i}`)) continue;
+      faltantes.push({
         sessaoId,
         exercicioId: ex.id,
-        numeroSerie,
+        numeroSerie: i,
         concluida: false,
-      };
-    })
-  );
+      });
+    }
+  }
 
   if (faltantes.length > 0) {
     await prisma.treinoSessaoSerie.createMany({ data: faltantes });
