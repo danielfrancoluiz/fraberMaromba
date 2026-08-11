@@ -1,13 +1,11 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { UserCheck } from "lucide-react";
 import { useCadastro } from "@/hooks/useCadastro";
-import { useLogin } from "@/hooks/useLogin";
 import { Logo } from "@/components/Logo";
-import { GoogleIcon } from "@/components/GoogleIcon";
 
 function CadastroContent() {
   const searchParams = useSearchParams();
@@ -25,14 +23,6 @@ function CadastroContent() {
     handleChange,
     handleSubmit,
   } = useCadastro(tokenConvite);
-
-  const {
-    loadingGoogle,
-    handleGoogle,
-    erro: erroGoogle,
-  } = useLogin(temConvite ? "aluno" : "professor");
-
-  const [googleErro, setGoogleErro] = useState<string | null>(null);
 
   const formularioDesabilitado =
     loadingConvite ||
@@ -96,29 +86,6 @@ function CadastroContent() {
             {mensagemErroUrl}
           </div>
         ) : null}
-
-        <button
-          type="button"
-          className="btn-google"
-          disabled={formularioDesabilitado || loadingGoogle}
-          onClick={() => {
-            setGoogleErro(null);
-            void handleGoogle(tokenConvite).catch(() => {
-              setGoogleErro("Não foi possível continuar com Google.");
-            });
-          }}
-        >
-          <GoogleIcon />
-          {loadingGoogle ? "Aguardando Google..." : "Continuar com Google"}
-        </button>
-
-        {erroGoogle || googleErro ? (
-          <p className="field-error" style={{ marginTop: "0.75rem" }}>
-            {erroGoogle ?? googleErro}
-          </p>
-        ) : null}
-
-        <div className="auth-divider">ou</div>
 
         <form
           className="auth-form"

@@ -5,6 +5,10 @@ import { usePlanos } from "@/hooks/usePlanos";
 import { usePagamento } from "@/hooks/usePagamento";
 import { PagamentoElements } from "@/components/pagamento/PagamentoElements";
 import type { PlanoOpcao } from "@/lib/planos-pagamento";
+import {
+  MSG_PAGAMENTO_PIX,
+  pagamentosManuaisAtivos,
+} from "@/lib/pagamentos-manuais";
 
 interface PlanoCardProps {
   plano: PlanoOpcao;
@@ -89,6 +93,7 @@ export function PlanosContratar({
   subtitulo = "Selecione um plano e informe os dados do cartão para concluir.",
 }: PlanosContratarProps) {
   const { planos, loading, erro } = usePlanos({ checkout: true });
+  const manualPix = pagamentosManuaisAtivos();
 
   return (
     <div className="page-stack">
@@ -98,25 +103,33 @@ export function PlanosContratar({
           {titulo}
         </h1>
         <p className="text-muted" style={{ margin: 0 }}>
-          {subtitulo}
+          {manualPix ? MSG_PAGAMENTO_PIX : subtitulo}
         </p>
       </div>
+
+      {manualPix ? (
+        <div className="auth-alert auth-alert--success" role="status">
+          {MSG_PAGAMENTO_PIX}
+        </div>
+      ) : null}
 
       {loading ? <p className="text-muted">Carregando planos...</p> : null}
       {erro ? <p className="field-error">{erro}</p> : null}
 
-      <div className="planos-grid">
-        {planos.map((plano) => (
-          <PlanoCard
-            key={plano.id}
-            plano={plano}
-            alunoId={alunoId}
-            planoAtualId={planoAtualId}
-          />
-        ))}
-      </div>
+      {!manualPix ? (
+        <div className="planos-grid">
+          {planos.map((plano) => (
+            <PlanoCard
+              key={plano.id}
+              plano={plano}
+              alunoId={alunoId}
+              planoAtualId={planoAtualId}
+            />
+          ))}
+        </div>
+      ) : null}
 
-      {!loading && planos.length === 0 ? (
+      {!manualPix && !loading && planos.length === 0 ? (
         <p className="text-muted">Nenhum plano disponível para contratação no momento.</p>
       ) : null}
     </div>

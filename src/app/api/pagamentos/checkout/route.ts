@@ -13,6 +13,10 @@ import {
   parseModulosVencimentos,
 } from "@/lib/modulos-aluno";
 import { assertAlunoDoProfessor, resolveAlunoId } from "@/lib/sessao-treino-server";
+import {
+  MSG_PAGAMENTO_PIX,
+  pagamentosManuaisAtivos,
+} from "@/lib/pagamentos-manuais";
 
 interface CheckoutBody {
   /** Professor: id do plano da plataforma. */
@@ -52,6 +56,10 @@ export async function POST(req: NextRequest) {
     const session = await getApiSession(req);
     if (!session) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    }
+
+    if (pagamentosManuaisAtivos()) {
+      return NextResponse.json({ error: MSG_PAGAMENTO_PIX }, { status: 503 });
     }
 
     if (!isStripeConfigurado()) {

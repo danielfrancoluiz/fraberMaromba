@@ -10,6 +10,10 @@ import {
   labelValidadeOferta,
 } from "@/lib/ofertas-planos";
 import { moduloVigente } from "@/lib/modulos-aluno";
+import {
+  MSG_PAGAMENTO_PIX,
+  pagamentosManuaisAtivos,
+} from "@/lib/pagamentos-manuais";
 
 interface OfertasContratarProps {
   alunoId: string;
@@ -90,6 +94,7 @@ export function OfertasContratar({
     ofertas.find((o) => o.badge)?.badge ??
     ofertasVisiveis.find((o) => o.badge)?.badge ??
     null;
+  const manualPix = pagamentosManuaisAtivos();
 
   return (
     <div className="page-stack ofertas-contratar">
@@ -108,6 +113,12 @@ export function OfertasContratar({
           </p>
         ) : null}
       </div>
+
+      {manualPix ? (
+        <div className="auth-alert auth-alert--success" role="status">
+          {MSG_PAGAMENTO_PIX}
+        </div>
+      ) : null}
 
       {loadingLista ? (
         <p className="text-muted">Carregando ofertas...</p>
@@ -131,9 +142,11 @@ export function OfertasContratar({
                 aria-checked={selected}
                 className={`oferta-card${selected ? " oferta-card--ativo" : ""}`}
                 onClick={() => {
+                  if (manualPix) return;
                   setEscolhida(o.id);
                   cancelarPagamento();
                 }}
+                disabled={manualPix}
               >
                 <span className="oferta-card-top">
                   <span className="oferta-card-nome">{o.nome}</span>
@@ -154,7 +167,7 @@ export function OfertasContratar({
         </div>
       )}
 
-      {ofertaSel ? (
+      {!manualPix && ofertaSel ? (
         <article className="card">
           <p style={{ margin: "0 0 8px" }}>
             <strong>Selecionado:</strong> {ofertaSel.nome}
