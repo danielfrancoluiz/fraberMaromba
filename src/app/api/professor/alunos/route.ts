@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { mensagemErroBanco } from "@/lib/erro-banco";
 import { normalizarEmail } from "@/lib/email";
 import { aplicarOfertaAoAluno } from "@/lib/aplicar-oferta-aluno";
+import { pagamentosManuaisAtivos } from "@/lib/pagamentos-manuais";
 
 export async function GET(req: NextRequest) {
   try {
@@ -90,10 +91,13 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const aplicado = await aplicarOfertaAoAluno(aluno.id, body.planoId);
-    if (!aplicado.ok) {
-      await prisma.aluno.delete({ where: { id: aluno.id } }).catch(() => {});
-      return NextResponse.json({ error: aplicado.error }, { status: 400 });
+    // PIX manual: grava planoId, mas só libera via SQL (ou Stripe quando voltar).
+    if (!pagamentosManuaisAtivos()) {
+      const aplicado = await aplicarOfertaAoAluno(aluno.id, body.planoId);
+      if (!aplicado.ok) {
+        await prisma.aluno.delete({ where: { id: aluno.id } }).catch(() => {});
+        return NextResponse.json({ error: aplicado.error }, { status: 400 });
+      }
     }
 
     const alunoAtualizado = await prisma.aluno.findUnique({

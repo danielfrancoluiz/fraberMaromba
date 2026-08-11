@@ -63,7 +63,7 @@ FROM "Aluno" a
 LEFT JOIN "Usuario" u ON u.id = a."usuarioId"
 WHERE a.id = 'COLE_AQUI_O_ALUNO_ID';
 
--- =============================================================================
--- Alternativa SEM SQL: no painel do professor, edite o aluno e escolha a oferta
--- (plano). Isso já chama aplicarOfertaAoAluno e libera os módulos.
+-- Alternativa SEM SQL: NÃO usar o painel do professor enquanto
+-- NEXT_PUBLIC_PAGAMENTOS_MANUAIS=1 — a oferta só grava a referência do plano.
+-- Liberação só por este script, ou via Stripe quando a env for desligada.
 -- =============================================================================

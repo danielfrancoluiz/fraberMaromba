@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireProfessorSession } from "@/lib/get-api-session";
 import { prisma } from "@/lib/prisma";
 import { aplicarOfertaAoAluno } from "@/lib/aplicar-oferta-aluno";
+import { pagamentosManuaisAtivos } from "@/lib/pagamentos-manuais";
 import { normalizarEmail } from "@/lib/email";
 
 interface RouteContext {
@@ -116,7 +117,11 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       },
     });
 
-    if (planoId !== undefined && planoId.trim() !== existente.planoId) {
+    if (
+      !pagamentosManuaisAtivos() &&
+      planoId !== undefined &&
+      planoId.trim() !== existente.planoId
+    ) {
       const aplicado = await aplicarOfertaAoAluno(id, planoId);
       if (!aplicado.ok) {
         return NextResponse.json({ error: aplicado.error }, { status: 400 });
