@@ -147,6 +147,7 @@ export function WorkoutExecution({
           {midiaUrl || urlMidiaExercicio(exercicioAtual) ? (
             <ExercicioMidia
               url={midiaUrl ?? urlMidiaExercicio(exercicioAtual)}
+              posterUrl={exercicioAtual.imagemUrl}
               alt={exercicioAtual.nome}
               mediaClassName="workout-exec-media-img"
             />
@@ -304,6 +305,7 @@ export function WorkoutExecution({
               {proximaMidia || (proximoExercicio && urlMidiaExercicio(proximoExercicio)) ? (
                 <ExercicioMidia
                   url={proximaMidia ?? urlMidiaExercicio(proximoExercicio!)}
+                  posterUrl={proximoExercicio?.imagemUrl}
                   alt={proximoExercicio!.nome}
                   compact
                   mediaClassName="workout-exec-next-thumb-media"

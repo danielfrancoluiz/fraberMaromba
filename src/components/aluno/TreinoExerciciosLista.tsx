@@ -141,6 +141,7 @@ function TreinoExercicioCard({
         {midiaUrl ? (
           <ExercicioMidia
             url={midiaUrl}
+            posterUrl={exercicio.imagemUrl}
             alt={exercicio.nome}
             compact
             mediaClassName="treino-exercicio-card-media"

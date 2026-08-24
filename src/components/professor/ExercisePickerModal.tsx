@@ -147,7 +147,8 @@ export function ExercisePickerModal({
                   <div className="exercise-picker-thumb">
                     {item.imagemUrl || item.gifUrl ? (
                       <ExercicioMidia
-                        url={item.imagemUrl ?? item.gifUrl}
+                        url={item.gifUrl ?? item.imagemUrl}
+                        posterUrl={item.imagemUrl}
                         alt={item.nome}
                         compact
                         mediaClassName="exercise-picker-thumb-media"

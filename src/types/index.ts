@@ -77,6 +77,8 @@ export interface ExercicioCatalogo {
 export interface CriarExercicioForm {
   nome: string;
   gifUrl: string;
+  /** Poster estático usado nas listas para não baixar o vídeo. */
+  imagemUrl: string;
   grupoMuscular: string;
   subGrupoMuscular: string;
   series: string;

@@ -14,6 +14,7 @@ import { subGruposDoMembro } from "@/lib/sub-grupos-musculares";
 const FORM_INICIAL: CriarExercicioForm = {
   nome: "",
   gifUrl: "",
+  imagemUrl: "",
   grupoMuscular: "",
   subGrupoMuscular: "",
   series: "3",
@@ -27,6 +28,7 @@ function exercicioParaForm(item: ExercicioCatalogo): CriarExercicioForm {
   return {
     nome: item.nome,
     gifUrl: item.gifUrl ?? "",
+    imagemUrl: item.imagemUrl ?? "",
     grupoMuscular: item.grupoMuscular,
     subGrupoMuscular: item.subGrupoMuscular ?? "",
     series: String(item.seriesPadrao ?? 3),
@@ -84,6 +86,7 @@ function formParaPayload(form: CriarExercicioForm) {
   return {
     nome: form.nome.trim(),
     gifUrl: form.gifUrl.trim() || undefined,
+    imagemUrl: form.imagemUrl.trim() || undefined,
     grupoMuscular: form.grupoMuscular,
     subGrupoMuscular: form.subGrupoMuscular,
     series: Number.parseInt(form.series, 10),
@@ -179,6 +182,7 @@ export function useExercicioForm({ exercicioId }: UseExercicioFormOptions = {}) 
     });
     setPreviewMime(null);
     handleChange("gifUrl", "");
+    handleChange("imagemUrl", "");
     setErrors((prev) => ({ ...prev, gifUrl: undefined }));
   }, [handleChange]);
 
@@ -196,13 +200,17 @@ export function useExercicioForm({ exercicioId }: UseExercicioFormOptions = {}) 
       });
 
       try {
-        const url = await uploadMidiaExercicioProfessor(file);
+        const urls = await uploadMidiaExercicioProfessor(file);
         setPreviewLocal((prev) => {
           if (prev) URL.revokeObjectURL(prev);
           return null;
         });
         setPreviewMime(null);
-        handleChange("gifUrl", url);
+        setForm((prev) => ({
+          ...prev,
+          gifUrl: urls.gifUrl,
+          imagemUrl: urls.imagemUrl,
+        }));
       } catch (error) {
         setPreviewLocal((prev) => {
           if (prev) URL.revokeObjectURL(prev);

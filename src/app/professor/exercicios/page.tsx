@@ -100,10 +100,12 @@ export default function Page() {
           <div className="exercicios-catalogo-grid">
             {itens.map((item) => (
               <article key={item.id} className="exercicio-catalogo-card card">
-                {item.gifUrl ? (
+                {item.gifUrl || item.imagemUrl ? (
                   <ExercicioMidia
-                    url={item.gifUrl}
+                    url={item.gifUrl ?? item.imagemUrl}
+                    posterUrl={item.imagemUrl}
                     alt={item.nome}
+                    compact
                     mediaClassName="exercicio-catalogo-card-media"
                   />
                 ) : (

@@ -34,18 +34,29 @@ export function validarExercicioCatalogo(body: ExercicioCatalogoPayload): string
       return "URL do vídeo/GIF inválida";
     }
   }
+  if (body.imagemUrl?.trim()) {
+    try {
+      const url = new URL(body.imagemUrl.trim());
+      if (!["http:", "https:"].includes(url.protocol)) {
+        return "URL da miniatura inválida";
+      }
+    } catch {
+      return "URL da miniatura inválida";
+    }
+  }
   return null;
 }
 
 export function mapPayloadParaDados(body: ExercicioCatalogoPayload) {
   const grupoMuscular = normalizarGrupoMuscular(body.grupoMuscular);
   const gifUrl = body.gifUrl?.trim() || null;
+  const imagemUrl = body.imagemUrl?.trim() || null;
   return {
     nome: body.nome.trim(),
     grupoMuscular,
     subGrupoMuscular: body.subGrupoMuscular.trim() || null,
     gifUrl,
-    imagemUrl: gifUrl,
+    imagemUrl,
     seriesPadrao: body.series,
     repeticoesPadrao: body.repeticoes,
     descansoPadrao: body.descanso,

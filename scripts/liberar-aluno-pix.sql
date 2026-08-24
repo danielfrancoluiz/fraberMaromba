@@ -39,7 +39,10 @@ SET
   "modulosAtivos" = ARRAY['musculacao']::text[],
   "planoVenceEm" = NOW() + INTERVAL '30 days',
   "modulosVencimentos" = jsonb_build_object(
-    'musculacao', to_char((NOW() + INTERVAL '30 days') AT TIMESTAMPTZ, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
+    'musculacao', to_char(
+      (NOW() + INTERVAL '30 days') AT TIME ZONE 'UTC',
+      'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'
+    )
   ),
   "atualizadoEm" = NOW()
 WHERE id = 'COLE_AQUI_O_ALUNO_ID';

@@ -94,6 +94,7 @@ function SubstituteItem({
         {midiaUrl ? (
           <ExercicioMidia
             url={midiaUrl}
+            posterUrl={item.imagemUrl}
             alt={item.nome}
             compact
             mediaClassName="workout-sub-thumb-media"

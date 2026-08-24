@@ -189,6 +189,7 @@ export function ExercicioFormulario({ exercicioId }: ExercicioFormularioProps) {
               <div className="exercicio-form-preview">
                 <ExercicioMidia
                   url={midiaSalvaUrl}
+                  posterUrl={form.imagemUrl}
                   alt="Prévia do exercício"
                   mediaClassName="exercicio-form-preview-media"
                 />
